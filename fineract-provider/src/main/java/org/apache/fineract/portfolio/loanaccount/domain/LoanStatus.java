@@ -34,7 +34,7 @@ public enum LoanStatus {
     CLOSED_OBLIGATIONS_MET(600, "loanStatusType.closed.obligations.met"), //
     CLOSED_WRITTEN_OFF(601, "loanStatusType.closed.written.off"), //
     CLOSED_RESCHEDULE_OUTSTANDING_AMOUNT(602, "loanStatusType.closed.reschedule.outstanding.amount"), //
-    OVERPAID(700, "loanStatusType.overpaid");
+    OVERPAID(700, "loanStatusType.overpaid"), UNDO_LOAN_RESCHEDULE(800, "loanStatusType.undo.loan.reschedule"),;
 
     private final Integer value;
     private final String code;
@@ -75,6 +75,9 @@ public enum LoanStatus {
             break;
             case 700:
                 enumeration = LoanStatus.OVERPAID;
+            break;
+            case 800:
+                enumeration = LoanStatus.UNDO_LOAN_RESCHEDULE;
             break;
         }
         return enumeration;

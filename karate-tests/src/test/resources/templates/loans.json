@@ -182,5 +182,43 @@
     "transactionDate": "#(transactionDate)",
     "locale": "en",
     "dateFormat": "#(format)"
+  },
+
+  "loanReschedulePayLoad": {
+    "submittedOnDate": "#(submittedOnDate)",
+    "rescheduleFromDate": "#(rescheduledFrom)",
+    "rescheduleReasonId": 1,
+    "adjustedDueDate": "#(adjustedDueDate)",
+    "loanId": "#(loanId)"
+  },
+
+  "undoLoanReschedulePayLoad": {
+    "notes": "Test undo loan reschedule"
+  },
+  "OXY163loanaccountPayLoad": {
+    "clientId": "#(clientId)",
+    "interestRatePerPeriod": 15,
+    "productId": "#(loanProductId)",
+    "disbursementData": [],
+    "principal": "#(loanAmount)",
+    "loanTermFrequency": "#(loanTermFrequency)",
+    "loanTermFrequencyType": 2,
+    "numberOfRepayments": "#(numberOfRepayments)",
+    "repaymentEvery": 1,
+    "repaymentFrequencyType": 2,
+    "amortizationType": 1,
+    "isEqualAmortization": false,
+    "interestType": 0,
+    "interestCalculationPeriodType": 0,
+    "allowPartialPeriodInterestCalcualtion": false,
+    "transactionProcessingStrategyId": 1,
+    "rates": [],
+    "isBnplLoan": false,
+    "requiresEquityContribution": false,
+    "locale": "en",
+    "dateFormat": "#(format)",
+    "loanType": "individual",
+    "expectedDisbursementDate": "#(submittedOnDate)",
+    "submittedOnDate": "#(submittedOnDate)"
   }
 }

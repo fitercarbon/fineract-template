@@ -37,4 +37,8 @@ public class LoanRescheduleRequestNotFoundException extends AbstractPlatformReso
                 requestId);
     }
 
+    public LoanRescheduleRequestNotFoundException() {
+        super("error.msg.loan.reschedule.not.found", "No loan reschedule on submitted and pending approval state with given loanId found");
+    }
+
 }

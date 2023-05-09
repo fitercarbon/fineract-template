@@ -24,6 +24,7 @@ import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -210,4 +211,17 @@ public class RescheduleLoansApiResource {
      *
      * return this.loanRescheduleRequestToApiJsonSerializer.serialize(settings, loanRescheduleReasons); }
      */
+
+    @PUT
+    @Path("{loanId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String undoLoanReschedule(@PathParam("loanId") final Long loanId, final String apiRequestBodyAsJson) {
+        CommandWrapper commandWrapper = new CommandWrapperBuilder().undoLoanReschedule(RescheduleLoansApiConstants.ENTITY_NAME, loanId)
+                .withJson(apiRequestBodyAsJson).build();
+
+        final CommandProcessingResult commandProcessingResult = this.commandsSourceWritePlatformService.logCommandSource(commandWrapper);
+
+        return this.loanRescheduleRequestToApiJsonSerializer.serialize(commandProcessingResult);
+    }
 }

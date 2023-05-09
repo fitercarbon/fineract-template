@@ -69,6 +69,8 @@ public final class RescheduleLoansApiConstants {
 
     public static final String newFixedPrincipalPercentagePerInstallment = "newFixedPrincipalPercentagePerInstallment";
 
+    public static final String notesParamName = "notes";
+
     public static final Set<String> APPROVE_REQUEST_DATA_PARAMETERS = Collections
             .unmodifiableSet(new HashSet<>(Arrays.asList(localeParamName, dateFormatParamName, approvedOnDateParam)));
 

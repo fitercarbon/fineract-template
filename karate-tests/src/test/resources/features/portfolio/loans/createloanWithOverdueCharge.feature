@@ -823,4 +823,94 @@ Feature: Test loan account apis
     * def loanResponse_3 = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
     * assert karate.sizeOf(loanResponse_3.loanAccount.transactions) == 5
     * assert loanResponse_3.loanAccount.summary.totalOutstanding == (totalOutstanding_3 - repaymentSchedule_3)
+  @OXY-163-test-that-a-virtual-schedule-should-not-be-added-when-number-of-repayment-are-greater-than-one-and-advancePaymentInterestForExactDaysInPeriod-is-true
+  Scenario: OXY-163 Loan Schedule with interest recalculation enabled is only 3 periods long regardless of the number of repayments set with 12 schedule, a virtual schedule should not be added
+        # Create Loan Product
+    * def loanProduct = call read('classpath:features/portfolio/products/LoanProductSteps.feature@OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps')
+    * def loanProductId = loanProduct.loanProductId
 
+    #Loan and client creation date
+    * def submittedOnDate = df.format(faker.date().past(425, 421, TimeUnit.DAYS))
+
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
+    * def clientId = result.response.resourceId
+
+
+    * def loanAmount = 10000
+    * def loanTermFrequency = 12
+    * def numberOfRepayments = 12
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@400-OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', loanTermFrequency : '#(loanTermFrequency)', numberOfRepayments : '#(numberOfRepayments)'}
+
+
+
+  @OXY-163-test-that-a-virtual-schedule-should-be-added-when-number-of-repayment-are-equal-to-one-and-advancePaymentInterestForExactDaysInPeriod-is-true
+  Scenario: OXY-163 Loan Schedule with interest recalculation enabled is only 3 periods long regardless of the number of repayments set with 12 schedule, a virtual schedule should be added
+        # Create Loan Product
+    * def loanProduct = call read('classpath:features/portfolio/products/LoanProductSteps.feature@OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps')
+    * def loanProductId = loanProduct.loanProductId
+
+    #Loan and client creation date
+    * def submittedOnDate = df.format(faker.date().past(7, 5, TimeUnit.DAYS))
+
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
+    * def clientId = result.response.resourceId
+
+
+    * def loanAmount = 10000
+    * def loanTermFrequency = 1
+    * def numberOfRepayments = 1
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', loanTermFrequency : '#(loanTermFrequency)', numberOfRepayments : '#(numberOfRepayments)'}
+    * def loanId = loan.loanId
+
+      #approval
+    * call read('classpath:features/portfolio/loans/loansteps.feature@approveloan') { approvalDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanId : '#(loanId)' }
+
+      #disbursal
+    * def disburseloan = call read('classpath:features/portfolio/loans/loansteps.feature@disburse') { loanAmount : '#(loanAmount)', disbursementDate : '#(submittedOnDate)', loanId : '#(loanId)'}
+
+    #fetch loan details here
+    * def loanResponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    * assert karate.sizeOf(loanResponse.loanAccount.transactions) == 1
+    * assert karate.sizeOf(loanResponse.loanAccount.repaymentSchedule.periods) == 2
+      #Loan Repayment Date
+    * def repaymentDate = df.format(faker.date().past(4, 3, TimeUnit.DAYS))
+
+
+    # Make Repayments for  each schedule period
+    * def totalOutstanding_1 = loanResponse.loanAccount.repaymentSchedule.periods[1].interestDue/2
+
+    Then print 'repaymentDate',repaymentDate
+    Then print 'totalOutstanding_1',totalOutstanding_1
+
+    * call read('classpath:features/portfolio/loans/loansteps.feature@loanRepaymentSteps') { repaymentAmount : '#(totalOutstanding_1)', repaymentDate : '#(repaymentDate)'}
+        #fetch loan details here
+    * def loanResponseAfterRepayment = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+
+    * assert karate.sizeOf(loanResponseAfterRepayment.loanAccount.repaymentSchedule.periods) >2
+    * assert karate.sizeOf(loanResponseAfterRepayment.loanAccount.transactions) == 2
+
+
+
+  @OXY-163-test-that-a-virtual-schedule-should-be-added-when-number-of-repayment-are-equal-to-one-and-advancePaymentInterestForExactDaysInPeriod-is-true-and-update-to-12-should-fail
+  Scenario: OXY-163 Loan Schedule with interest recalculation enabled is only 3 periods long regardless of the number of repayments set with 12 schedule, a virtual schedule should be added-and-update-to-12-should-fail
+        # Create Loan Product
+    * def loanProduct = call read('classpath:features/portfolio/products/LoanProductSteps.feature@OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps')
+    * def loanProductId = loanProduct.loanProductId
+
+    #Loan and client creation date
+    * def submittedOnDate = df.format(faker.date().past(7, 5, TimeUnit.DAYS))
+
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
+    * def clientId = result.response.resourceId
+
+
+    * def loanAmount = 10000
+    * def loanTermFrequency = 1
+    * def numberOfRepayments = 1
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', loanTermFrequency : '#(loanTermFrequency)', numberOfRepayments : '#(numberOfRepayments)'}
+    * def loanId = loan.loanId
+
+    # Update should fail
+    * def loanTermFrequency = 12
+    * def numberOfRepayments = 12
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@Update-400-OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps') {loanId : '#(loanId)', submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', loanTermFrequency : '#(loanTermFrequency)', numberOfRepayments : '#(numberOfRepayments)'}

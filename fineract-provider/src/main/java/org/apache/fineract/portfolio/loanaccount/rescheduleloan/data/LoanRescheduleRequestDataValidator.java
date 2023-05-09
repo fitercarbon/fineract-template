@@ -69,6 +69,8 @@ public class LoanRescheduleRequestDataValidator {
             Arrays.asList(RescheduleLoansApiConstants.localeParamName, RescheduleLoansApiConstants.dateFormatParamName,
                     RescheduleLoansApiConstants.approvedOnDateParam));
 
+    public static final Set<String> UNDO_REQUEST_DATA_PARAMETERS = new HashSet<>(Arrays.asList(RescheduleLoansApiConstants.notesParamName));
+
     @Autowired
     public LoanRescheduleRequestDataValidator(FromJsonHelper fromJsonHelper) {
         this.fromJsonHelper = fromJsonHelper;
@@ -349,6 +351,35 @@ public class LoanRescheduleRequestDataValidator {
                             + "Loan reschedule request is not in submitted and pending approval state.");
         }
 
+        if (!dataValidationErrors.isEmpty()) {
+            throw new PlatformApiDataValidationException(dataValidationErrors);
+        }
+    }
+
+    /**
+     * Validates a user request to undo a loan reschedules
+     *
+     * @param jsonCommand
+     *            the JSON command object (instance of the JsonCommand class)
+     *
+     **/
+    public void validateForUndoAction(final JsonCommand jsonCommand) {
+        final String jsonString = jsonCommand.json();
+
+        if (StringUtils.isBlank(jsonString)) {
+            throw new InvalidJsonException();
+        }
+        final Type typeToken = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromJsonHelper.checkForUnsupportedParameters(typeToken, jsonString, UNDO_REQUEST_DATA_PARAMETERS);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder dataValidatorBuilder = new DataValidatorBuilder(dataValidationErrors)
+                .resource(StringUtils.lowerCase(RescheduleLoansApiConstants.ENTITY_NAME));
+
+        final JsonElement jsonElement = jsonCommand.parsedJson();
+
+        final String notes = this.fromJsonHelper.extractStringNamed(RescheduleLoansApiConstants.notesParamName, jsonElement);
+        dataValidatorBuilder.reset().parameter(RescheduleLoansApiConstants.notesParamName).value(notes).notNull();
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }

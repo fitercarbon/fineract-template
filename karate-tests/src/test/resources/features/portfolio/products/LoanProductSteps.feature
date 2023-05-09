@@ -68,4 +68,20 @@ Feature: Create Loan Product and It's charges Steps
     Then def loanProductId = response.resourceId
 
 
+  @ignore
+  @OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps
+  Scenario: OXY-163 Loan Schedule with interest recalculation enabled is only 3 periods long regardless of the number of repayments set
+    Given configure ssl = true
+    * def productsData = read('classpath:templates/loanProduct.json')
+    Given path 'loanproducts'
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request productsData.OXY163loanproductPayLoad
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanProductId = response.resourceId
+
+
 

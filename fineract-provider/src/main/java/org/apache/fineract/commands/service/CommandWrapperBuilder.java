@@ -318,6 +318,22 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createTask() {
+        this.actionName = "ADD";
+        this.entityName = "TASKS";
+        this.entityId = null;
+        this.href = "/task/template";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateTask(final Long taskId) {
+        this.actionName = "UPDATE";
+        this.entityName = "TASKS";
+        this.entityId = taskId;
+        this.href = "/task/" + taskId;
+        return this;
+    }
+
     public CommandWrapperBuilder createGuarantor(final Long loanId) {
         this.actionName = "CREATE";
         this.entityName = "GUARANTOR";
@@ -3638,6 +3654,14 @@ public class CommandWrapperBuilder {
         this.savingsId = accountId;
         this.entityId = accountId;
         this.href = "/savingsaccounts/" + accountId + "?command=nextWithdrawalDate";
+        return this;
+    }
+
+    public CommandWrapperBuilder undoLoanReschedule(String entityName, Long loanId) {
+        this.actionName = "UNDO";
+        this.entityName = entityName;
+        this.entityId = loanId;
+        this.href = "/rescheduleloans/" + loanId;
         return this;
     }
 }

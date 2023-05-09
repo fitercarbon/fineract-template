@@ -779,7 +779,13 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             length = mapColumnNameDefinition.get(name).getColumnLength().intValue();
         }
 
-        sqlBuilder = sqlBuilder.append(", CHANGE " + sqlGenerator.escape(name) + " " + sqlGenerator.escape(newName) + " " + type);
+        if (databaseTypeResolver.isPostgreSQL()) {
+            sqlBuilder = sqlBuilder.append(", RENAME COLUMN " + sqlGenerator.escape(name) + " TO " + sqlGenerator.escape(newName))
+                    .append("; ALTER TABLE " + sqlGenerator.escape(datatableName) + " ALTER COLUMN " + sqlGenerator.escape(newName)
+                            + " TYPE " + type);
+        } else {
+            sqlBuilder = sqlBuilder.append(", CHANGE " + sqlGenerator.escape(name) + " " + sqlGenerator.escape(newName) + " " + type);
+        }
         if (length != null && length > 0) {
             if (type.toLowerCase().equals("decimal")) {
                 sqlBuilder.append("(19,6)");
@@ -788,10 +794,23 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             }
         }
 
-        if (mandatory) {
-            sqlBuilder = sqlBuilder.append(" NOT NULL");
-        } else {
-            sqlBuilder = sqlBuilder.append(" DEFAULT NULL");
+        if (databaseTypeResolver.isPostgreSQL()) {
+            if (mandatory) {
+                sqlBuilder = sqlBuilder.append("; ALTER TABLE " + sqlGenerator.escape(datatableName) + " ALTER COLUMN "
+                        + sqlGenerator.escape(newName) + " SET NOT NULL ");
+            } else {
+                sqlBuilder = sqlBuilder.append("; ALTER TABLE " + sqlGenerator.escape(datatableName) + " ALTER COLUMN "
+                        + sqlGenerator.escape(newName) + " DROP NOT NULL ");
+            }
+        }
+
+        else {
+            if (mandatory) {
+                sqlBuilder = sqlBuilder.append(" NOT NULL");
+            } else {
+                sqlBuilder = sqlBuilder.append(" DEFAULT NULL");
+            }
+
         }
 
         if (after != null) {

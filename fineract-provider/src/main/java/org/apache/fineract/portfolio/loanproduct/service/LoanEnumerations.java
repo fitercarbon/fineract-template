@@ -503,6 +503,10 @@ public final class LoanEnumerations {
                 optionData = new LoanStatusEnumData(LoanStatus.TRANSFER_ON_HOLD.getValue().longValue(),
                         LoanStatus.TRANSFER_ON_HOLD.getCode(), "Transfer on hold");
             break;
+
+            case UNDO_LOAN_RESCHEDULE:
+                optionData = new LoanStatusEnumData(LoanStatus.UNDO_LOAN_RESCHEDULE.getValue().longValue(),
+                        LoanStatus.UNDO_LOAN_RESCHEDULE.getCode(), "Undo Loan Reschedule");
         }
 
         return optionData;

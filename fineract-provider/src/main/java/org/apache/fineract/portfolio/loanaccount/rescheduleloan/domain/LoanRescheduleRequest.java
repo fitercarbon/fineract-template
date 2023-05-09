@@ -237,12 +237,7 @@ public class LoanRescheduleRequest extends AbstractPersistableCustom {
      *
      **/
     public void approve(final AppUser approvedByUser, final LocalDate approvedOnDate) {
-
-        if (approvedOnDate != null) {
-            this.approvedByUser = approvedByUser;
-            this.approvedOnDate = approvedOnDate;
-            this.statusEnum = LoanStatus.APPROVED.getValue();
-        }
+        this.statusEnum = LoanStatus.APPROVED.getValue();
     }
 
     /**
@@ -262,6 +257,10 @@ public class LoanRescheduleRequest extends AbstractPersistableCustom {
             this.rejectedOnDate = approvedOnDate;
             this.statusEnum = LoanStatus.REJECTED.getValue();
         }
+    }
+
+    public void undo() {
+        this.statusEnum = LoanStatus.UNDO_LOAN_RESCHEDULE.getValue();
     }
 
     public void updateLoanRescheduleRequestToTermVariationMappings(final List<LoanRescheduleRequestToTermVariationMapping> mapping) {

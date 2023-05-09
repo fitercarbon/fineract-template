@@ -120,3 +120,49 @@ Feature: Test loan account apis
     * def loanAmount = 8500
     * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createloanTemplate403Step') { submittedOnDate : '#(LoanCreationDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)'}
 
+  @testUndoLoanReschedule
+  Scenario: Test Undo Loan Reschedule
+    Given configure ssl = true
+     * def today=java.time.LocalDate.now()
+    * def loansData = read('classpath:templates/loans.json')
+    * def submittedOnDate = df.format(faker.date().past(30, 29, TimeUnit.DAYS))
+    * def rescheduledFrom = df.format(faker.date().past(30, 29, TimeUnit.DAYS))
+    * def adjustedDueDate=df.format(faker.date().past(30, 29, TimeUnit.DAYS))
+    * def loanAmount = 8500000
+    * def loanProduct = call read('classpath:features/portfolio/products/loanproduct.feature@fetchdefaultproduct')
+    * def loanProductId = loanProduct.loanProductId
+
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
+    * def clientId = result.response.
+
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createloanTemplate400Step') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)'}
+    * def loanId = loan.loanId
+    * def loanResponseBeforeReschedule = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    * def loanReschedule = call read('classpath:features/portfolio/loans/loansteps.feature@loanRescheduleSteps') { submittedOnDate : '#(submittedOnDate)', rescheduledFrom : '#(rescheduledFrom)', adjustedDueDate : '#(adjustedDueDate)', loanId : '#(loanId)' }
+
+    Given  path 'rescheduleloans',loanId,
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loanSearchPayload.loanPreviousSearchPayload
+    When call read('classpath:features/portfolio/loans/createloan.feature@createanddisburseloan')
+    And request loansData.undoLoanReschedulePayLoad
+    When method POST
+    Then status 200
+    Then match $ contains { loanId: '#notnull' }
+    And response.loanId=loanId
+
+    * def loanResponseAfterUndoReschedule = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+
+    #Compare first and last repayment schedule before and after undo loan reschedule
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[0].fromDate == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[0].fromDate
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[0].dueDate == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[0].dueDate
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[0].principalDue == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[0].principalDue
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[0].daysInPeriod == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[0].daysInPeriod
+
+    #Compare the last repayments
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[-1].fromDate == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[-1].fromDate
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[-1].dueDate == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[-1].dueDate
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[-1].principalDue == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[-1].principalDue
+    * assert loanResponseAfterUndoReschedule.repaymentSchedule.futurePeriods[-].daysInPeriod == loanResponseBeforeReschedule.repaymentSchedule.futurePeriods[-1].daysInPeriod
+

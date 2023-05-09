@@ -18,10 +18,13 @@
  */
 package org.apache.fineract.portfolio.loanaccount.rescheduleloan.domain;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface LoanRescheduleRequestRepository
         extends JpaRepository<LoanRescheduleRequest, Long>, JpaSpecificationExecutor<LoanRescheduleRequest> {
+
+    List<LoanRescheduleRequest> findByLoanIdAndStatusEnum(final Long loanId, final Integer statusEnum);
 
 }
