@@ -1,0 +1,8 @@
+{
+  "enabled_enforce_loan_overdue_amount_min_balance_check": {
+    "enabled": "true"
+  },
+  "disable_enforce_loan_overdue_amount_min_balance_check": {
+    "enabled": "false"
+  }
+}

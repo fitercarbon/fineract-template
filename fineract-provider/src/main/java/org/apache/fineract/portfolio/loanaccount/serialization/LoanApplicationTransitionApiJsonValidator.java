@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
@@ -148,6 +149,65 @@ public final class LoanApplicationTransitionApiJsonValidator {
 
         final String note = this.fromApiJsonHelper.extractStringNamed(LoanApiConstants.noteParameterName, element);
         baseDataValidator.reset().parameter(LoanApiConstants.noteParameterName).value(note).notExceedingLengthOf(1000);
+
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    public void validateWithdrawalFromRedraw(final String json) {
+
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+
+        final Set<String> disbursementParameters = new HashSet<>(Arrays.asList(LoanApiConstants.transactionDateParamName,
+                LoanApiConstants.noteParameterName, LoanApiConstants.principalDisbursedParameterName, LoanApiConstants.localeParameterName,
+                LoanApiConstants.dateFormatParameterName));
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, disbursementParameters);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(LoanApiConstants.withdrawFromRedraw);
+
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+
+        final LocalDate transactionDate = this.fromApiJsonHelper.extractLocalDateNamed(LoanApiConstants.transactionDateParamName, element);
+        baseDataValidator.reset().parameter(LoanApiConstants.withdrawnOnDateParameterName).value(transactionDate).notNull();
+
+        final BigDecimal transactionAmount = this.fromApiJsonHelper.extractBigDecimalNamed(LoanApiConstants.principalDisbursedParameterName,
+                element, Locale.US);
+        baseDataValidator.reset().parameter(LoanApiConstants.withdrawnOnDateParameterName).value(transactionAmount).notNull();
+
+        final String note = this.fromApiJsonHelper.extractStringNamed(LoanApiConstants.noteParameterName, element);
+        baseDataValidator.reset().parameter(LoanApiConstants.noteParameterName).value(note).notExceedingLengthOf(1000);
+
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    public void validateApplyRedrawPayment(final String json) {
+
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+
+        final Set<String> disbursementParameters = new HashSet<>(
+                Arrays.asList(LoanApiConstants.transactionDateParamName, LoanApiConstants.principalDisbursedParameterName,
+                        LoanApiConstants.localeParameterName, LoanApiConstants.dateFormatParameterName));
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, disbursementParameters);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(LoanApiConstants.withdrawFromRedraw);
+
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+
+        final LocalDate transactionDate = this.fromApiJsonHelper.extractLocalDateNamed(LoanApiConstants.transactionDateParamName, element);
+        baseDataValidator.reset().parameter(LoanApiConstants.withdrawnOnDateParameterName).value(transactionDate).notNull();
+
+        final BigDecimal transactionAmount = this.fromApiJsonHelper.extractBigDecimalNamed(LoanApiConstants.principalDisbursedParameterName,
+                element, Locale.US);
+        baseDataValidator.reset().parameter(LoanApiConstants.withdrawnOnDateParameterName).value(transactionAmount).notNull();
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }

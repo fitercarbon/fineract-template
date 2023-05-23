@@ -279,6 +279,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     private final LoanRepository loanRepository;
     private final RepaymentWithPostDatedChecksAssembler repaymentWithPostDatedChecksAssembler;
     private final PostDatedChecksRepository postDatedChecksRepository;
+
     @Autowired
     private ActiveMqNotificationDomainServiceImpl activeMqNotificationDomainService;
     @Autowired
@@ -992,6 +993,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             // Don't react to this exception because If messaging fails, RpPayment Transaction shouldn't rollback
         }
 
+        if (loan.getTotalOverpaid() != null) {
+            loanRepositoryWrapper.updateRedrawAmount(currentUser, loanId, loan.getTotalOverpaid(), true);
+        }
         return commandProcessingResultBuilder.withCommandId(command.commandId()) //
                 .withLoanId(loanId) //
                 .with(changes) //

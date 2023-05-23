@@ -137,18 +137,12 @@ public class FixedDepositProductWritePlatformServiceJpaRepositoryImpl implements
             final FixedDepositProduct product = this.fixedDepositProductRepository.findById(productId)
                     .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
             CodeValue productCategory = getLoanProductCategory(command);
-            if (productCategory != null) {
-                product.setProductCategory(productCategory);
-            }
+            product.setProductCategory(productCategory);
 
             CodeValue productType = getLoanProductType(command);
-            if (productType != null) {
-                product.setProductType(productType);
-            }
+            product.setProductType(productType);
+            this.fixedDepositProductRepository.saveAndFlush(product);
 
-            if (productCategory != null || productType != null) {
-                this.fixedDepositProductRepository.saveAndFlush(product);
-            }
             product.setHelpers(this.chartAssembler);
 
             final Map<String, Object> changes = product.update(command);

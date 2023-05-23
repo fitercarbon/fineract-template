@@ -265,8 +265,8 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
             final String fundName = rs.getString("fundName");
             final Long transactionStrategyId = JdbcSupport.getLong(rs, "transactionStrategyId");
             final String transactionStrategyName = rs.getString("transactionStrategyName");
-            final Long productCategoryId = rs.getLong("productCategoryId");
-            final Long productTypeId = rs.getLong("productTypeId");
+            final Long productCategoryId = JdbcSupport.getLong(rs, "productCategoryId");
+            final Long productTypeId = JdbcSupport.getLong(rs, "productTypeId");
 
             final String currencyCode = rs.getString("currencyCode");
             final String currencyName = rs.getString("currencyName");

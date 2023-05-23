@@ -1,7 +1,6 @@
 {
   "createClientPayload": {
     "address": [],
-    "familyMembers": [],
     "officeId": 1,
     "legalFormId": 1,
     "firstname": "#(faker.name().firstName())",
@@ -32,9 +31,7 @@
     "dateFormat": "#(format)"
   },
   "createEntityClient" : {
-    "address": [],
-    "familyMembers": [],
-    "businessOwners": [],
+    "address": "#(address)",
     "officeId": 1,
     "legalFormId": 2,
     "fullname": "Business",
@@ -48,7 +45,6 @@
     "active": false,
     "locale": "en",
     "dateFormat": "#(format)",
-    "activationDate": "#(clientCreationDate)",
     "submittedOnDate": "#(clientCreationDate)",
     "dateOfBirth": "#(df.format(faker.date().birthday()))",
     "savingsProductId": null,
@@ -56,6 +52,7 @@
     "initials": "1"
   },
   "updateEntityClientPayload": {
+    "address": "#(address)",
     "active": true,
     "accountNo": "#(accountNo)",
     "isStaff": false,
@@ -76,12 +73,11 @@
     "submittedOnDate": "#(df.format(calendar.getTime()))",
     "externalId": "#(faker.number().randomNumber())",
     "mnemonics": "anything",
-    "initials": "1"
+    "initials": "1",
+    "isRegister": "true"
   },
   "createClientWithSavingsPayload" : {
     "address": [],
-    "familyMembers": [],
-    "businessOwners": [],
     "officeId": 1,
     "legalFormId": 1,
     "firstname": "#(faker.name().firstName())",
@@ -99,5 +95,24 @@
     "activationDate": "#(df.format(calendar.getTime()))",
     "submittedOnDate": "#(df.format(calendar.getTime()))",
     "dateOfBirth": "#(df.format(faker.date().birthday()))"
+  },
+  "createClientWithdrawalLimitsPayload": {
+    "address": [],
+    "officeId": 1,
+    "legalFormId": 1,
+    "firstname": "#(faker.name().firstName())",
+    "lastname": "#(faker.name().lastName())",
+    "mobileNo": "#(faker.phoneNumber().cellPhone())",
+    "active": true,
+    "locale": "en",
+    "dateFormat": "#(format)",
+    "submittedOnDate": "#(clientCreationDate)",
+    "activationDate": "#(clientCreationDate)",
+    "dateOfBirth": "#(df.format(faker.date().birthday()))",
+    "mnemonics": "anything",
+    "initials": "1",
+    "dailyWithdrawLimit": "#(dailyWithdrawLimit)",
+    "singleWithdrawLimit": "#(singleWithdrawLimit)",
+    "clientLevelId": "#(clientLevel)"
   }
 }

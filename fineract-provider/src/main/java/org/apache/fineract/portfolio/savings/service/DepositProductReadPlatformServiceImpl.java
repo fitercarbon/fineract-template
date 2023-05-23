@@ -166,8 +166,8 @@ public class DepositProductReadPlatformServiceImpl implements DepositProductRead
             final String name = rs.getString("name");
             final String shortName = rs.getString("shortName");
             final String description = rs.getString("description");
-            final Long productCategoryId = rs.getLong("productCategoryId");
-            final Long productTypeId = rs.getLong("productTypeId");
+            final Long productCategoryId = JdbcSupport.getLong(rs, "productCategoryId");
+            final Long productTypeId = JdbcSupport.getLong(rs, "productTypeId");
 
             final String currencyCode = rs.getString("currencyCode");
             final String currencyName = rs.getString("currencyName");

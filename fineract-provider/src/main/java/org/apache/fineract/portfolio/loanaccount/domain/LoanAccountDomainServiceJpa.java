@@ -85,6 +85,7 @@ import org.apache.fineract.portfolio.group.exception.GroupNotActiveException;
 import org.apache.fineract.portfolio.loanaccount.data.HolidayDetailDTO;
 import org.apache.fineract.portfolio.loanaccount.data.LoanScheduleAccrualData;
 import org.apache.fineract.portfolio.loanaccount.data.ScheduleGeneratorDTO;
+import org.apache.fineract.portfolio.loanaccount.exception.InvalidLoanStateTransitionException;
 import org.apache.fineract.portfolio.loanaccount.service.LoanAccrualPlatformService;
 import org.apache.fineract.portfolio.loanaccount.service.LoanAssembler;
 import org.apache.fineract.portfolio.loanaccount.service.LoanUtilService;
@@ -124,6 +125,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     private final PostDatedChecksRepository postDatedChecksRepository;
     private final LoanCollateralManagementRepository loanCollateralManagementRepository;
 
+    private final LoanRedrawAccountRepository loanRedrawAccountRepository;
+
     @Transactional
     @Override
     public LoanTransaction makeRepayment(final LoanTransactionType repaymentTransactionType, final Loan loan,
@@ -147,6 +150,46 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             loanCollateralManagement.setIsReleased(isReleased);
         }
         this.loanCollateralManagementRepository.saveAll(loanCollateralManagementSet);
+    }
+
+    @Override
+    public LoanTransaction withdrawFromRedraw(Long accountId, CommandProcessingResultBuilder builderResult, LocalDate transactionDate,
+            BigDecimal transactionAmount, PaymentDetail paymentDetail, String noteText, String txnExternalId) {
+        var user = this.context.authenticatedUser();
+        final var loan = this.loanAccountAssembler.assembleFrom(accountId);
+        checkClientOrGroupActive(loan);
+        final var withdrawAmount = Money.of(loan.getCurrency(), transactionAmount);
+        final var withdrawFromRedraw = LoanTransaction.withdrawFromRedraw(loan.getOffice(), withdrawAmount, paymentDetail, transactionDate,
+                txnExternalId);
+
+        var loanRedrawAccountOptional = loanRedrawAccountRepository.findByLoanId(accountId);
+        if (loanRedrawAccountOptional.isPresent()) {
+            if (loanRedrawAccountOptional.get().getRedrawBalance().compareTo(transactionAmount) < 0) {
+                final String errorMessage = "The withdraw amount must be less than or equal to redraw balance ";
+                throw new InvalidLoanStateTransitionException("transaction", "is.exceeding.redraw.balance", errorMessage,
+                        loanRedrawAccountOptional.get().getRedrawBalance(), transactionAmount);
+            }
+        } else {
+            final String errorMessage = "Theres is no redraw balance for withdraw ";
+            throw new InvalidLoanStateTransitionException("transaction", "no.redraw.balance.for.withdraw", errorMessage);
+        }
+
+        var loanRedrawAccount = loanRedrawAccountOptional.get();
+        loanRedrawAccount.withdraw(transactionAmount, user, DateUtils.getLocalDateTimeOfTenant());
+        loanRedrawAccountRepository.saveAndFlush(loanRedrawAccount);
+        saveLoanTransactionWithDataIntegrityViolationChecks(withdrawFromRedraw);
+        this.loanRepositoryWrapper.saveAndFlush(loan);
+
+        if (StringUtils.isNotBlank(noteText)) {
+            final Note note = Note.loanTransactionNote(loan, withdrawFromRedraw, noteText);
+            this.noteRepository.save(note);
+        }
+        ;
+
+        builderResult.withEntityId(withdrawFromRedraw.getId()).withOfficeId(loan.getOfficeId()).withClientId(loan.getClientId())
+                .withGroupId(loan.getGroupId());
+
+        return withdrawFromRedraw;
     }
 
     @Transactional
@@ -444,6 +487,7 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         boolean isAccountTransfer = true;
         final Loan loan = this.loanAccountAssembler.assembleFrom(accountId);
         checkClientOrGroupActive(loan);
+        var currentUser = this.context.authenticatedUser();
         businessEventNotifierService.notifyPreBusinessEvent(new LoanRefundPreBusinessEvent(loan));
         final List<Long> existingTransactionIds = new ArrayList<>();
         final List<Long> existingReversedTransactionIds = new ArrayList<>();
@@ -467,6 +511,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             final Note note = Note.loanTransactionNote(loan, newRefundTransaction, noteText);
             this.noteRepository.save(note);
         }
+
+        loanRepositoryWrapper.updateRedrawAmount(currentUser, loan.getId(), refundAmount.getAmount(), false);
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
         businessEventNotifierService.notifyPostBusinessEvent(new LoanRefundPostBusinessEvent(newRefundTransaction));

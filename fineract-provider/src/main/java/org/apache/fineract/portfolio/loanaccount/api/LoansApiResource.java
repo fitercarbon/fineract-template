@@ -209,9 +209,9 @@ import org.springframework.util.CollectionUtils;
 public class LoansApiResource {
 
     private final Set<String> loanDataParameters = new HashSet<>(Arrays.asList("id", "accountNo", "status", "externalId", "clientId",
-            "group", "loanProductId", "loanProductName", "loanProductDescription", "isLoanProductLinkedToFloatingRate", "fundId",
-            "fundName", "loanPurposeId", "loanPurposeName", "loanOfficerId", "loanOfficerName", "currency", "principal", "totalOverpaid",
-            "inArrearsTolerance", "termFrequency", "termPeriodFrequencyType", "numberOfRepayments", "repaymentEvery",
+            "group", "loanProductId", "createdDate", "loanProductName", "loanProductDescription", "isLoanProductLinkedToFloatingRate",
+            "fundId", "fundName", "loanPurposeId", "loanPurposeName", "loanOfficerId", "loanOfficerName", "currency", "principal",
+            "totalOverpaid", "inArrearsTolerance", "termFrequency", "termPeriodFrequencyType", "numberOfRepayments", "repaymentEvery",
             "interestRatePerPeriod", "annualInterestRate", "repaymentFrequencyType", "transactionProcessingStrategyId",
             "transactionProcessingStrategyName", "interestRateFrequencyType", "amortizationType", "interestType",
             "interestCalculationPeriodType", LoanProductConstants.ALLOW_PARTIAL_PERIOD_INTEREST_CALCUALTION_PARAM_NAME,
@@ -983,16 +983,25 @@ public class LoansApiResource {
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         }
 
-        if (is(commandParam, "updateArrearsTolerance")) {
+        else if (is(commandParam, "updateArrearsTolerance")) {
             final CommandWrapper commandRequest = builder.updateArrearsTolerance(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-        }
-        if (is(commandParam, "runCloneJobForLoanPenalty")) {
+        } else if (is(commandParam, "runCloneJobForLoanPenalty")) {
             final CommandWrapper commandRequest = builder.runCloneJobForLoanPenalty(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         }
 
-        if (result == null) {
+        else if (is(commandParam, "withdrawalFromRedraw")) {
+            final CommandWrapper commandRequest = builder.withdrawalFromRedraw(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        }
+
+        else if (is(commandParam, "applyRedrawPayment")) {
+            final CommandWrapper commandRequest = builder.applyRedrawPayment(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        }
+
+        else if (result == null) {
             throw new UnrecognizedQueryParamException("command", commandParam);
         }
 

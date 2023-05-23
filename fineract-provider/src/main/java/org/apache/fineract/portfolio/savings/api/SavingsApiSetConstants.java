@@ -58,11 +58,11 @@ public class SavingsApiSetConstants extends SavingsApiConstants {
             "interestCalculationDaysInYearTypeOptions", "lockinPeriodFrequencyTypeOptions", "withdrawalFeeTypeOptions", "withdrawalFee",
             "annualFee", onHoldFundsParamName, nominalAnnualInterestRateOverdraftParamName, minOverdraftForInterestCalculationParamName,
             datatables, savingsAmountOnHold, accountMappingForPaymentParamName, interestPostedTillDate, blockNarrationOptionsParamName,
-            blockNarrationParamName));
+            blockNarrationParamName, "createdDate"));
 
     protected static final Set<String> SAVINGS_TRANSACTION_RESPONSE_DATA_PARAMETERS = new HashSet<>(
             Arrays.asList(idParamName, "accountId", accountNoParamName, "currency", "amount", dateParamName, paymentDetailDataParamName,
-                    runningBalanceParamName, reversedParamName, noteParamName));
+                    runningBalanceParamName, reversedParamName, noteParamName, "createdDate"));
 
     protected static final Set<String> SAVINGS_ACCOUNT_CHARGES_RESPONSE_DATA_PARAMETERS = new HashSet<>(
             Arrays.asList(chargeIdParamName, savingsAccountChargeIdParamName, chargeNameParamName, penaltyParamName,

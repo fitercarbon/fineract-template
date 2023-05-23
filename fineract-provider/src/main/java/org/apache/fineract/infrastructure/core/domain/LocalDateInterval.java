@@ -26,7 +26,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 public class LocalDateInterval {
 
     private final LocalDate startDate;
-    private final LocalDate endDate;
+    private LocalDate endDate;
 
     public static LocalDateInterval create(final LocalDate startDate, final LocalDate endDate) {
         return new LocalDateInterval(startDate, endDate);
@@ -43,6 +43,10 @@ public class LocalDateInterval {
 
     public LocalDate endDate() {
         return this.endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public Integer daysInPeriodInclusiveOfEndDate() {

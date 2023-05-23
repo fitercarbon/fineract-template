@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -421,7 +422,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             sqlBuilder.append("c.staff_id as staffId, s.display_name as staffName,");
             sqlBuilder.append("c.default_savings_product as savingsProductId, sp.name as savingsProductName, ");
             sqlBuilder.append("c.default_savings_account as savingsAccountId, ");
-
+            sqlBuilder.append("c.created_on_utc as createdDate, ");
             sqlBuilder.append("c.submittedon_date as submittedOnDate, ");
             sqlBuilder.append("sbu.username as submittedByUsername, ");
             sqlBuilder.append("sbu.firstname as submittedByFirstname, ");
@@ -502,6 +503,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             final boolean isStaff = rs.getBoolean("isStaff");
             final String emailAddress = rs.getString("emailAddress");
             final LocalDate dateOfBirth = JdbcSupport.getLocalDate(rs, "dateOfBirth");
+            final LocalDateTime createdDate = JdbcSupport.getLocalDateTime(rs, "createdDate");
+
             final Long genderId = JdbcSupport.getLong(rs, "genderId");
             final String genderValue = rs.getString("genderValue");
             final CodeValueData gender = CodeValueData.instance(genderId, genderValue);
@@ -567,7 +570,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             return ClientData.instance(accountNo, status, subStatus, officeId, officeName, transferToOfficeId, transferToOfficeName, id,
                     firstname, middlename, lastname, fullname, displayName, externalId, mobileNo, emailAddress, dateOfBirth, gender,
                     activationDate, imageId, staffId, staffName, timeline, savingsProductId, savingsProductName, savingsAccountId,
-                    clienttype, classification, legalForm, clientNonPerson, isStaff, null, null, null, null);
+                    clienttype, classification, legalForm, clientNonPerson, isStaff, null, null, null, null, createdDate);
 
         }
     }
@@ -604,6 +607,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             builder.append("c.fullname as fullname, c.display_name as displayName, ");
             builder.append("c.mobile_no as mobileNo, ");
             builder.append("c.is_staff as isStaff, ");
+            builder.append("c.created_on_utc as createdDate, ");
             builder.append("c.email_address as emailAddress, ");
             builder.append("c.date_of_birth as dateOfBirth, ");
             builder.append("c.gender_cv_id as genderId, ");
@@ -742,6 +746,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             final String closedByLastname = rs.getString("closedByLastname");
 
             final LocalDate submittedOnDate = JdbcSupport.getLocalDate(rs, "submittedOnDate");
+            final LocalDateTime createdDate = JdbcSupport.getLocalDateTime(rs, "createdDate");
+
             final String submittedByUsername = rs.getString("submittedByUsername");
             final String submittedByFirstname = rs.getString("submittedByFirstname");
             final String submittedByLastname = rs.getString("submittedByLastname");
@@ -793,7 +799,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                     firstname, middlename, lastname, fullname, displayName, externalId, mobileNo, emailAddress, dateOfBirth, gender,
                     activationDate, imageId, staffId, staffName, timeline, savingsProductId, savingsProductName, savingsAccountId,
                     clienttype, classification, legalForm, clientNonPerson, isStaff, clientLevel, dailyWithDrawLimit, singleWithDrawLimit,
-                    clientAdditionalInfo);
+                    clientAdditionalInfo, createdDate);
 
         }
     }

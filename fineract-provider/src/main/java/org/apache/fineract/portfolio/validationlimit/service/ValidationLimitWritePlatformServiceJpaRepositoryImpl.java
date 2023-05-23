@@ -89,8 +89,7 @@ public class ValidationLimitWritePlatformServiceJpaRepositoryImpl implements Val
                 throw new ValidationLimitAlreadyPresentException(validationLimit.getClientLevel().getId());
             }
 
-            this.validationLimitRepository.save(validationLimit);
-
+            ValidationLimit newLimit = this.validationLimitRepository.saveAndFlush(validationLimit);
             return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(validationLimit.getId()).build();
         } catch (final DataIntegrityViolationException dve) {
             handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);

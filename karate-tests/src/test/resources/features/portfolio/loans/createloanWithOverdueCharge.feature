@@ -914,3 +914,90 @@ Feature: Test loan account apis
     * def loanTermFrequency = 12
     * def numberOfRepayments = 12
     * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@Update-400-OXY163loanScheduleWithInterestRecalculationEnabledIsOnly3PeriodsLongRegardlessOfTheNumberOfRepaymentsSetSteps') {loanId : '#(loanId)', submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', loanTermFrequency : '#(loanTermFrequency)', numberOfRepayments : '#(numberOfRepayments)'}
+
+
+  @testThatICanHoldFundsOnASavingsAccountWhenTheLinkedLoanAccountIsInArrearsAndTheOtherSavingsAccountOfTheClientShouldNotBePutOnHold
+  Scenario: Test that i can hold funds on a savings account when the linked loan account is in arrears and the other savings account of the client should not be put on hold
+    # https://fiterio.atlassian.net/browse/OXY-232
+    * def chargeAmount = 100;
+    # Create Flat Overdue Charge
+    * def charges = call read('classpath:features/portfolio/products/LoanProductSteps.feature@createFlatOverdueChargeWithOutFrequencySteps') { chargeAmount : '#(chargeAmount)' }
+    * def chargeId = charges.chargeId
+
+        # Create Loan Product With Flat Overdue Charge
+    * def loanProduct = call read('classpath:features/portfolio/products/LoanProductSteps.feature@createLoanProductWithOverdueChargeSteps') { chargeId : '#(chargeId)' }
+    * def loanProductId = loanProduct.loanProductId
+
+    #create savings account with clientCreationDate
+    * def submittedOnDate = df.format(faker.date().past(425, 421, TimeUnit.DAYS))
+
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
+    * def clientId = result.response.resourceId
+
+
+
+        #Create Savings Account Product and Savings Account
+    * def savingsAccount = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@createSavingsAccountStep') { submittedOnDate : '#(submittedOnDate)', clientId : '#(clientId)'}
+    * def savingsId = savingsAccount.savingsId
+    #approve savings account step setup approval Date
+
+    * call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@approve') { savingsId : '#(savingsId)', approvalDate : '#(submittedOnDate)' }
+    #activate savings account step activation Date
+    * def activateSavings = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@activate') { savingsId : '#(savingsId)', activationDate : '#(submittedOnDate)' }
+    Then def activeSavingsId = activateSavings.activeSavingsId
+
+
+
+    * def loanAmount = 8500
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createLoanWithConfigurableProductStep') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', clientCreationDate : '#(submittedOnDate)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', chargeId : '#(chargeId)', savingsAccountId : '#(savingsId)' }
+    * def loanId = loan.loanId
+
+      #approval
+    * call read('classpath:features/portfolio/loans/loansteps.feature@approveloan') { approvalDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanId : '#(loanId)' }
+
+      #disbursal
+    * def disburseloan = call read('classpath:features/portfolio/loans/loansteps.feature@disburseToSavingsAccountStep') { loanAmount : '#(loanAmount)', disbursementDate : '#(submittedOnDate)', loanId : '#(loanId)'}
+         # Run Clone Job
+    * def applyPenaltyCharge = call read('classpath:features/portfolio/loans/loansteps.feature@runCloneJobForLoanPenalty') { loanId : '#(loanId)'}
+       #fetch loan details here
+    * def loanResponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+
+    #- Add Global Configuration --- enforce_loan_overdue_amount_min_balance_check  mentioned here https://fiterio.atlassian.net/browse/OXY-42
+    * def enforce_loan_overdue_amount_min_balance_check_id = 48
+    * def configResponse = call read('classpath:features/portfolio/configuration/configurationsteps.feature@enable_enforce_loan_overdue_amount_min_balance_check_step') { configurationsId : '#(enforce_loan_overdue_amount_min_balance_check_id)' }
+    #- Create Savings Account Two without relationship with Loan Account
+
+      #Create Savings Account Product and Savings Account
+    * def savingsAccount_2 = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@createSavingsAccountStep') { submittedOnDate : '#(submittedOnDate)', clientId : '#(clientId)'}
+    * def savingsId_2 = savingsAccount_2.savingsId
+    #approve savings account step setup approval Date
+
+    * call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@approve') { savingsId : '#(savingsId_2)', approvalDate : '#(submittedOnDate)' }
+    #activate savings account step activation Date
+    * def activateSavings_2 = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@activate') { savingsId : '#(savingsId_2)', activationDate : '#(submittedOnDate)' }
+    Then def activeSavingsId_2 = activateSavings_2.activeSavingsId
+
+    * def tx_amount = 1000
+    * def tx_date = df.format(faker.date().past(15, TimeUnit.DAYS))
+    #-Deposit on savings account two
+    * def deposit_account2_requestVariables = { savingsId : '#(activeSavingsId_2)', transactionAmount : '#(tx_amount)', transactionDate : '#(tx_date)', command : 'deposit' }
+    * call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@transaction') deposit_account2_requestVariables
+
+    #-Withdraw
+    * def withdraw_account2_requestVariables = { savingsId : '#(activeSavingsId_2)', transactionAmount : '#(tx_amount)', transactionDate : '#(tx_date)', command : 'withdrawal' }
+    * call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@transaction') withdraw_account2_requestVariables
+
+
+    * def deposit_account1_depositAmount = 10
+    * def account1_transactionDate = df.format(faker.date().past(15, TimeUnit.DAYS))
+     #-Deposit on savings account one which is linked to Loan Account . Withdrawal must fail since there is outstanding balance on linked loan account
+    * def deposit_account1_requestVariables = { savingsId : '#(savingsId)', transactionAmount : '#(deposit_account1_depositAmount)', transactionDate : '#(account1_transactionDate)', command : 'deposit' }
+    * call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@transaction') deposit_account1_requestVariables
+
+    #-Withdraw
+    * def withdraw_account1_Amount = 8500
+    * def withdraw_account1_requestVariables = { savingsId : '#(savingsId)', transactionAmount : '#(withdraw_account1_Amount)', transactionDate : '#(account1_transactionDate)', command : 'withdrawal' }
+    * call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@transactionWithBadRequest') withdraw_account1_requestVariables
+
+    #- Disable configuration  ---enforce_loan_overdue_amount_min_balance_check
+    * def configResponse = call read('classpath:features/portfolio/configuration/configurationsteps.feature@disable_enforce_loan_overdue_amount_min_balance_check_step') { configurationsId : '#(enforce_loan_overdue_amount_min_balance_check_id)' }

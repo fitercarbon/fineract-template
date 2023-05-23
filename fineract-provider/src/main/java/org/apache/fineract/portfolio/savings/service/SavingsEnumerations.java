@@ -401,7 +401,7 @@ public final class SavingsEnumerations {
             break;
             case TENURE:
                 optionData = new EnumOptionData(SavingsPostingInterestPeriodType.TENURE.getValue().longValue(),
-                        codePrefix + SavingsPostingInterestPeriodType.TENURE.getCode(), "Per Tenure");
+                        codePrefix + SavingsPostingInterestPeriodType.TENURE.getCode(), "At-Maturity");
             break;
         }
 
@@ -455,13 +455,10 @@ public final class SavingsEnumerations {
                 optionData = new EnumOptionData(SavingsCompoundingInterestPeriodType.ANNUAL.getValue().longValue(),
                         codePrefix + SavingsCompoundingInterestPeriodType.ANNUAL.getCode(), "Annually");
             break;
-            // case NO_COMPOUNDING_SIMPLE_INTEREST:
-            // optionData = new
-            // EnumOptionData(SavingsCompoundingInterestPeriodType.NO_COMPOUNDING_SIMPLE_INTEREST.getValue().longValue(),
-            // codePrefix +
-            // SavingsCompoundingInterestPeriodType.NO_COMPOUNDING_SIMPLE_INTEREST.getCode(),
-            // "No Compounding - Simple Interest");
-            // break;
+            case AT_MATURITY:
+                optionData = new EnumOptionData(SavingsCompoundingInterestPeriodType.AT_MATURITY.getValue().longValue(),
+                        codePrefix + SavingsCompoundingInterestPeriodType.AT_MATURITY.getCode(), "At-Maturity");
+            break;
         }
 
         return optionData;

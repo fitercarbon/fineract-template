@@ -563,6 +563,31 @@ public final class PostingPeriod {
                     periodStartDate = periodEndDate.plusDays(1);
                 }
             break;
+            case AT_MATURITY:
+                final LocalDate atPostingPeriodEndDate = postingPeriodInterval.endDate();
+
+                periodStartDate = postingPeriodInterval.startDate();
+                periodEndDate = periodStartDate;
+
+                while (!periodStartDate.isAfter(atPostingPeriodEndDate) && !periodEndDate.isAfter(atPostingPeriodEndDate)) {
+
+                    periodEndDate = postingPeriodInterval.endDate();
+                    if (periodEndDate.isAfter(atPostingPeriodEndDate)) {
+                        periodEndDate = atPostingPeriodEndDate;
+                    }
+
+                    final LocalDateInterval compoundingPeriodInterval = LocalDateInterval.create(periodStartDate, periodEndDate);
+                    if (postingPeriodInterval.contains(compoundingPeriodInterval)) {
+
+                        compoundingPeriod = AnnualCompoundingPeriod.create(compoundingPeriodInterval, allEndOfDayBalances,
+                                upToInterestCalculationDate);
+                        compoundingPeriods.add(compoundingPeriod);
+                    }
+
+                    // move periodStartDate forward to day after this period
+                    periodStartDate = periodEndDate.plusDays(1);
+                }
+            break;
             // case NO_COMPOUNDING_SIMPLE_INTEREST:
             // break;
         }
@@ -605,6 +630,8 @@ public final class PostingPeriod {
                 if (periodEndDate.isBefore(periodStartDate)) {
                     periodEndDate = periodEndDate.plusYears(1);
                 }
+            break;
+            case AT_MATURITY:
             break;
 
             // case NO_COMPOUNDING_SIMPLE_INTEREST:
@@ -828,5 +855,9 @@ public final class PostingPeriod {
 
     public void setInterestEarned(List<Money> interestEarnedRounded) {
         this.interestEarnedRoundeds = interestEarnedRounded;
+    }
+
+    public List<CompoundingPeriod> getCompoundingPeriods() {
+        return compoundingPeriods;
     }
 }

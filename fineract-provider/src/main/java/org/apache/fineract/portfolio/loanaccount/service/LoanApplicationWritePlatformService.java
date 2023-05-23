@@ -44,4 +44,8 @@ public interface LoanApplicationWritePlatformService {
     CommandProcessingResult rejectGLIMApplicationApproval(Long loanId, JsonCommand command);
 
     CommandProcessingResult updateArrearsTolerance(final Long loanId, final JsonCommand command);
+
+    CommandProcessingResult withdrawalFromRedraw(final Long loanId, final JsonCommand command);
+
+    CommandProcessingResult applyRedrawPayment(final Long loanId, final JsonCommand command);
 }

@@ -1,0 +1,12 @@
+{
+  "createPayload": {
+    "clientLevelId": 20,
+    "maximumSingleDepositAmount": "3000",
+    "maximumCumulativeBalance": "10000",
+    "maximumSingleWithdrawLimit": "2000",
+    "maximumDailyWithdrawLimit": "6000",
+    "maximumClientSpecificSingleWithdrawLimit": "10000",
+    "maximumClientSpecificDailyWithdrawLimit": "10000",
+    "locale": "en"
+  }
+}

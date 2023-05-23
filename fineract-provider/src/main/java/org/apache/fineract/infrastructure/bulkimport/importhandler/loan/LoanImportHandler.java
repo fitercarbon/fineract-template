@@ -115,7 +115,7 @@ public class LoanImportHandler implements ImportHandler {
                 repaymentType);
         if (repaymentAmount != null && lastRepaymentDate != null && repaymentType != null && repaymentTypeId != null) {
             return LoanTransactionData.importInstance(repaymentAmount, lastRepaymentDate, repaymentTypeId, row.getRowNum(), locale,
-                    dateFormat);
+                    dateFormat, null);
         }
 
         return null;

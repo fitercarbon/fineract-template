@@ -130,6 +130,7 @@ public final class AnnualCompoundingPeriod implements CompoundingPeriod {
                 case QUATERLY:
                 case BI_ANNUAL:
                 case ANNUAL:
+                case AT_MATURITY:
                     interestOnBalanceUnrounded = balance.calculateInterestOnBalance(interestToCompound, interestRateAsFraction, daysInYear,
                             minBalanceForInterestCalculation, overdraftInterestRateAsFraction, minOverdraftForInterestCalculation);
                 break;
@@ -220,6 +221,7 @@ public final class AnnualCompoundingPeriod implements CompoundingPeriod {
                 case QUATERLY:
                 case ANNUAL:
                 case BI_ANNUAL:
+                case AT_MATURITY:
                     interestOnBalanceUnrounded
                             .addAll(balance.calculateInterestOnBalances(interestToCompound, interestRateAsFraction, daysInYear,
                                     minBalanceForInterestCalculation, overdraftInterestRateAsFraction, minOverdraftForInterestCalculation));

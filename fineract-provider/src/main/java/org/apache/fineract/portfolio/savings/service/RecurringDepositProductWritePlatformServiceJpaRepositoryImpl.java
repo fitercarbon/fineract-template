@@ -142,18 +142,12 @@ public class RecurringDepositProductWritePlatformServiceJpaRepositoryImpl implem
             product.setHelpers(this.chartAssembler);
 
             CodeValue productCategory = getLoanProductCategory(command);
-            if (productCategory != null) {
-                product.setProductCategory(productCategory);
-            }
+            product.setProductCategory(productCategory);
 
             CodeValue productType = getLoanProductType(command);
-            if (productType != null) {
-                product.setProductType(productType);
-            }
+            product.setProductType(productType);
 
-            if (productCategory != null || productType != null) {
-                this.recurringDepositProductRepository.saveAndFlush(product);
-            }
+            this.recurringDepositProductRepository.saveAndFlush(product);
 
             final Map<String, Object> changes = product.update(command);
 

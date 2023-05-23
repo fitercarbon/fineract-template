@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -992,7 +993,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         SavingsAccountTransactionsMapper() {
 
             final StringBuilder sqlBuilder = new StringBuilder(400);
-            sqlBuilder.append("tr.id as transactionId, tr.transaction_type_enum as transactionType, ");
+            sqlBuilder.append("tr.id as transactionId,tr.created_date as createdDate, tr.transaction_type_enum as transactionType, ");
             sqlBuilder.append("tr.transaction_date as transactionDate, tr.amount as transactionAmount,");
             sqlBuilder.append("tr.running_balance_derived as runningBalance, tr.is_reversed as reversed,");
             sqlBuilder.append("fromtran.id as fromTransferId, fromtran.is_reversed as fromTransferReversed,");
@@ -1037,6 +1038,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             final BigDecimal outstandingChargeAmount = null;
             final BigDecimal runningBalance = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "runningBalance");
             final boolean reversed = rs.getBoolean("reversed");
+            final LocalDateTime createdDate = JdbcSupport.getLocalDateTime(rs, "createdDate");
 
             final Long savingsId = rs.getLong("savingsId");
             final String accountNo = rs.getString("accountNo");
@@ -1092,7 +1094,8 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             final String submittedByUsername = rs.getString("submittedByUsername");
             final String note = null;
             return SavingsAccountTransactionData.create(id, transactionType, paymentDetailData, savingsId, accountNo, date, currency,
-                    amount, outstandingChargeAmount, runningBalance, reversed, transfer, postInterestAsOn, submittedByUsername, note);
+                    amount, outstandingChargeAmount, runningBalance, reversed, transfer, postInterestAsOn, submittedByUsername, note,
+                    createdDate);
         }
     }
 
@@ -1501,7 +1504,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             final String note = null;
             return SavingsAccountTransactionData.create(savingsId, transactionType, paymentDetailData, savingsId, accountNo, duedate,
                     currency, dueamount, outstandingChargeAmount, runningBalance, false, transfer, postInterestAsOn, submittedByUsername,
-                    note);
+                    note, null);
         }
     }
 

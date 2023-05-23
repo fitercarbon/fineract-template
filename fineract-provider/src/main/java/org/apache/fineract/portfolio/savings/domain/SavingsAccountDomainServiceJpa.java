@@ -106,7 +106,7 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
         BigDecimal overdueLoanAmountForClient = BigDecimal.ZERO;
         if (this.configurationDomainService.enforceOverdueLoansForMinBalance() && !isTransferToLoanAccount) {
             List<LoanAccountData> loanAccountDataList = this.loanReadPlatformService
-                    .retrieveOverDueLoansForClient(savingsAccount.getClient().getId());
+                    .retrieveOverDueLoansForClient(savingsAccount.getClient().getId(), savingsAccount.getId());
             if (CollectionUtils.isNotEmpty(loanAccountDataList)) {
                 for (int i = 0; i < loanAccountDataList.size(); i++) {
                     LoanAccountData loanAccountData = loanAccountDataList.get(i);

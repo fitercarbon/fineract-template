@@ -28,7 +28,9 @@ import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,6 +64,8 @@ import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYea
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
+import org.apache.fineract.portfolio.savings.domain.interest.AnnualCompoundingPeriod;
+import org.apache.fineract.portfolio.savings.domain.interest.CompoundingPeriod;
 import org.apache.fineract.portfolio.savings.domain.interest.PostingPeriod;
 import org.apache.fineract.portfolio.savings.service.SavingsEnumerations;
 import org.apache.fineract.useradministration.domain.AppUser;
@@ -144,7 +148,7 @@ public class FixedDepositAccount extends SavingsAccount {
         final Map<String, Object> termAndPreClosureChanges = accountTermAndPreClosure.update(command, baseDataValidator);
         actualChanges.putAll(termAndPreClosureChanges);
         validateDomainRules(baseDataValidator);
-        super.validateInterestPostingAndCompoundingPeriodTypes(baseDataValidator);
+        this.validateInterestPostingAndCompoundingPeriodTypes(baseDataValidator);
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
@@ -314,9 +318,10 @@ public class FixedDepositAccount extends SavingsAccount {
                 .fromInt(this.interestCalculationDaysInYearType);
         List<LocalDate> postedAsOnTransactionDates = getManualPostingDates();
 
-        final List<LocalDateInterval> postingPeriodIntervals = this.savingsHelper.determineInterestPostingPeriods(
-                accountSubmittedOrActivationDate(), maturityDate, postingPeriodType, financialYearBeginningMonth,
-                postedAsOnTransactionDates);
+        final List<LocalDateInterval> postingPeriodIntervals = postingPeriodType.equals(SavingsPostingInterestPeriodType.TENURE)
+                ? Arrays.asList(LocalDateInterval.create(accountSubmittedOrActivationDate(), maturityDate))
+                : this.savingsHelper.determineInterestPostingPeriods(accountSubmittedOrActivationDate(), maturityDate, postingPeriodType,
+                        financialYearBeginningMonth, postedAsOnTransactionDates);
 
         final List<PostingPeriod> allPostingPeriods = new ArrayList<>();
 
@@ -341,6 +346,23 @@ public class FixedDepositAccount extends SavingsAccount {
 
             allPostingPeriods.add(postingPeriod);
         }
+
+        if (allPostingPeriods.size() == 1 && SavingsPostingInterestPeriodType.TENURE.getValue().equals(this.interestPostingPeriodType)) {
+            List<CompoundingPeriod> compoundingPeriods = allPostingPeriods.get(0).getCompoundingPeriods();
+            if (!compoundingPeriods.isEmpty()) {
+                CompoundingPeriod compoundingPeriod = compoundingPeriods.get(0);
+                compoundingPeriod.getPeriodInterval()
+                        .setEndDate(compoundingPeriods.get(compoundingPeriods.size() - 1).getPeriodInterval().endDate());
+                allPostingPeriods.get(0).getCompoundingPeriods().clear();
+                allPostingPeriods.get(0).getCompoundingPeriods().add(compoundingPeriod);
+                if (compoundingPeriod instanceof AnnualCompoundingPeriod
+                        && !((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().isEmpty()) {
+                    ((AnnualCompoundingPeriod) compoundingPeriod).getEndOfDayBalances().get(0)
+                            .setNumberOfDays(compoundingPeriod.getPeriodInterval().daysInPeriodInclusiveOfEndDate());
+                }
+            }
+        }
+        this.mergePostingPeriods(allPostingPeriods);
 
         this.summary.updateFromInterestPeriodSummaries(this.currency, allPostingPeriods);
         this.savingsHelper.calculateInterestForAllPostingPeriods(this.currency, allPostingPeriods, this.getLockedInUntilLocalDate(),
@@ -767,7 +789,7 @@ public class FixedDepositAccount extends SavingsAccount {
         final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
                 .resource(FIXED_DEPOSIT_ACCOUNT_RESOURCE_NAME);
         validateDomainRules(baseDataValidator);
-        super.validateInterestPostingAndCompoundingPeriodTypes(baseDataValidator);
+        this.validateInterestPostingAndCompoundingPeriodTypes(baseDataValidator);
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
@@ -947,5 +969,46 @@ public class FixedDepositAccount extends SavingsAccount {
 
     public FixedDepositProduct getProduct() {
         return (FixedDepositProduct) this.product;
+    }
+
+    @Override
+    public void validateInterestPostingAndCompoundingPeriodTypes(final DataValidatorBuilder baseDataValidator) {
+        Map<SavingsPostingInterestPeriodType, List<SavingsCompoundingInterestPeriodType>> postingtoCompoundMap = new HashMap<>();
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.DAILY,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.MONTHLY, Arrays.asList(new SavingsCompoundingInterestPeriodType[] {
+                SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.QUATERLY,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.BIANNUAL,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
+                        SavingsCompoundingInterestPeriodType.BI_ANNUAL }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNUAL,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
+                        SavingsCompoundingInterestPeriodType.BI_ANNUAL, SavingsCompoundingInterestPeriodType.ANNUAL }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.TENURE,
+                java.util.Arrays.asList(SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY,
+                        SavingsCompoundingInterestPeriodType.QUATERLY, SavingsCompoundingInterestPeriodType.BI_ANNUAL,
+                        SavingsCompoundingInterestPeriodType.AT_MATURITY));
+
+        SavingsPostingInterestPeriodType savingsPostingInterestPeriodType = SavingsPostingInterestPeriodType
+                .fromInt(interestPostingPeriodType);
+        SavingsCompoundingInterestPeriodType savingsCompoundingInterestPeriodType = SavingsCompoundingInterestPeriodType
+                .fromInt(interestCompoundingPeriodType);
+
+        if (postingtoCompoundMap.get(savingsPostingInterestPeriodType) == null) {
+            baseDataValidator.failWithCodeNoParameterAddedToErrorCode("posting.period.type.is.less.than.compound.period.type",
+                    savingsPostingInterestPeriodType.name(), savingsCompoundingInterestPeriodType.name());
+
+        }
     }
 }

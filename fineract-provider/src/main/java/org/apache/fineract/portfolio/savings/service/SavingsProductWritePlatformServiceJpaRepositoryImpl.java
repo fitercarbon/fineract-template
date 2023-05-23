@@ -179,18 +179,11 @@ public class SavingsProductWritePlatformServiceJpaRepositoryImpl implements Savi
                     .orElseThrow(() -> new SavingsProductNotFoundException(productId));
 
             CodeValue productCategory = getProductCategory(command);
-            if (productCategory != null) {
-                product.setProductCategory(productCategory);
-            }
+            product.setProductCategory(productCategory);
 
             CodeValue productType = getLoanProductType(command);
-            if (productType != null) {
-                product.setProductType(productType);
-            }
-
-            if (productCategory != null || productType != null) {
-                this.savingProductRepository.saveAndFlush(product);
-            }
+            product.setProductType(productType);
+            this.savingProductRepository.saveAndFlush(product);
 
             this.fromApiJsonDataValidator.validateForUpdate(command.json(), product);
 

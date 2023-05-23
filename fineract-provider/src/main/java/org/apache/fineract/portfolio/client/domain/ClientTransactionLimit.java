@@ -74,7 +74,7 @@ public class ClientTransactionLimit extends AbstractPersistableCustom {
             this.dailyWithdrawLimit = newValue;
         }
 
-        if (command.isChangeInBigDecimalParameterNamed(ClientApiConstants.singleWithdrawLimit, getDailyWithdrawLimit())) {
+        if (command.isChangeInBigDecimalParameterNamed(ClientApiConstants.singleWithdrawLimit, getSingleWithdrawLimit())) {
             final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(ClientApiConstants.singleWithdrawLimit);
             this.singleWithdrawLimit = newValue;
         }

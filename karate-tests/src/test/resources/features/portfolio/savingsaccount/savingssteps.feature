@@ -82,6 +82,25 @@ Feature: Savings Creation Steps
     Then match $ contains { savingsId: '#(savingsId)' }
     Then def activeSavingsId = response.savingsId
 
+      #add parameters savingsId, command(withdraw/deposit), transactionDate and transactionAmount
+  @ignore
+  @transactionWithBadRequest
+  Scenario: Savings transaction With Bad Request Exception
+    Given configure ssl = true
+    * def transactionDate = transactionDate
+    * def transactionAmount = transactionAmount
+    * def command = command
+    * def savingsData = read('classpath:templates/savings.json')
+    Given path 'savingsaccounts',savingsId,'transactions'
+    And params { command : '#(command)' }
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request savingsData.transaction
+    When method POST
+    Then status 403
+    Then match $ contains { developerMessage: '#notnull' }
+
   @ignore
   @findsavingsbyid
   Scenario: Get savings account by id
