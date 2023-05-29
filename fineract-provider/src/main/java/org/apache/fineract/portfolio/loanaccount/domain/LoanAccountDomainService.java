@@ -53,7 +53,7 @@ public interface LoanAccountDomainService {
 
     void updateLoanCollateralStatus(Set<LoanCollateralManagement> loanCollateralManagementSet, boolean isReleased);
 
-    LoanTransaction withdrawFromRedraw(Long accountId, CommandProcessingResultBuilder builderResult, LocalDate transactionDate,
+    void withdrawFromRedraw(Long accountId, CommandProcessingResultBuilder builderResult, LocalDate transactionDate,
             BigDecimal transactionAmount, PaymentDetail paymentDetail, String noteText, String txnExternalId);
 
     /**

@@ -994,7 +994,8 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         }
 
         if (loan.getTotalOverpaid() != null) {
-            loanRepositoryWrapper.updateRedrawAmount(currentUser, loanId, loan.getTotalOverpaid(), true);
+            loanRepositoryWrapper.updateRedrawAmount(loan, currentUser, loanId, loan.getTotalOverpaid(), true, transactionDate,
+                    paymentDetail);
         }
         return commandProcessingResultBuilder.withCommandId(command.commandId()) //
                 .withLoanId(loanId) //

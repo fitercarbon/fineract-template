@@ -57,7 +57,9 @@ public enum LoanTransactionType {
     MERCHANT_ISSUED_REFUND(21, "loanTransactionType.merchantIssuedRefund"), //
     PAYOUT_REFUND(22, "loanTransactionType.payoutRefund"), //
     GOODWILL_CREDIT(23, "loanTransactionType.goodwillCredit"), //
-    BNPL_VENDOR_TRANSFER(24, "loanTransactionType.bnplVendorTransfer"), WITHDRAWAL_REDRAW(26, "loanTransactionType.withdrawalRedraw");
+    BNPL_VENDOR_TRANSFER(24, "loanTransactionType.bnplVendorTransfer"), WITHDRAWAL_REDRAW(26, "loanTransactionType.withdrawalRedraw"),
+
+    DEPOSIT_REDRAW(27, "loanTransactionType.depositRedraw");
 
     private final Integer value;
     private final String code;
@@ -157,6 +159,9 @@ public enum LoanTransactionType {
             break;
             case 26:
                 loanTransactionType = LoanTransactionType.WITHDRAWAL_REDRAW;
+            break;
+            case 27:
+                loanTransactionType = LoanTransactionType.DEPOSIT_REDRAW;
             break;
             default:
                 loanTransactionType = LoanTransactionType.INVALID;

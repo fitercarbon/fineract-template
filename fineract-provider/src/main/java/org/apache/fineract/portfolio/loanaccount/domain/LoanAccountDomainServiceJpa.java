@@ -153,14 +153,14 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     }
 
     @Override
-    public LoanTransaction withdrawFromRedraw(Long accountId, CommandProcessingResultBuilder builderResult, LocalDate transactionDate,
+    public void withdrawFromRedraw(Long accountId, CommandProcessingResultBuilder builderResult, LocalDate transactionDate,
             BigDecimal transactionAmount, PaymentDetail paymentDetail, String noteText, String txnExternalId) {
         var user = this.context.authenticatedUser();
         final var loan = this.loanAccountAssembler.assembleFrom(accountId);
         checkClientOrGroupActive(loan);
         final var withdrawAmount = Money.of(loan.getCurrency(), transactionAmount);
         final var withdrawFromRedraw = LoanTransaction.withdrawFromRedraw(loan.getOffice(), withdrawAmount, paymentDetail, transactionDate,
-                txnExternalId);
+                txnExternalId, loan);
 
         var loanRedrawAccountOptional = loanRedrawAccountRepository.findByLoanId(accountId);
         if (loanRedrawAccountOptional.isPresent()) {
@@ -184,12 +184,9 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             final Note note = Note.loanTransactionNote(loan, withdrawFromRedraw, noteText);
             this.noteRepository.save(note);
         }
-        ;
 
         builderResult.withEntityId(withdrawFromRedraw.getId()).withOfficeId(loan.getOfficeId()).withClientId(loan.getClientId())
                 .withGroupId(loan.getGroupId());
-
-        return withdrawFromRedraw;
     }
 
     @Transactional
@@ -512,7 +509,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             this.noteRepository.save(note);
         }
 
-        loanRepositoryWrapper.updateRedrawAmount(currentUser, loan.getId(), refundAmount.getAmount(), false);
+        loanRepositoryWrapper.updateRedrawAmount(loan, currentUser, loan.getId(), refundAmount.getAmount(), false, transactionDate,
+                paymentDetail);
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
         businessEventNotifierService.notifyPostBusinessEvent(new LoanRefundPostBusinessEvent(newRefundTransaction));

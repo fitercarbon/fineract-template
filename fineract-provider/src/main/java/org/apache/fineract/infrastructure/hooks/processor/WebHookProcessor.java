@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.infrastructure.hooks.processor;
 
+import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.BasicAuthParamName;
+import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.apiKeyName;
 import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.contentTypeName;
 import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.payloadURLName;
 
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.domain.FineractContext;
 import org.apache.fineract.infrastructure.hooks.domain.Hook;
 import org.apache.fineract.infrastructure.hooks.domain.HookConfiguration;
@@ -49,6 +52,12 @@ public class WebHookProcessor implements HookProcessor {
         String url = "";
         String contentType = "";
 
+        String basicAuthCreds = "";
+
+        String apiKey = "";
+
+        String apiKeyValue = "";
+
         for (final HookConfiguration conf : config) {
             final String fieldName = conf.getFieldName();
             if (fieldName.equals(payloadURLName)) {
@@ -57,14 +66,22 @@ public class WebHookProcessor implements HookProcessor {
             if (fieldName.equals(contentTypeName)) {
                 contentType = conf.getFieldValue();
             }
+            if (fieldName.equals(BasicAuthParamName)) {
+                basicAuthCreds = "Basic " + conf.getFieldValue();
+            }
+            if (fieldName.equals(apiKeyName)) {
+                String keyValuePair = conf.getFieldValue();
+                apiKey = StringUtils.split(keyValuePair, ":")[0];
+                apiKeyValue = StringUtils.split(keyValuePair, ":")[1];
+            }
         }
 
-        sendRequest(url, contentType, payload, entityName, actionName, context);
+        sendRequest(url, contentType, payload, entityName, actionName, context, basicAuthCreds, apiKey, apiKeyValue);
     }
 
     @SuppressWarnings("unchecked")
     private void sendRequest(final String url, final String contentType, final String payload, final String entityName,
-            final String actionName, final FineractContext context) {
+            final String actionName, final FineractContext context, String basicAuthCreds, String apiKey, String apiKeyValue) {
 
         final String fineractEndpointUrl = System.getProperty("baseUrl");
         final WebHookService service = processorHelper.createWebHookService(url);
@@ -74,8 +91,16 @@ public class WebHookProcessor implements HookProcessor {
 
         if (contentType.equalsIgnoreCase("json") || contentType.contains("json")) {
             final JsonObject json = JsonParser.parseString(payload).getAsJsonObject();
-            service.sendJsonRequest(entityName, actionName, context.getTenantContext().getTenantIdentifier(), fineractEndpointUrl, json)
-                    .enqueue(callback);
+
+            if (StringUtils.isBlank(basicAuthCreds)) {
+                service.sendJsonRequestBasicAuth(entityName, actionName, context.getTenantContext().getTenantIdentifier(),
+                        fineractEndpointUrl, basicAuthCreds, json).enqueue(callback);
+            } else if (StringUtils.isBlank(apiKey)) {
+                service.sendJsonRequestApiKey(entityName, actionName, context.getTenantContext().getTenantIdentifier(), fineractEndpointUrl,
+                        apiKeyValue, json).enqueue(callback);
+            } else
+                service.sendJsonRequest(entityName, actionName, context.getTenantContext().getTenantIdentifier(), fineractEndpointUrl, json)
+                        .enqueue(callback);
         } else {
             Map<String, String> map = new HashMap<>();
             map = new Gson().fromJson(payload, map.getClass());

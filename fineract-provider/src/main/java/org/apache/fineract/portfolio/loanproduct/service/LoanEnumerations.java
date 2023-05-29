@@ -438,10 +438,15 @@ public final class LoanEnumerations {
             case TOP_UP:
                 optionData = new LoanTransactionEnumData(LoanTransactionType.TOP_UP.getValue().longValue(),
                         LoanTransactionType.TOP_UP.getCode(), "Top Up");
+            break;
 
             case WITHDRAWAL_REDRAW:
                 optionData = new LoanTransactionEnumData(LoanTransactionType.WITHDRAWAL_REDRAW.getValue().longValue(),
                         LoanTransactionType.WITHDRAWAL_REDRAW.getCode(), "Withdraw from Redraw");
+            break;
+            case DEPOSIT_REDRAW:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.DEPOSIT_REDRAW.getValue().longValue(),
+                        LoanTransactionType.DEPOSIT_REDRAW.getCode(), "Deposit Redraw");
             break;
         }
         return optionData;

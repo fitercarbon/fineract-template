@@ -246,8 +246,14 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
     }
 
     public static LoanTransaction withdrawFromRedraw(final Office office, final Money amount, final PaymentDetail paymentDetail,
-            final LocalDate paymentDate, final String externalId) {
-        return new LoanTransaction(null, office, LoanTransactionType.WITHDRAWAL_REDRAW, paymentDetail, amount.getAmount(), paymentDate,
+            final LocalDate paymentDate, final String externalId, final Loan loan) {
+        return new LoanTransaction(loan, office, LoanTransactionType.WITHDRAWAL_REDRAW, paymentDetail, amount.getAmount(), paymentDate,
+                externalId);
+    }
+
+    public static LoanTransaction applyRedrawRepayment(final Office office, final Money amount, final PaymentDetail paymentDetail,
+            final LocalDate paymentDate, final String externalId, final Loan loan) {
+        return new LoanTransaction(loan, office, LoanTransactionType.DEPOSIT_REDRAW, paymentDetail, amount.getAmount(), paymentDate,
                 externalId);
     }
 

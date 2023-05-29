@@ -290,7 +290,7 @@ public class SavingsAccountsApiResource {
                     charges = currentCharges;
                 }
                 floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService
-                        .getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
+                        .getSavingsAccountFloatingInterestRateForSavingsAccount(savingsAccount.productId());
             }
 
             if (associationParameters.contains(SavingsApiConstants.blockNarrations)) {
@@ -304,7 +304,7 @@ public class SavingsAccountsApiResource {
             if (associationParameters.contains(SavingsApiConstants.floatingInterestRates)) {
                 mandatoryResponseParameters.add(SavingsApiConstants.floatingInterestRates);
                 floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService
-                        .getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
+                        .getSavingsAccountFloatingInterestRateForSavingsAccount(savingsAccount.productId());
             }
         }
 

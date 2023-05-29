@@ -42,8 +42,8 @@ public class SavingsAccountFloatingInterestRateReadPlatformServiceImpl implement
     private static final class SavingsAccountFloatingInterestRateMapper implements RowMapper<SavingsAccountFloatingInterestRateData> {
 
         public String schema() {
-            return "safir.id AS id, safir.savings_account_id AS savingsAccountId, safir.from_date AS fromDate, safir.end_date AS endDate,safir.floating_interest_rate AS floatingInterestRate"
-                    + " FROM m_savings_account_floating_interest_rate safir";
+            return "safir.id AS id, safir.savings_product_id AS savingsAccountId, safir.from_date AS fromDate, safir.end_date AS endDate,safir.floating_interest_rate AS floatingInterestRate"
+                    + " FROM m_savings_product_floating_interest_rate safir";
         }
 
         @Override
@@ -60,11 +60,11 @@ public class SavingsAccountFloatingInterestRateReadPlatformServiceImpl implement
 
     @Override
     public Collection<SavingsAccountFloatingInterestRateData> getSavingsAccountFloatingInterestRateForSavingsAccount(
-            long savingsAccountId) {
+            long savingsProductId) {
         this.context.authenticatedUser();
         final SavingsAccountFloatingInterestRateMapper rm = new SavingsAccountFloatingInterestRateMapper();
-        final String sql = "select " + rm.schema() + " where safir.savings_account_id=?";
-        return this.jdbcTemplate.query(sql, rm, new Object[] { savingsAccountId }); // NOSONAR
+        final String sql = "select " + rm.schema() + " where safir.savings_product_id=?";
+        return this.jdbcTemplate.query(sql, rm, new Object[] { savingsProductId }); // NOSONAR
     }
 
     @Override

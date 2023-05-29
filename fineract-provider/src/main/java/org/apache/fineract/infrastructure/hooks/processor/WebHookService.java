@@ -36,10 +36,23 @@ public interface WebHookService {
     String TENANT_HEADER = "Fineract-Platform-TenantId";
     String ENDPOINT_HEADER = "X-Fineract-Endpoint";
     String API_KEY_HEADER = "X-Fineract-API-Key";
+    String BASIC_AUTH_HEADER = "Authorization";
 
     // Ping
     @GET(".")
     Call<Void> sendEmptyRequest();
+
+    // Template - Web
+    @POST(".")
+    Call<Void> sendJsonRequestBasicAuth(@Header(ENTITY_HEADER) String entityHeader, @Header(ACTION_HEADER) String actionHeader,
+            @Header(TENANT_HEADER) String tenantHeader, @Header(ENDPOINT_HEADER) String endpointHeader,
+            @Header(BASIC_AUTH_HEADER) String basicAuthHeader, @Body JsonObject result);
+
+    // Template - Web
+    @POST(".")
+    Call<Void> sendJsonRequestApiKey(@Header(ENTITY_HEADER) String entityHeader, @Header(ACTION_HEADER) String actionHeader,
+            @Header(TENANT_HEADER) String tenantHeader, @Header(ENDPOINT_HEADER) String endpointHeader,
+            @Header(API_KEY_HEADER) String apiKeyValue, @Body JsonObject result);
 
     // Template - Web
     @POST(".")

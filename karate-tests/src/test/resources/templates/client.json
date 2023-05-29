@@ -31,7 +31,7 @@
     "dateFormat": "#(format)"
   },
   "createEntityClient" : {
-    "address": "#(address)",
+    "address": [],
     "officeId": 1,
     "legalFormId": 2,
     "fullname": "Business",
@@ -40,7 +40,8 @@
       "incorpNumber": "#(faker.number().randomNumber())",
       "locale": "en",
       "dateFormat": "dd MMMM yyyy",
-      "incorpValidityTillDate": "#(df.format(calendar.getTime()))"
+      "incorpValidityTillDate": "#(df.format(calendar.getTime()))",
+      "constitutionId": "#(constitutionId)"
     },
     "active": false,
     "locale": "en",
@@ -52,7 +53,6 @@
     "initials": "1"
   },
   "updateEntityClientPayload": {
-    "address": "#(address)",
     "active": true,
     "accountNo": "#(accountNo)",
     "isStaff": false,
@@ -62,7 +62,9 @@
        "incorpNumber": "#(faker.number().randomNumber())",
        "locale": "en",
        "dateFormat": "#(format)",
-       "incorpValidityTillDate": "#(df.format(calendar.getTime()))"
+       "incorpValidityTillDate": "#(df.format(calendar.getTime()))",
+       "constitutionId": "#(constitutionId)",
+       "isRegistered": "true"
      },
     "legalFormId": 2,
     "altMobileNo": "#(faker.phoneNumber().cellPhone())",
@@ -73,8 +75,7 @@
     "submittedOnDate": "#(df.format(calendar.getTime()))",
     "externalId": "#(faker.number().randomNumber())",
     "mnemonics": "anything",
-    "initials": "1",
-    "isRegister": "true"
+    "initials": "1"
   },
   "createClientWithSavingsPayload" : {
     "address": [],

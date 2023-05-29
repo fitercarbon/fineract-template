@@ -4,5 +4,11 @@
   },
   "disable_enforce_loan_overdue_amount_min_balance_check": {
     "enabled": "false"
+  },
+  "enable_global_config": {
+    "enabled": "true"
+  },
+  "disable_global_config": {
+    "enabled": "false"
   }
 }

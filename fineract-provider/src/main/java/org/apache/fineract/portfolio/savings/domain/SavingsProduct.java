@@ -963,4 +963,8 @@ public class SavingsProduct extends AbstractPersistableCustom {
     public void setPostOverdraftInterestOnDeposit(Boolean postOverdraftInterestOnDeposit) {
         this.postOverdraftInterestOnDeposit = postOverdraftInterestOnDeposit;
     }
+
+    public Set<SavingsProductFloatingInterestRate> getSavingsProductFloatingInterestRates() {
+        return savingsProductFloatingInterestRates;
+    }
 }

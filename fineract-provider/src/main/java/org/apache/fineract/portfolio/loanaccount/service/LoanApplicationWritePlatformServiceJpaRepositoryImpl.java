@@ -146,7 +146,6 @@ import org.apache.fineract.portfolio.loanproduct.serialization.LoanProductDataVa
 import org.apache.fineract.portfolio.loanproduct.service.LoanProductReadPlatformService;
 import org.apache.fineract.portfolio.note.domain.Note;
 import org.apache.fineract.portfolio.note.domain.NoteRepository;
-import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.rate.service.RateAssembler;
 import org.apache.fineract.portfolio.savings.data.GroupSavingsIndividualMonitoringAccountData;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
@@ -1916,11 +1915,9 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         final var transactionDate = command.localDateValueOfParameterNamed(LoanApiConstants.transactionDateParamName);
         final var transactionAmount = command.bigDecimalValueOfParameterNamed(LoanApiConstants.principalDisbursedParameterName);
         final var notes = command.stringValueOfParameterNamed(LoanApiConstants.noteParameterName);
-        final PaymentDetail paymentDetail = null;
         final var commandProcessingResultBuilder = new CommandProcessingResultBuilder();
-        this.loanAccountDomainService.withdrawFromRedraw(loanId, commandProcessingResultBuilder, transactionDate, transactionAmount,
-                paymentDetail, notes, null);
-
+        this.loanAccountDomainService.withdrawFromRedraw(loanId, commandProcessingResultBuilder, transactionDate, transactionAmount, null,
+                notes, null);
         return commandProcessingResultBuilder.withEntityId(loanId).withLoanId(loanId).build();
     }
 
@@ -1929,7 +1926,9 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         var user = this.context.authenticatedUser();
         this.loanApplicationTransitionApiJsonValidator.validateApplyRedrawPayment(command.json());
         final var transactionAmount = command.bigDecimalValueOfParameterNamed(LoanApiConstants.principalDisbursedParameterName);
-        loanRepositoryWrapper.updateRedrawAmount(user, loanId, transactionAmount, true);
+        final var loan = this.loanRepositoryWrapper.findOneWithNotFoundDetection(loanId);
+        final var transactionDate = command.localDateValueOfParameterNamed(LoanApiConstants.transactionDateParamName);
+        loanRepositoryWrapper.updateRedrawAmount(loan, user, loanId, transactionAmount, true, transactionDate, null);
         return new CommandProcessingResultBuilder().withEntityId(loanId).withLoanId(loanId).build();
     }
 

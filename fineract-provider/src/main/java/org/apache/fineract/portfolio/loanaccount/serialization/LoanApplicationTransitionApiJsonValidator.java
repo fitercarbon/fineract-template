@@ -192,7 +192,7 @@ public final class LoanApplicationTransitionApiJsonValidator {
 
         final Set<String> disbursementParameters = new HashSet<>(
                 Arrays.asList(LoanApiConstants.transactionDateParamName, LoanApiConstants.principalDisbursedParameterName,
-                        LoanApiConstants.localeParameterName, LoanApiConstants.dateFormatParameterName));
+                        LoanApiConstants.localeParameterName, LoanApiConstants.dateFormatParameterName, "notes"));
         final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
         this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, disbursementParameters);
 

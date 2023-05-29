@@ -23,7 +23,7 @@ import org.apache.fineract.portfolio.savings.data.SavingsAccountFloatingInterest
 
 public interface SavingsAccountFloatingInterestRateReadPlatformService {
 
-    Collection<SavingsAccountFloatingInterestRateData> getSavingsAccountFloatingInterestRateForSavingsAccount(long savingsAccountId);
+    Collection<SavingsAccountFloatingInterestRateData> getSavingsAccountFloatingInterestRateForSavingsAccount(long savingsProductId);
 
     SavingsAccountFloatingInterestRateData getSavingsAccountFloatingInterestRateById(long id);
 }

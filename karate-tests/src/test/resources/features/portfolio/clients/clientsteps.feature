@@ -90,7 +90,7 @@ Feature: Client creations steps
     Then status 200
     Then def res = response
 
-  #set parameter clientCreationDate
+  #set parameter clientCreationDate, constitutionId
   @ignore
   @createEntityStep
   Scenario: Create Entity client test
