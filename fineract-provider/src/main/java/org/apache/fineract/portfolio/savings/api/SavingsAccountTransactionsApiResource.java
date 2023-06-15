@@ -233,4 +233,20 @@ public class SavingsAccountTransactionsApiResource {
 
         return this.toApiJsonSerializer.serialize(result);
     }
+
+    @GET
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "List Savings Account Transactions", description = "Example Requests:\n" + "\n"
+            + "savingsaccounts/1/transactions\n" + "\n" + "savingsaccounts/1/transactions?offset=10&limit=50\n")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(array = @ArraySchema(schema = @Schema(implementation = SavingsAccountTransactionsApiResourceSwagger.GetSavingsAccountTransactionsResponse.class)))) })
+    public String retrieveAll(@PathParam("savingsId") final Long savingsId, @Context final UriInfo uriInfo,
+            @QueryParam("offset") Integer offset, @QueryParam("limit") Integer limit) {
+
+        this.context.authenticatedUser().validateHasReadPermission(SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME);
+        Collection<SavingsAccountTransactionData> transactions = this.savingsAccountReadPlatformService.retrieveAllTransactions(savingsId,
+                offset, limit);
+        return this.toApiJsonSerializer.serialize(transactions);
+    }
 }

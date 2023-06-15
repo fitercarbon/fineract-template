@@ -22,7 +22,7 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_001">
+    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_0010">
         <preConditions onFail="MARK_RAN">
             <sqlCheck  expectedResult="0">select count(*) from m_code where code_name='SavingsProductCategory'</sqlCheck>
         </preConditions>
@@ -31,7 +31,7 @@
             <column name="is_system_defined" valueBoolean="true"/>
         </insert>
     </changeSet>
-    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_002">
+    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_0012">
         <preConditions onFail="MARK_RAN">
             <sqlCheck  expectedResult="0">select count(*) from m_code where code_name='SavingsProductType'</sqlCheck>
         </preConditions>
@@ -40,7 +40,7 @@
             <column name="is_system_defined" valueBoolean="true"/>
         </insert>
     </changeSet>
-    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_003">
+    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_0013">
         <preConditions onFail="MARK_RAN">
             <sqlCheck  expectedResult="0">select count(*) from m_code where code_name='ProductCategory'</sqlCheck>
         </preConditions>
@@ -49,7 +49,7 @@
             <column name="is_system_defined" valueBoolean="true"/>
         </insert>
     </changeSet>
-    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_004">
+    <changeSet author="judiao@fiter.io" id="CI18-142_adding_system_codes_product_categories_and_types_0014">
         <preConditions onFail="MARK_RAN">
             <sqlCheck  expectedResult="0">select count(*) from m_code where code_name='ProductType'</sqlCheck>
         </preConditions>

@@ -131,4 +131,8 @@ public interface SavingsAccountWritePlatformService {
     CommandProcessingResult unlockAccount(Long savingsId, JsonCommand command);
 
     CommandProcessingResult nextWithdrawalDateSavingsAccount(Long savingsId, JsonCommand command);
+
+    CommandProcessingResult createSavingsAccountNote(Long savingsId, JsonCommand command);
+
+    CommandProcessingResult updateSavingsAccountNote(Long noteId, JsonCommand command);
 }

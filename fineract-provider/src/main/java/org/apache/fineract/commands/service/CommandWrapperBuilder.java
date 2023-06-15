@@ -1358,6 +1358,24 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder createSavingsAccountNote(final Long accountId) {
+        this.actionName = "CREATE";
+        this.entityName = "SAVINGS_ACCOUNT_NOTE";
+        this.entityId = accountId;
+        this.savingsId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "/notes";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateSavingsAccountNote(final Long noteId, final Long accountId) {
+        this.actionName = "UPDATE";
+        this.entityName = "SAVINGS_ACCOUNT_NOTE";
+        this.entityId = noteId;
+        this.savingsId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "/notes/" + noteId;
+        return this;
+    }
+
     public CommandWrapperBuilder rejectSavingsAccountApplication(final Long accountId) {
         this.actionName = "REJECT";
         this.entityName = "SAVINGSACCOUNT";
@@ -3680,6 +3698,15 @@ public class CommandWrapperBuilder {
         this.entityName = entityName;
         this.entityId = loanId;
         this.href = "/rescheduleloans/" + loanId;
+        return this;
+    }
+
+    public CommandWrapperBuilder loanPayOfLoan(Long loanId) {
+        this.actionName = "PAY_OFF";
+        this.loanId = loanId;
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.href = "/payoffloans/" + loanId;
         return this;
     }
 }

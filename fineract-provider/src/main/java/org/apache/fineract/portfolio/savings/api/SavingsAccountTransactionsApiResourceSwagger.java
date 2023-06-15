@@ -66,4 +66,9 @@ final class SavingsAccountTransactionsApiResourceSwagger {
         @Schema(example = "true")
         public String isBulk;
     }
+
+    public static final class GetSavingsAccountTransactionsResponse {
+
+        private GetSavingsAccountTransactionsResponse() {}
+    }
 }

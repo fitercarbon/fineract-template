@@ -257,7 +257,7 @@ bootJar {
 
 jib {
     from {
-        image = 'azul/zulu-openjdk-alpine:17'
+        image = 'azul/zulu-openjdk-debian:17'
     }
 
     extraDirectories {
@@ -265,6 +265,14 @@ jib {
             path {
                 from = 'ff4j'
                 into = '/.fineract/ff4j'
+            }
+            path {
+                from = 'pentahoReports'
+                into = '/root/.mifosx/pentahoReports'
+            }
+            path {
+                from = 'pentahoReportsPostgres'
+                into = '/root/.mifosx/pentahoReportsPostgres'
             }
         }
     }

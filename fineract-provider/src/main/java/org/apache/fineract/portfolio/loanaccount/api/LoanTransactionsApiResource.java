@@ -150,6 +150,8 @@ public class LoanTransactionsApiResource {
             transactionData = this.loanReadPlatformService.retrieveWaiveInterestDetails(loanId);
         } else if (is(commandParam, "writeoff")) {
             transactionData = this.loanReadPlatformService.retrieveLoanWriteoffTemplate(loanId);
+        } else if (is(commandParam, "payoff")) {
+            transactionData = this.loanReadPlatformService.retrieveLoanPayoffTemplate(loanId);
         } else if (is(commandParam, "close-rescheduled")) {
             transactionData = this.loanReadPlatformService.retrieveNewClosureDetails();
         } else if (is(commandParam, "close")) {
@@ -286,7 +288,10 @@ public class LoanTransactionsApiResource {
             final CommandWrapper commandRequest = builder.creditBalanceRefund(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         }
-
+        if (is(commandParam, "payoff")) {
+            final CommandWrapper commandRequest = builder.loanPayOfLoan(loanId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+        }
         if (result == null) {
             throw new UnrecognizedQueryParamException("command", commandParam);
         }

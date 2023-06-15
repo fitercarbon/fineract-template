@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTermVariationsData;
+import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionData;
 
 /**
  * Immutable data object representing loan reschedule request data.
@@ -37,9 +38,12 @@ public final class LoanRescheduleRequestData {
     private final Integer rescheduleFromInstallment;
     private final LocalDate rescheduleFromDate;
     private final Boolean recalculateInterest;
+    private final Boolean adjustFuturePayments;
     private final CodeValueData rescheduleReasonCodeValue;
     private final LoanRescheduleRequestTimelineData timeline;
     private final String rescheduleReasonComment;
+    private LoanTransactionData loanTransactionData;
+    private CodeValueData codeValueData;
     @SuppressWarnings("unused")
     private final Collection<CodeValueData> rescheduleReasons;
     @SuppressWarnings("unused")
@@ -50,12 +54,15 @@ public final class LoanRescheduleRequestData {
      *
      * @param loanTermVariationsData
      *            TODO
+     * @param loanTransactionData
+     * @param adjustFuturePayments
      **/
     private LoanRescheduleRequestData(Long id, Long loanId, LoanRescheduleRequestStatusEnumData statusEnum,
             Integer rescheduleFromInstallment, LocalDate rescheduleFromDate, CodeValueData rescheduleReasonCodeValue,
             String rescheduleReasonComment, LoanRescheduleRequestTimelineData timeline, final String clientName,
             final String loanAccountNumber, final Long clientId, final Boolean recalculateInterest,
-            Collection<CodeValueData> rescheduleReasons, final Collection<LoanTermVariationsData> loanTermVariationsData) {
+            Collection<CodeValueData> rescheduleReasons, final Collection<LoanTermVariationsData> loanTermVariationsData,
+            LoanTransactionData loanTransactionData, boolean adjustFuturePayments) {
 
         this.id = id;
         this.loanId = loanId;
@@ -71,6 +78,8 @@ public final class LoanRescheduleRequestData {
         this.recalculateInterest = recalculateInterest;
         this.rescheduleReasons = rescheduleReasons;
         this.loanTermVariationsData = loanTermVariationsData;
+        this.loanTransactionData = loanTransactionData;
+        this.adjustFuturePayments = adjustFuturePayments;
     }
 
     /**
@@ -82,18 +91,17 @@ public final class LoanRescheduleRequestData {
             Integer rescheduleFromInstallment, LocalDate rescheduleFromDate, CodeValueData rescheduleReasonCodeValue,
             String rescheduleReasonComment, LoanRescheduleRequestTimelineData timeline, final String clientName,
             final String loanAccountNumber, final Long clientId, final Boolean recalculateInterest,
-            Collection<CodeValueData> rescheduleReasons, final Collection<LoanTermVariationsData> loanTermVariationsData) {
+            Collection<CodeValueData> rescheduleReasons, final Collection<LoanTermVariationsData> loanTermVariationsData,
+            final LoanTransactionData loanTransactionData, final boolean adjustFuturePayments) {
 
         return new LoanRescheduleRequestData(id, loanId, statusEnum, rescheduleFromInstallment, rescheduleFromDate,
                 rescheduleReasonCodeValue, rescheduleReasonComment, timeline, clientName, loanAccountNumber, clientId, recalculateInterest,
-                rescheduleReasons, loanTermVariationsData);
+                rescheduleReasons, loanTermVariationsData, loanTransactionData, adjustFuturePayments);
     }
 
     /**
      * LoanRescheduleRequestData constructor
      *
-     * @param loanTermVariationsData
-     *            TODO
      **/
     private LoanRescheduleRequestData(Long id, Long loanId, LoanRescheduleRequestStatusEnumData statusEnum, final String clientName,
             final String loanAccountNumber, final Long clientId, final LocalDate rescheduleFromDate,
@@ -113,6 +121,8 @@ public final class LoanRescheduleRequestData {
         this.recalculateInterest = null;
         this.rescheduleReasons = null;
         this.loanTermVariationsData = null;
+        this.loanTransactionData = null;
+        this.adjustFuturePayments = null;
     }
 
     /**
@@ -214,5 +224,13 @@ public final class LoanRescheduleRequestData {
         }
 
         return value;
+    }
+
+    public void updateLoanTransactionData(LoanTransactionData loanTransactionData) {
+        this.loanTransactionData = loanTransactionData;
+    }
+
+    public LoanTransactionData getLoanTransactionData() {
+        return loanTransactionData;
     }
 }

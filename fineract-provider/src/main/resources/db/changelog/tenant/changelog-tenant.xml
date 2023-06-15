@@ -85,4 +85,5 @@
     <include file="parts/OXY-83_flexi_account_withdrawal_window.xml" relativeToChangelogFile="true" />
     <include file="parts/OXY-137_add_max_withdrawal_global_config.xml" relativeToChangelogFile="true" />
     <include file="parts/OXY-138_add_on_hold_table_for_savings_account.xml" relativeToChangelogFile="true" />
+    <includeAll path="custom-changelog" relativeToChangelogFile="true"/>
 </databaseChangeLog>

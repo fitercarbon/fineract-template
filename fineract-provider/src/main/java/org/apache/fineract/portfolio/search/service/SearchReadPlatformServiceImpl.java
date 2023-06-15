@@ -255,6 +255,12 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
                     params.add(convertValue(filterConstraint.getValue()));
                 break;
 
+                case NOT_EMPTY:
+                    queryBuilder.append(" AND ").append(getFilterSelection(filterConstraint.getFilterSelection(), searchRequestMap))
+                            .append(" is not null ");
+                    params.add(convertValue(filterConstraint.getValue()));
+                break;
+
                 case LESS_THAN:
                     queryBuilder.append(" AND ").append(getFilterSelection(filterConstraint.getFilterSelection(), searchRequestMap))
                             .append(" < ? ");

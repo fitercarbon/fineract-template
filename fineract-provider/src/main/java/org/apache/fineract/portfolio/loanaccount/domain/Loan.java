@@ -3257,8 +3257,9 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             addLoanTransaction(loanTransaction);
         }
 
-        if (loanTransaction.isNotRepaymentType() && loanTransaction.isNotWaiver() && loanTransaction.isNotRecoveryRepayment()) {
-            final String errorMessage = "A transaction of type repayment or recovery repayment or waiver was expected but not received.";
+        if (loanTransaction.isNotRepaymentType() && !loanTransaction.isPayoff() && loanTransaction.isNotWaiver()
+                && loanTransaction.isNotRecoveryRepayment()) {
+            final String errorMessage = "A transaction of type repayment or payoff or recovery repayment or waiver was expected but not received.";
             throw new InvalidLoanTransactionTypeException("transaction", "is.not.a.repayment.or.waiver.or.recovery.transaction",
                     errorMessage);
         }

@@ -111,7 +111,8 @@ public class LoanProductsApiResource {
             "isLinkedToFloatingInterestRates", "floatingRatesId", "interestRateDifferential", "minDifferentialLendingRate",
             "defaultDifferentialLendingRate", "maxDifferentialLendingRate", "isFloatingInterestRateCalculationAllowed",
             LoanProductConstants.CAN_USE_FOR_TOPUP, LoanProductConstants.IS_EQUAL_AMORTIZATION_PARAM, LoanProductConstants.RATES_PARAM_NAME,
-            LoanApiConstants.fixedPrincipalPercentagePerInstallmentParamName, LoanProductConstants.LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM));
+            LoanApiConstants.fixedPrincipalPercentagePerInstallmentParamName, LoanProductConstants.LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM,
+            LoanProductConstants.maintainInterestOnLoanTermExtensionParamName));
 
     private final Set<String> productMixDataParameters = new HashSet<>(
             Arrays.asList("productId", "productName", "restrictedProducts", "allowedProducts", "productOptions"));

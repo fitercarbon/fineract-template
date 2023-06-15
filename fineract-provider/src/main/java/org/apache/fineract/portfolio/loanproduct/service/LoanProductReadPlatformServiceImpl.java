@@ -209,6 +209,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                     + "lpr.id as lprId, lpr.product_id as productId, lpr.compound_type_enum as compoundType, lpr.reschedule_strategy_enum as rescheduleStrategy, "
                     + "lpr.rest_frequency_type_enum as restFrequencyEnum, lpr.rest_frequency_interval as restFrequencyInterval, "
                     + "lpr.rest_frequency_nth_day_enum as restFrequencyNthDayEnum, "
+                    + "lp.maintain_interest_rate_on_loan_term_extension as maintainInterestRate, "
                     + "lpr.rest_frequency_weekday_enum as restFrequencyWeekDayEnum, " + "lpr.rest_frequency_on_day as restFrequencyOnDay, "
                     + "lpr.arrears_based_on_original_schedule as isArrearsBasedOnOriginalSchedule, "
                     + "lpr.compounding_frequency_type_enum as compoundingFrequencyTypeEnum, lpr.compounding_frequency_interval as compoundingInterval, "
@@ -315,6 +316,7 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
             final BigDecimal defaultDifferentialLendingRate = rs.getBigDecimal("defaultDifferentialLendingRate");
             final BigDecimal maxDifferentialLendingRate = rs.getBigDecimal("maxDifferentialLendingRate");
             final boolean isFloatingInterestRateCalculationAllowed = rs.getBoolean("isFloatingInterestRateCalculationAllowed");
+            final Boolean maintainInterestRate = rs.getBoolean("maintainInterestRate");
 
             final boolean isVariableIntallmentsAllowed = rs.getBoolean("isVariableIntallmentsAllowed");
             final Integer minimumGap = rs.getInt("minimumGap");
@@ -499,7 +501,8 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                     maxDifferentialLendingRate, isFloatingInterestRateCalculationAllowed, isVariableIntallmentsAllowed, minimumGap,
                     maximumGap, syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization, rateOptions, this.rates,
                     isRatesEnabled, fixedPrincipalPercentagePerInstallment, maxNumberOfLoanExtensionsAllowed,
-                    loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable, productCategoryId, productTypeId);
+                    loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable, productCategoryId, productTypeId,
+                    maintainInterestRate);
             loanProductData.setBnplLoanProduct(isBnplLoanProduct);
             loanProductData.setRequiresEquityContribution(requiresEquityContribution);
             loanProductData.setEquityContributionLoanPercentage(equityContributionLoanPercentage);

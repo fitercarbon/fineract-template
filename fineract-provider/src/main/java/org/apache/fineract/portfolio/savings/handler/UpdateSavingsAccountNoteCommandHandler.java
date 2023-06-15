@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.loanaccount.handler;
+package org.apache.fineract.portfolio.savings.handler;
 
-import lombok.RequiredArgsConstructor;
 import org.apache.fineract.commands.annotation.CommandType;
 import org.apache.fineract.commands.handler.NewCommandSourceHandler;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
-import org.apache.fineract.portfolio.loanaccount.service.LoanWritePlatformService;
+import org.apache.fineract.portfolio.savings.service.SavingsAccountWritePlatformService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
-@CommandType(entity = "LOAN", action = "RECOVERYPAYMENT")
-public class LoanRecoveryPaymentCommandHandler implements NewCommandSourceHandler {
+@CommandType(entity = "SAVINGS_ACCOUNT_NOTE", action = "UPDATE")
+public class UpdateSavingsAccountNoteCommandHandler implements NewCommandSourceHandler {
 
-    private final LoanWritePlatformService writePlatformService;
+    private final SavingsAccountWritePlatformService writePlatformService;
+
+    @Autowired
+    public UpdateSavingsAccountNoteCommandHandler(final SavingsAccountWritePlatformService writePlatformService) {
+        this.writePlatformService = writePlatformService;
+    }
 
     @Override
-    public CommandProcessingResult processCommand(JsonCommand command) {
-        final boolean isRecoveryRepayment = true;
-        final boolean isPayOff = false;
-        return writePlatformService.makeLoanRepayment(LoanTransactionType.REPAYMENT, command.getLoanId(), command, isRecoveryRepayment,
-                isPayOff);
+    public CommandProcessingResult processCommand(final JsonCommand command) {
+        return this.writePlatformService.updateSavingsAccountNote(command.entityId(), command);
     }
 }

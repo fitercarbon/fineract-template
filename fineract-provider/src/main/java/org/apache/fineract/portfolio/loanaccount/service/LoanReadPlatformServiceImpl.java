@@ -478,7 +478,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             LocalDate onDate) {
 
         this.context.authenticatedUser();
-        this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType);
+        this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType, false);
 
         final Loan loan = this.loanRepositoryWrapper.findOneWithNotFoundDetection(loanId, true);
         loan.setHelpers(null, null, loanRepaymentScheduleTransactionProcessorFactory);
@@ -2506,6 +2506,21 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public LoanTransactionData retrieveLoanPayoffTemplate(Long loanId) {
+        final LoanAccountData loan = this.retrieveOne(loanId);
+        final BigDecimal outstandingLoanBalance = null;
+        final LoanTransactionEnumData transactionType = LoanEnumerations.transactionType(LoanTransactionType.PAY_OFF);
+        final BigDecimal unrecognizedIncomePortion = null;
+        final List<CodeValueData> writeOffReasonOptions = new ArrayList<>(
+                this.codeValueReadPlatformService.retrieveCodeValuesByCode(LoanApiConstants.WRITEOFFREASONS));
+        LoanTransactionData loanTransactionData = new LoanTransactionData(null, null, null, transactionType, null, loan.currency(),
+                DateUtils.getBusinessLocalDate(), loan.getTotalOutstandingAmount(), loan.getNetDisbursalAmount(), null, null, null, null,
+                null, null, null, null, outstandingLoanBalance, unrecognizedIncomePortion, false, null);
+        loanTransactionData.setWriteOffReasonOptions(writeOffReasonOptions);
+        return loanTransactionData;
     }
 
     private static final class CollectionDataMapper implements RowMapper<CollectionData> {

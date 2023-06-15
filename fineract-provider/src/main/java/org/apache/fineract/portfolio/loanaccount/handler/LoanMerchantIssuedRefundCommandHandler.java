@@ -43,9 +43,10 @@ public class LoanMerchantIssuedRefundCommandHandler implements NewCommandSourceH
     @Override
     public CommandProcessingResult processCommand(final JsonCommand command) {
         try {
-            boolean isRecoveryRepayment = false;
+            final boolean isRecoveryRepayment = false;
+            final boolean isPayOff = false;
             return this.writePlatformService.makeLoanRepayment(LoanTransactionType.MERCHANT_ISSUED_REFUND, command.getLoanId(), command,
-                    isRecoveryRepayment);
+                    isRecoveryRepayment, isPayOff);
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             dataIntegrityErrorHandler.handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve, "loan.merchantIssuedRefund",
                     "Merchant Issued Refund");

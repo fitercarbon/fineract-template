@@ -43,9 +43,10 @@ public class LoanRepaymentCommandHandler implements NewCommandSourceHandler {
     @Override
     public CommandProcessingResult processCommand(final JsonCommand command) {
         try {
-            boolean isRecoveryRepayment = false;
+            final boolean isRecoveryRepayment = false;
+            final boolean isPayOff = false;
             return this.writePlatformService.makeLoanRepayment(LoanTransactionType.REPAYMENT, command.getLoanId(), command,
-                    isRecoveryRepayment);
+                    isRecoveryRepayment, isPayOff);
         } catch (final JpaSystemException | DataIntegrityViolationException dve) {
             dataIntegrityErrorHandler.handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve, "loan.repayment", "Repayment");
             return CommandProcessingResult.empty();

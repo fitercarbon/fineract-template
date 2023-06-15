@@ -374,6 +374,49 @@ final class SavingsAccountsApiResourceSwagger {
         public Integer resourceId;
     }
 
+    @Schema(description = "CreateSavingsAccountsAccountNoteResponse")
+    public static final class CreateSavingsAccountsAccountNoteResponse {
+
+        private CreateSavingsAccountsAccountNoteResponse() {}
+
+        @Schema(example = "1")
+        public Integer savingsId;
+        @Schema(example = "1")
+        public Integer clientId;
+        @Schema(example = "1")
+        public Integer resourceId;
+    }
+
+    @Schema(description = "UpdateSavingsAccountsAccountNoteResponse")
+    public static final class UpdateSavingsAccountsAccountNoteResponse {
+
+        private UpdateSavingsAccountsAccountNoteResponse() {}
+
+        @Schema(example = "1")
+        public Integer savingsId;
+        @Schema(example = "1")
+        public Integer clientId;
+        @Schema(example = "1")
+        public Integer resourceId;
+    }
+
+    @Schema(description = "GetSavingsAccountsAccountIdNotesResponse")
+    public static final class GetSavingsAccountsAccountIdNotesResponse {
+
+        private GetSavingsAccountsAccountIdNotesResponse() {}
+
+        static final class GetSavingsAccountsAccountIdNotes {
+
+            private GetSavingsAccountsAccountIdNotes() {}
+
+            @Schema(example = "1")
+            public Integer savingAccountId;
+            @Schema(example = "Savings account note")
+            public String note;
+
+        }
+    }
+
     @Schema(description = "FilterConstraintRequest")
     public static final class FilterConstraintRequest {
 

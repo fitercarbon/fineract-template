@@ -567,6 +567,10 @@ public class LoanTransaction extends AbstractAuditableWithUTCDateTimeCustom {
         return getTypeOf().isChargePayment() && isNotReversed();
     }
 
+    public boolean isPayoff() {
+        return LoanTransactionType.PAY_OFF.equals(getTypeOf()) && isNotReversed();
+    }
+
     public boolean isPenaltyPayment() {
         boolean isPenalty = false;
         if (isChargePayment()) {

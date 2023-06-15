@@ -448,6 +448,11 @@ public final class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.DEPOSIT_REDRAW.getValue().longValue(),
                         LoanTransactionType.DEPOSIT_REDRAW.getCode(), "Deposit Redraw");
             break;
+
+            case PAY_OFF:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.PAY_OFF.getValue().longValue(),
+                        LoanTransactionType.PAY_OFF.getCode(), "Payoff");
+            break;
         }
         return optionData;
     }

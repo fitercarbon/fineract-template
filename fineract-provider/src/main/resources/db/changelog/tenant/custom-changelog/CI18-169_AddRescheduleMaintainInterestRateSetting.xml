@@ -22,29 +22,14 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="brian" id="CI18-160_add_webhook_authorization_fields">
-        <preConditions onFail="WARN">
+    <changeSet author="brian" id="CI18-169_AddRescheduleMaintainInterestRateSetting">
+        <preConditions onFail="MARK_RAN">
             <not>
-                <sqlCheck expectedResult="1">
-                    SELECT COUNT(1) FROM m_hook_schema WHERE field_name = 'Basic Auth Credentials' and hook_template_id = 1
-                </sqlCheck>
+                <columnExists tableName="m_product_loan" columnName="maintain_interest_rate_on_loan_term_extension"/>
             </not>
         </preConditions>
-        <insert tableName="m_hook_schema">
-            <column name="hook_template_id" valueNumeric="1"/>
-            <column name="field_type" value="string"/>
-            <column name="field_name" value="Basic Auth Credentials"/>
-            <column name="placeholder" value="Base64 encoded Credentials(username:password)"/>
-            <column name="optional" valueBoolean="true"/>
-        </insert>
-        <insert tableName="m_hook_schema">
-            <column name="hook_template_id" valueNumeric="1"/>
-            <column name="field_type" value="string"/>
-            <column name="field_name" value="Api Key"/>
-            <column name="placeholder" value="API Key Credentials(key:value)"/>
-            <column name="optional" valueBoolean="true"/>
-        </insert>
-
-
+        <addColumn tableName="m_product_loan">
+            <column name="maintain_interest_rate_on_loan_term_extension" type="boolean" defaultValueBoolean="false"/>
+        </addColumn>
     </changeSet>
 </databaseChangeLog>

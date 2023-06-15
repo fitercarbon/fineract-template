@@ -31,23 +31,27 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.commands.domain.CommandWrapper;
 import org.apache.fineract.commands.service.CommandWrapperBuilder;
 import org.apache.fineract.commands.service.PortfolioCommandSourceWritePlatformService;
+import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
 import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.apache.fineract.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanScheduleData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleModel;
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.RescheduleLoansApiConstants;
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.data.LoanRescheduleRequestData;
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.service.LoanReschedulePreviewPlatformService;
 import org.apache.fineract.portfolio.loanaccount.rescheduleloan.service.LoanRescheduleRequestReadPlatformService;
+import org.apache.fineract.portfolio.loanaccount.service.LoanReadPlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -64,15 +68,18 @@ public class RescheduleLoansApiResource {
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
     private final LoanRescheduleRequestReadPlatformService loanRescheduleRequestReadPlatformService;
     private final LoanReschedulePreviewPlatformService loanReschedulePreviewPlatformService;
+    private final LoanReadPlatformService loanReadPlatformService;
     private final ApiRequestParameterHelper apiRequestParameterHelper;
+    private final CodeValueReadPlatformService codeValueReadPlatformService;
 
     @Autowired
     public RescheduleLoansApiResource(final DefaultToApiJsonSerializer<LoanRescheduleRequestData> loanRescheduleRequestToApiJsonSerializer,
             final PlatformSecurityContext platformSecurityContext,
             final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,
             final LoanRescheduleRequestReadPlatformService loanRescheduleRequestReadPlatformService,
-            final ApiRequestParameterHelper apiRequestParameterHelper,
+            final ApiRequestParameterHelper apiRequestParameterHelper, final LoanReadPlatformService loanReadPlatformService,
             final DefaultToApiJsonSerializer<LoanScheduleData> loanRescheduleToApiJsonSerializer,
+            final CodeValueReadPlatformService codeValueReadPlatformService,
             final LoanReschedulePreviewPlatformService loanReschedulePreviewPlatformService) {
         this.loanRescheduleRequestToApiJsonSerializer = loanRescheduleRequestToApiJsonSerializer;
         this.platformSecurityContext = platformSecurityContext;
@@ -81,6 +88,8 @@ public class RescheduleLoansApiResource {
         this.apiRequestParameterHelper = apiRequestParameterHelper;
         this.loanRescheduleToApiJsonSerializer = loanRescheduleToApiJsonSerializer;
         this.loanReschedulePreviewPlatformService = loanReschedulePreviewPlatformService;
+        this.loanReadPlatformService = loanReadPlatformService;
+        this.codeValueReadPlatformService = codeValueReadPlatformService;
     }
 
     @GET
@@ -90,11 +99,16 @@ public class RescheduleLoansApiResource {
     public String retrieveTemplate(@Context final UriInfo uriInfo) {
 
         this.platformSecurityContext.authenticatedUser().validateHasReadPermission(RescheduleLoansApiConstants.ENTITY_NAME);
-        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+        MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(queryParameters);
 
+        String loanId = queryParameters.getFirst("loanId");
         LoanRescheduleRequestData loanRescheduleReasons = null;
+        LoanTransactionData loanTransactionData = this.loanReadPlatformService.retrieveLoanTransactionTemplate(Long.valueOf(loanId));
         loanRescheduleReasons = this.loanRescheduleRequestReadPlatformService
                 .retrieveAllRescheduleReasons(RescheduleLoansApiConstants.LOAN_RESCHEDULE_REASON);
+
+        loanRescheduleReasons.updateLoanTransactionData(loanTransactionData);
 
         return this.loanRescheduleRequestToApiJsonSerializer.serialize(settings, loanRescheduleReasons);
     }

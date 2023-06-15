@@ -319,6 +319,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             repaymentEvent = new LoanTransactionGoodwillCreditPreBusinessEvent(loan);
         } else if (isRecoveryRepayment) {
             repaymentEvent = new LoanTransactionRecoveryPaymentPreBusinessEvent(loan);
+        } else if (repaymentTransactionType.isPayOff()) {
+            repaymentEvent = new LoanTransactionMakeRepaymentPreBusinessEvent(loan);
         }
         return repaymentEvent;
     }
@@ -336,6 +338,9 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
             repaymentEvent = new LoanTransactionGoodwillCreditPostBusinessEvent(transaction);
         } else if (isRecoveryRepayment) {
             repaymentEvent = new LoanTransactionRecoveryPaymentPostBusinessEvent(transaction);
+        }
+        if (repaymentTransactionType.isPayOff()) {
+            repaymentEvent = new LoanTransactionMakeRepaymentPostBusinessEvent(transaction);
         }
         return repaymentEvent;
     }

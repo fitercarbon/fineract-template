@@ -183,4 +183,12 @@ public class Note extends AbstractAuditableCustom {
     public String getNote() {
         return note;
     }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public SavingsAccount getSavingsAccount() {
+        return savingsAccount;
+    }
 }

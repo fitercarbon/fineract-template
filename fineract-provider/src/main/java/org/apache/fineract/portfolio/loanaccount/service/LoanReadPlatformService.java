@@ -175,4 +175,6 @@ public interface LoanReadPlatformService {
     Collection<PortfolioAccountData> retrieveVendorSavingAccountsForBnplLoans(Long vendorClientId);
 
     Collection<LoanTransactionData> retrieveLoanTransactions(final String filterConstraintJson, final Integer limit, final Integer offset);
+
+    LoanTransactionData retrieveLoanPayoffTemplate(final Long loanId);
 }

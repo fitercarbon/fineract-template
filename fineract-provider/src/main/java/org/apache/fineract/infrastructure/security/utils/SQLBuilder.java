@@ -101,6 +101,22 @@ public class SQLBuilder {
         args.add(argument);
     }
 
+    public void addORCriteria(String criteria, Object argument) {
+        var trimmedCriteria = criteria.trim();
+        if (sb.length() > 0) {
+            sb.append("  OR  ");
+        }
+        sb.append("(");
+        sb.append(trimmedCriteria);
+        sb.append(" ?");
+        crts.add(trimmedCriteria);
+
+        if (argument != null) {
+            args.add(argument);
+        }
+        sb.append(")");
+    }
+
     /**
      * Delegates to {@link #addCriteria(String, Object)} if argument is not null, otherwise does nothing.
      */

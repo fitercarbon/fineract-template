@@ -627,4 +627,18 @@ public class SavingsAccountDataValidator {
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
+
+    public void validateSavingsAccountNote(String json) {
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME);
+
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+        String note = this.fromApiJsonHelper.extractStringNamed("note", element);
+        baseDataValidator.reset().parameter("note").value(note).notBlank().notExceedingLengthOf(1000);
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
 }

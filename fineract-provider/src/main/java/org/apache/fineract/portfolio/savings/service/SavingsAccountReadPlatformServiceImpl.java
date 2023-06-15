@@ -487,8 +487,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     }
 
     @Override
-    public Collection<SavingsAccountTransactionData> retrieveAllTransactions(final Long savingsId, DepositAccountType depositAccountType,
-            Integer offset, Integer limit) {
+    public Collection<SavingsAccountTransactionData> retrieveAllTransactions(final Long savingsId, Integer offset, Integer limit) {
         if (offset == null) {
             offset = 0;
         }
@@ -496,10 +495,9 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             limit = 15;
         }
         final String sql = "select " + this.transactionsMapper.schema()
-                + " where sa.id = ? and sa.deposit_type_enum = ? AND transaction_type_enum not in (22,25)  order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC LIMIT ? OFFSET ?  ";
+                + " where sa.id = ? AND transaction_type_enum not in (22,25)  order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC LIMIT ? OFFSET ?  ";
 
-        return this.jdbcTemplate.query(sql, this.transactionsMapper,
-                new Object[] { savingsId, depositAccountType.getValue(), limit, offset }); // NOSONAR
+        return this.jdbcTemplate.query(sql, this.transactionsMapper, new Object[] { savingsId, limit, offset }); // NOSONAR
     }
 
     @Override
@@ -695,7 +693,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     @Override
     public List<Long> retrieveActiveSavingAccountsWithZeroInterest() {
         String sql = "select id from m_savings_account where status_enum = 300 and nominal_annual_interest_rate != 0 and deposit_type_enum != 200";
-        return this.jdbcTemplate.queryForList(sql, Long.class, true);
+        return this.jdbcTemplate.queryForList(sql, Long.class);
     }
 
     @Override

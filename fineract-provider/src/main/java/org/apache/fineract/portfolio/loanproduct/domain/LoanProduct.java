@@ -226,6 +226,9 @@ public class LoanProduct extends AbstractPersistableCustom {
     @JoinColumn(name = "product_type_id")
     private CodeValue productType;
 
+    @Column(name = "maintain_interest_rate_on_loan_term_extension")
+    private Boolean maintainInterestRateOnLoanTermExtension;
+
     public static LoanProduct assembleFromJson(final Fund fund, final LoanTransactionProcessingStrategy loanTransactionProcessingStrategy,
             final List<Charge> productCharges, final JsonCommand command, final AprCalculator aprCalculator, FloatingRate floatingRate,
             final List<Rate> productRates, final CodeValue productCategory, final CodeValue productType) {
@@ -241,6 +244,8 @@ public class LoanProduct extends AbstractPersistableCustom {
         final BigDecimal principal = command.bigDecimalValueOfParameterNamed("principal");
         final BigDecimal minPrincipal = command.bigDecimalValueOfParameterNamed("minPrincipal");
         final BigDecimal maxPrincipal = command.bigDecimalValueOfParameterNamed("maxPrincipal");
+        final Boolean maintainInterest = command
+                .booleanObjectValueOfParameterNamed(LoanProductConstants.maintainInterestOnLoanTermExtensionParamName);
 
         final InterestMethod interestMethod = InterestMethod.fromInt(command.integerValueOfParameterNamed("interestType"));
         final InterestCalculationPeriodMethod interestCalculationPeriodMethod = InterestCalculationPeriodMethod
@@ -433,7 +438,7 @@ public class LoanProduct extends AbstractPersistableCustom {
                 isEqualAmortization, productRates, fixedPrincipalPercentagePerInstallment, disallowExpectedDisbursements,
                 allowApprovedDisbursedAmountsOverApplied, overAppliedCalculationType, overAppliedNumber, maxNumberOfLoanExtensionsAllowed,
                 loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable, isBnplLoanProduct, requiresEquityContribution,
-                equityContributionLoanPercentage);
+                equityContributionLoanPercentage, maintainInterest);
 
     }
 
@@ -672,7 +677,7 @@ public class LoanProduct extends AbstractPersistableCustom {
             final boolean allowApprovedDisbursedAmountsOverApplied, final String overAppliedCalculationType,
             final Integer overAppliedNumber, final Integer maxNumberOfLoanExtensionsAllowed, final boolean loanTermIncludesToppedUpLoanTerm,
             final boolean isAccountLevelArrearsToleranceEnable, Boolean isBnplLoanProduct, Boolean requiresEquityContribution,
-            BigDecimal equityContributionLoanPercentage) {
+            BigDecimal equityContributionLoanPercentage, Boolean maintainInterest) {
         this.fund = fund;
         this.transactionProcessingStrategy = transactionProcessingStrategy;
         this.name = name.trim();
@@ -756,6 +761,7 @@ public class LoanProduct extends AbstractPersistableCustom {
         this.isBnplLoanProduct = isBnplLoanProduct;
         this.requiresEquityContribution = requiresEquityContribution;
         this.equityContributionLoanPercentage = equityContributionLoanPercentage;
+        this.maintainInterestRateOnLoanTermExtension = maintainInterest;
 
         if (rates != null) {
             this.rates = rates;

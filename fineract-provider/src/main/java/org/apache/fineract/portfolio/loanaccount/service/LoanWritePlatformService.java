@@ -45,7 +45,7 @@ public interface LoanWritePlatformService {
     CommandProcessingResult undoLoanDisbursal(Long loanId, JsonCommand command);
 
     CommandProcessingResult makeLoanRepayment(LoanTransactionType repaymentTransactionType, Long loanId, JsonCommand command,
-            boolean isRecoveryRepayment);
+            boolean isRecoveryRepayment, final boolean isPayOff);
 
     Map<String, Object> makeLoanBulkRepayment(CollectionSheetBulkRepaymentCommand bulkRepaymentCommand);
 
@@ -122,4 +122,5 @@ public interface LoanWritePlatformService {
 
     CommandProcessingResult runCloneJobForLoanPenalty(Long loanId);
 
+    CommandProcessingResult payOffLoan(Long loanId, JsonCommand command);
 }

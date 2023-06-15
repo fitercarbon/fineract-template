@@ -924,7 +924,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         int j = 0;
         for (JsonElement element : repayments) {
             childCommand = JsonCommand.fromExistingCommand(command, element);
-            result = makeLoanRepayment(LoanTransactionType.REPAYMENT, childLoanId[j++], childCommand, false);
+            result = makeLoanRepayment(LoanTransactionType.REPAYMENT, childLoanId[j++], childCommand, false, false);
         }
         return result;
     }
@@ -932,9 +932,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     @Transactional
     @Override
     public CommandProcessingResult makeLoanRepayment(final LoanTransactionType repaymentTransactionType, final Long loanId,
-            final JsonCommand command, final boolean isRecoveryRepayment) {
+            final JsonCommand command, final boolean isRecoveryRepayment, final boolean isPayOff) {
         final AppUser currentUser = getAppUserIfPresent();
-        this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType);
+        this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType, isPayOff);
         this.loanEventApiJsonValidator.validateNewRepaymentTransaction(command.json());
 
         final LocalDate transactionDate = command.localDateValueOfParameterNamed("transactionDate");
@@ -3296,6 +3296,15 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         addOverdueChargeToLoanAccountInArrears(loan.getId());
         return new CommandProcessingResultBuilder().withEntityId(loan.getId()) //
                 .withLoanId(loanId).build();
+    }
+
+    @Override
+    public CommandProcessingResult payOffLoan(Long loanId, JsonCommand command) {
+        final boolean isRecoveryPayment = false;
+        final boolean isPayOff = true;
+        CommandProcessingResult result = this.makeLoanRepayment(LoanTransactionType.PAY_OFF, command.getLoanId(), command,
+                isRecoveryPayment, isPayOff);
+        return result;
     }
 
     @Override

@@ -94,6 +94,7 @@ import org.apache.fineract.portfolio.group.domain.Group;
 import org.apache.fineract.portfolio.group.exception.GroupNotActiveException;
 import org.apache.fineract.portfolio.note.domain.Note;
 import org.apache.fineract.portfolio.note.domain.NoteRepository;
+import org.apache.fineract.portfolio.note.exception.NoteNotFoundException;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymentdetail.service.PaymentDetailWritePlatformService;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
@@ -178,6 +179,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
     private final PaymentTypeRepositoryWrapper repositoryWrapper;
 
     private final SavingsAccountTransactionLimitPlatformService savingsAccountTransactionLimitPlatformService;
+    private final SavingsAccountDataValidator savingsAccountDataValidator;
 
     @Autowired
     public SavingsAccountWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
@@ -202,7 +204,8 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
             final BusinessEventNotifierService businessEventNotifierService, final GSIMRepositoy gsimRepository,
             final JdbcTemplate jdbcTemplate, final SavingsAccountInterestPostingService savingsAccountInterestPostingService,
             final CodeValueRepositoryWrapper codeValueRepositoryWrapper, final PaymentTypeRepositoryWrapper repositoryWrapper,
-            final SavingsAccountTransactionLimitPlatformService savingsAccountTransactionLimitPlatformService) {
+            final SavingsAccountTransactionLimitPlatformService savingsAccountTransactionLimitPlatformService,
+            SavingsAccountDataValidator savingsAccountDataValidator) {
         this.context = context;
         this.savingAccountRepositoryWrapper = savingAccountRepositoryWrapper;
         this.savingsAccountTransactionRepository = savingsAccountTransactionRepository;
@@ -234,6 +237,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
         this.codeValueRepositoryWrapper = codeValueRepositoryWrapper;
         this.repositoryWrapper = repositoryWrapper;
         this.savingsAccountTransactionLimitPlatformService = savingsAccountTransactionLimitPlatformService;
+        this.savingsAccountDataValidator = savingsAccountDataValidator;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(SavingsAccountWritePlatformServiceJpaRepositoryImpl.class);
@@ -2488,6 +2492,29 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .withSavingsId(savingsId) //
                 .build();
 
+    }
+
+    @Override
+    public CommandProcessingResult createSavingsAccountNote(Long savingsId, JsonCommand command) {
+        this.savingsAccountDataValidator.validateSavingsAccountNote(command.json());
+        final String noteText = command.stringValueOfParameterNamed("note");
+        final Map<String, Object> changes = new LinkedHashMap<>();
+        SavingsAccount account = this.savingAccountAssembler.assembleFrom(savingsId);
+        final Note note = Note.savingNote(account, noteText);
+        changes.put("note", noteText);
+        this.noteRepository.save(note);
+        return new CommandProcessingResultBuilder().withEntityId(note.getId()).withSavingsId(savingsId).withClientId(account.clientId())
+                .with(changes).build();
+    }
+
+    @Override
+    public CommandProcessingResult updateSavingsAccountNote(Long noteId, JsonCommand command) {
+        this.savingsAccountDataValidator.validateSavingsAccountNote(command.json());
+        Note note = this.noteRepository.findById(noteId).orElseThrow(() -> new NoteNotFoundException(noteId));
+        final Map<String, Object> changes = note.update(command);
+        this.noteRepository.save(note);
+        return new CommandProcessingResultBuilder().withEntityId(note.getId()).withSavingsId(note.getSavingsAccount().getId())
+                .withClientId(note.getSavingsAccount().clientId()).with(changes).build();
     }
 
 }

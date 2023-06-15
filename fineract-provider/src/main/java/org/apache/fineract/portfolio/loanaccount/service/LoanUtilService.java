@@ -340,8 +340,8 @@ public class LoanUtilService {
         return disbursementDatas;
     }
 
-    public void validateRepaymentTransactionType(LoanTransactionType repaymentTransactionType) {
-        if (!repaymentTransactionType.isRepaymentType()) {
+    public void validateRepaymentTransactionType(LoanTransactionType repaymentTransactionType, final boolean isPayOff) {
+        if (!repaymentTransactionType.isRepaymentType() && !isPayOff) {
             throw new PlatformServiceUnavailableException("error.msg.repaymentTransactionType.provided.not.a.repayment.type",
                     "Loan :" + repaymentTransactionType.getCode() + " Repayment Transaction Type provided is not a Repayment Type",
                     repaymentTransactionType.getCode());

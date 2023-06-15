@@ -45,8 +45,7 @@ public interface SavingsAccountReadPlatformService {
 
     SavingsAccountTransactionData retrieveDepositTransactionTemplate(Long savingsId, DepositAccountType depositAccountType);
 
-    Collection<SavingsAccountTransactionData> retrieveAllTransactions(Long savingsId, DepositAccountType depositAccountType, Integer offset,
-            Integer limit);
+    Collection<SavingsAccountTransactionData> retrieveAllTransactions(Long savingsId, Integer offset, Integer limit);
 
     Collection<SavingsAccountTransactionData> retrieveAccrualTransactions(Long savingsId, DepositAccountType depositAccountType,
             Integer offset, Integer limit);

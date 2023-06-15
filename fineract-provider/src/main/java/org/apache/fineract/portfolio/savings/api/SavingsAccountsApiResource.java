@@ -66,6 +66,9 @@ import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSer
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.portfolio.note.data.NoteData;
+import org.apache.fineract.portfolio.note.domain.NoteType;
+import org.apache.fineract.portfolio.note.service.NoteReadPlatformService;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountBlockNarrationHistoryData;
@@ -102,6 +105,8 @@ public class SavingsAccountsApiResource {
 
     private final DefaultToApiJsonSerializer<SavingsAccountTransactionData> savingsTransactionApiJsonSerializer;
 
+    private final NoteReadPlatformService noteReadPlatformService;
+
     @Autowired
     public SavingsAccountsApiResource(final SavingsAccountReadPlatformService savingsAccountReadPlatformService,
             final PlatformSecurityContext context, final DefaultToApiJsonSerializer<SavingsAccountData> toApiJsonSerializer,
@@ -112,7 +117,8 @@ public class SavingsAccountsApiResource {
             final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService,
             final CodeValueReadPlatformService codeValueReadPlatformService,
             final SavingsAccountFloatingInterestRateReadPlatformService savingsAccountFloatingInterestRateReadPlatformService,
-            DefaultToApiJsonSerializer<SavingsAccountTransactionData> savingsTransactionApiJsonSerializer) {
+            DefaultToApiJsonSerializer<SavingsAccountTransactionData> savingsTransactionApiJsonSerializer,
+            NoteReadPlatformService noteReadPlatformService) {
         this.savingsAccountReadPlatformService = savingsAccountReadPlatformService;
         this.context = context;
         this.toApiJsonSerializer = toApiJsonSerializer;
@@ -124,6 +130,7 @@ public class SavingsAccountsApiResource {
         this.codeValueReadPlatformService = codeValueReadPlatformService;
         this.savingsAccountFloatingInterestRateReadPlatformService = savingsAccountFloatingInterestRateReadPlatformService;
         this.savingsTransactionApiJsonSerializer = savingsTransactionApiJsonSerializer;
+        this.noteReadPlatformService = noteReadPlatformService;
     }
 
     @GET
@@ -264,7 +271,7 @@ public class SavingsAccountsApiResource {
             if (associationParameters.contains(SavingsApiConstants.transactions)) {
                 mandatoryResponseParameters.add(SavingsApiConstants.transactions);
                 final Collection<SavingsAccountTransactionData> currentTransactions = this.savingsAccountReadPlatformService
-                        .retrieveAllTransactions(accountId, DepositAccountType.SAVINGS_DEPOSIT, offset, limit);
+                        .retrieveAllTransactions(accountId, offset, limit);
                 transactionSize = this.savingsAccountReadPlatformService.getSavingsAccountTransactionTotalFiltered(accountId,
                         DepositAccountType.SAVINGS_DEPOSIT, true);
                 if (!CollectionUtils.isEmpty(currentTransactions)) {
@@ -574,6 +581,65 @@ public class SavingsAccountsApiResource {
     public String delete(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId) {
 
         final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteSavingsAccount(accountId).build();
+
+        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+        return this.toApiJsonSerializer.serialize(result);
+    }
+
+    @GET
+    @Path("{accountId}/notes")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Retrieve a savings account's comments", description = "Example Requests:\n" + "\n" + "savingsaccounts/1/notes\n")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SavingsAccountsApiResourceSwagger.GetSavingsAccountsAccountIdNotesResponse.class))) })
+    public String retrieveAllNotes(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId) {
+        final Collection<NoteData> notes = this.noteReadPlatformService.retrieveNotesByResource(accountId,
+                NoteType.SAVING_ACCOUNT.getValue());
+        return this.toApiJsonSerializer.serialize(notes);
+    }
+
+    @POST
+    @Path("{accountId}/notes")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Adds a comment to a savings account", description = "A savings account can have several comments attached to it.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SavingsAccountsApiResourceSwagger.CreateSavingsAccountsAccountNoteResponse.class))) })
+    public String createNote(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+
+        String jsonApiRequest = apiRequestBodyAsJson;
+        if (StringUtils.isBlank(jsonApiRequest)) {
+            jsonApiRequest = "{}";
+        }
+        final CommandWrapper commandRequest = new CommandWrapperBuilder().withJson(jsonApiRequest).createSavingsAccountNote(accountId)
+                .build();
+
+        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+
+        return this.toApiJsonSerializer.serialize(result);
+    }
+
+    @PUT
+    @Path("{accountId}/notes/{noteId}")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Updates a savings account comment", description = "A savings account can have several comments attached to it. These comments can be updated by providing the noteId in the request.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = SavingsAccountsApiResourceSwagger.UpdateSavingsAccountsAccountNoteResponse.class))) })
+    public String createNote(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId,
+            @PathParam("noteId") @Parameter(description = "noteId") final Long noteId,
+            @Parameter(hidden = true) final String apiRequestBodyAsJson) {
+
+        String jsonApiRequest = apiRequestBodyAsJson;
+        if (StringUtils.isBlank(jsonApiRequest)) {
+            jsonApiRequest = "{}";
+        }
+
+        final CommandWrapper commandRequest = new CommandWrapperBuilder().withJson(jsonApiRequest)
+                .updateSavingsAccountNote(noteId, accountId).build();
 
         final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 
