@@ -3709,4 +3709,72 @@ public class CommandWrapperBuilder {
         this.href = "/payoffloans/" + loanId;
         return this;
     }
+
+    public CommandWrapperBuilder updateHouseholdExpenses(long householdExpenseId) {
+        this.actionName = "UPDATE";
+        this.entityName = "HOUSEHOLD_EXPENSES";
+        this.entityId = householdExpenseId;
+        this.href = "/householdexpenses/" + householdExpenseId;
+        return this;
+    }
+
+    public CommandWrapperBuilder addHouseholdExpenses(long clientId) {
+        this.actionName = "ADD";
+        this.entityName = "HOUSEHOLD_EXPENSES";
+        this.clientId = clientId;
+        this.href = "/householdexpenses/" + clientId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteHouseholdExpenses(long householdExpenseId) {
+        this.actionName = "DELETE";
+        this.entityName = "HOUSEHOLD_EXPENSES";
+        this.entityId = householdExpenseId;
+        this.href = "/householdexpenses/" + householdExpenseId;
+        return this;
+    }
+
+    public CommandWrapperBuilder createClientOtherInfo(final long clientId) {
+        this.actionName = "CREATE";
+        this.entityName = "CLIENTOTHERINFO";
+        this.href = "/clients/" + clientId + "/otherInfo";
+        this.clientId = clientId;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateClientOtherInfo(final Long otherInfoId, final Long clientId) {
+        this.actionName = "UPDATE";
+        this.entityName = "CLIENTOTHERINFO";
+        this.href = "/clients/" + clientId + "/otherInfo";
+        this.clientId = clientId;
+        this.entityId = otherInfoId;
+        return this;
+    }
+
+    public CommandWrapperBuilder addBusinessDetail(final long clientId) {
+        this.actionName = "CREATE";
+        this.entityName = "CLIENTBUSINESSDETAIL";
+        this.href = "/clients/" + clientId + "/businessDetail";
+        this.clientId = clientId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteBusinessDetail(final long clientId, final long businessDetailId) {
+        this.actionName = "DELETE";
+        this.entityName = "CLIENTBUSINESSDETAIL";
+        this.href = "/clients/" + clientId + "/businessDetail/" + businessDetailId;
+        this.clientId = clientId;
+        this.entityId = businessDetailId;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateBusinessDetail(final long clientId, final long businessDetailId) {
+        this.actionName = "UPDATE";
+        this.entityName = "CLIENTBUSINESSDETAIL";
+        this.entityId = businessDetailId;
+        this.clientId = clientId;
+        this.href = "/clients/" + clientId + "/businessDetail/" + businessDetailId;
+        return this;
+    }
 }

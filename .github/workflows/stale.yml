@@ -5,17 +5,11 @@ name: Mark stale issues and pull requests
 on:
   schedule:
   - cron: "0 0 * * *"
-permissions:
-  contents: read
-
 jobs:
   stale:
-    permissions:
-      issues: write  # for actions/stale to close stale issues
-      pull-requests: write  # for actions/stale to close stale PRs
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/stale@532554b8a8498a0e006fbcde824b048728c4178f # tag=v5
+    - uses: actions/stale@v3
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         # stale-issue-message: 'Stale issue message'

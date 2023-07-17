@@ -1,0 +1,20 @@
+{
+  "createClientOtherInfoPayload": {
+    "strataId": "#(strataId)",
+    "nationalityId": "#(nationalityId)",
+    "numberOfChildren": "1",
+    "numberOfDependents": "1",
+    "yearArrivedInHostCountryId": "#(yearArrivedInHostCountryId)",
+    "locale": "en",
+    "dateFormat": "#(format)"
+  },
+  "updateClientOtherInfoPayload": {
+    "strataId": "#(strataId)",
+    "nationalityId": "#(nationalityId)",
+    "numberOfChildren": "2",
+    "numberOfDependents": "1",
+    "yearArrivedInHostCountryId": "#(yearArrivedInHostCountryId)",
+    "locale": "en",
+    "dateFormat": "#(format)"
+  }
+}

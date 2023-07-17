@@ -59,3 +59,17 @@ Feature: Client creations steps
     When method GET
     Then status 200
     Then def globalConfig = response
+
+      # enable global configuration
+  @ignore
+  @enable_global_config
+  Scenario: enable Global Config
+    Given configure ssl = true
+    Given path 'configurations' ,configurationsId
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request configurationData.enable_global_config
+    When method PUT
+    Then status 200
+    Then def res = response

@@ -24,11 +24,17 @@ import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.cont
 import static org.apache.fineract.infrastructure.hooks.api.HookApiConstants.payloadURLName;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +42,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.domain.FineractContext;
 import org.apache.fineract.infrastructure.hooks.domain.Hook;
 import org.apache.fineract.infrastructure.hooks.domain.HookConfiguration;
+import org.apache.fineract.portfolio.client.domain.Client;
+import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
 import org.apache.fineract.template.domain.Template;
-import org.apache.fineract.template.domain.TemplateMapper;
-import org.apache.fineract.template.service.TemplateMergeService;
 import org.springframework.stereotype.Service;
 import retrofit2.Callback;
 
@@ -46,13 +52,29 @@ import retrofit2.Callback;
 @RequiredArgsConstructor
 public class WebHookProcessor implements HookProcessor {
 
+    private final ClientRepositoryWrapper clientRepository;
     private final ProcessorHelper processorHelper;
-    private final TemplateMergeService templateMergeService;
 
     @Override
     public void process(final Hook hook, final String payload, final String entityName, final String actionName,
             final FineractContext context) throws IOException {
+        final HashMap<String, Object> payLoadMap = new ObjectMapper().readValue(payload, HashMap.class);
 
+        if (payLoadMap.get("response") instanceof Map<?, ?>) {
+            Map<String, Object> responseMap = (Map<String, Object>) payLoadMap.get("response");
+            if (responseMap.get("errors") instanceof List && ((List) responseMap.get("errors")).size() > 0) {
+                return;
+            }
+        }
+
+        if (payLoadMap.get("request") instanceof Map<?, ?>) {
+            Map<String, Object> requestMap = (Map<String, Object>) payLoadMap.get("request");
+            if (requestMap.get("clientId") != null) {
+                Long clientId = Long.parseLong(String.valueOf(requestMap.get("clientId")));
+                Client client = clientRepository.findOneWithNotFoundDetection(clientId);
+                payLoadMap.put("client", client);
+            }
+        }
         final Set<HookConfiguration> config = hook.getHookConfig();
 
         String url = "";
@@ -72,17 +94,16 @@ public class WebHookProcessor implements HookProcessor {
             if (fieldName.equals(contentTypeName)) {
                 contentType = conf.getFieldValue();
             }
-            if (fieldName.equals(BasicAuthParamName)) {
+            if (fieldName.equals(BasicAuthParamName) && !conf.getFieldValue().isEmpty()) {
                 basicAuthCreds = "Basic " + conf.getFieldValue();
             }
-            if (fieldName.equals(apiKeyName)) {
+            if (fieldName.equals(apiKeyName) && !conf.getFieldValue().isEmpty()) {
                 String keyValuePair = conf.getFieldValue();
                 apiKey = StringUtils.split(keyValuePair, ":")[0];
                 apiKeyValue = StringUtils.split(keyValuePair, ":")[1];
             }
         }
-        final HashMap<String, Object> map = new ObjectMapper().readValue(payload, HashMap.class);
-        final String compilePayLoad = compilePayLoad(hook.getUgdTemplate(), (Map<String, Object>) map.get("request"));
+        final String compilePayLoad = compilePayLoad(hook.getUgdTemplate(), payLoadMap);
         sendRequest(url, contentType, compilePayLoad, entityName, actionName, context, basicAuthCreds, apiKey, apiKeyValue);
     }
 
@@ -95,14 +116,15 @@ public class WebHookProcessor implements HookProcessor {
 
         @SuppressWarnings("rawtypes")
         final Callback callback = processorHelper.createCallback(url);
-
+        final String validPayload = payload.replace("&nbsp;", " ").replace("&quot;", "\"").replaceAll("\\\\&quot;", "\"");
         if (contentType.equalsIgnoreCase("json") || contentType.contains("json")) {
-            final JsonObject json = JsonParser.parseString(payload).getAsJsonObject();
 
-            if (StringUtils.isBlank(basicAuthCreds)) {
+            final JsonObject json = JsonParser.parseString(validPayload).getAsJsonObject();
+
+            if (!StringUtils.isBlank(basicAuthCreds)) {
                 service.sendJsonRequestBasicAuth(entityName, actionName, context.getTenantContext().getTenantIdentifier(),
                         fineractEndpointUrl, basicAuthCreds, json).enqueue(callback);
-            } else if (StringUtils.isBlank(apiKey)) {
+            } else if (!StringUtils.isBlank(apiKey)) {
                 service.sendJsonRequestApiKey(entityName, actionName, context.getTenantContext().getTenantIdentifier(), fineractEndpointUrl,
                         apiKeyValue, json).enqueue(callback);
             } else
@@ -110,17 +132,17 @@ public class WebHookProcessor implements HookProcessor {
                         .enqueue(callback);
         } else {
             Map<String, String> map = new HashMap<>();
-            map = new Gson().fromJson(payload, map.getClass());
+            map = new Gson().fromJson(validPayload, map.getClass());
             service.sendFormRequest(entityName, actionName, context.getTenantContext().getTenantIdentifier(), fineractEndpointUrl, map)
                     .enqueue(callback);
         }
     }
 
-    private String compilePayLoad(final Template template, final Map<String, Object> requestMap) {
-        Map<String, Object> payLoadMap = new HashMap<>();
-        for (final TemplateMapper mapper : template.getMappers()) {
-            payLoadMap.put(mapper.getMapperkey(), requestMap.get(mapper.getMappervalue()));
-        }
-        return new Gson().toJson(payLoadMap);
+    private String compilePayLoad(final Template template, final Map<String, Object> payLoadObj) throws IOException {
+        final MustacheFactory mf = new DefaultMustacheFactory();
+        final Mustache mustache = mf.compile(new StringReader(template.getText()), "");
+        StringWriter writer = new StringWriter();
+        mustache.execute(writer, payLoadObj).flush();
+        return writer.toString().replaceAll("<[^>]*>", "");
     }
 }

@@ -16,3 +16,15 @@ Feature: Codes api tests
     When method GET
     Then status 200
     Then def listOfCodes = response
+
+  @ignore
+  @fetchCodeByNameStep
+  Scenario: Fetch Code
+    Given path 'codes/name',codeName
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    When method GET
+    Then status 200
+    Then def codeName = response

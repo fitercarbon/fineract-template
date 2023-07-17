@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet author="deepika@fiter.io" id="modify_client_other_info_for_company">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="m_client_other_info"/>
+            <not>
+                <columnExists tableName="m_client_other_info" columnName="business_location"/>
+                <columnExists tableName="m_client_other_info" columnName="tax_identification_number"/>
+                <columnExists tableName="m_client_other_info" columnName="other_employment_income_generating_activity"/>
+                <columnExists tableName="m_client_other_info" columnName="other_employment_income_generating_activity_monthly_amount"/>
+                <columnExists tableName="m_client_other_info" columnName="telephone_no"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_client_other_info">
+            <column name="business_location" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tax_identification_number" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="income_generating_activity" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="income_generating_activity_monthly_amount" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="telephone_no" type="varchar(20)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_unique_constraints_for_co_signors">
+        <addUniqueConstraint
+                columnNames="co_signors"
+                constraintName="co_signors_constraint"
+                tableName="m_client_other_info"/>
+    </changeSet>
+    <changeSet  author="deepika@fiter.io"  id="dropNotNullConstraint">
+        <preConditions>
+            <columnExists tableName="m_client_other_info" columnName="nationality_cv_id"></columnExists>
+            <columnExists tableName="m_client_other_info" columnName="year_arrived_in_country_cv_id"></columnExists>
+        </preConditions>
+        <dropNotNullConstraint
+                                columnDataType="int"
+                                columnName="nationality_cv_id"
+                                tableName="m_client_other_info"/>
+        <dropNotNullConstraint
+                columnDataType="int"
+                columnName="year_arrived_in_country_cv_id"
+                tableName="m_client_other_info"/>
+    </changeSet>
+</databaseChangeLog>

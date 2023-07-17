@@ -23,6 +23,7 @@ import static org.apache.fineract.portfolio.savings.DepositsApiConstants.FIXED_D
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.FIXED_DEPOSIT_PRODUCT_RESOURCE_NAME;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.RECURRING_DEPOSIT_PRODUCT_REQUEST_DATA_PARAMETERS;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.RECURRING_DEPOSIT_PRODUCT_RESOURCE_NAME;
+import static org.apache.fineract.portfolio.savings.DepositsApiConstants.accountingRuleParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.adjustAdvanceTowardsFuturePaymentsParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.allowFreeWithdrawalParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.allowWithdrawalParamName;
@@ -372,6 +373,55 @@ public class DepositProductDataValidator {
 
             validatePaymentChannelFundSourceMappings(fromApiJsonHelper, baseDataValidator, element);
             validateChargeToIncomeAccountMappings(fromApiJsonHelper, baseDataValidator, element);
+        } else if (isAccrualAccounting(accountingRuleType)) {
+
+            final Long savingsControlAccountId = fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.SAVINGS_CONTROL.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.SAVINGS_CONTROL.getValue()).value(savingsControlAccountId)
+                    .notNull().integerGreaterThanZero();
+
+            final Long savingsReferenceAccountId = fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.SAVINGS_REFERENCE.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.SAVINGS_REFERENCE.getValue()).value(savingsReferenceAccountId)
+                    .notNull().integerGreaterThanZero();
+
+            final Long transfersInSuspenseAccountId = fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.TRANSFERS_SUSPENSE.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.TRANSFERS_SUSPENSE.getValue())
+                    .value(transfersInSuspenseAccountId).notNull().integerGreaterThanZero();
+
+            final Long interestOnSavingsAccountId = fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.INTEREST_ON_SAVINGS.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.INTEREST_ON_SAVINGS.getValue())
+                    .value(interestOnSavingsAccountId).notNull().integerGreaterThanZero();
+
+            final Long incomeFromFeeId = fromApiJsonHelper.extractLongNamed(SavingProductAccountingParams.INCOME_FROM_FEES.getValue(),
+                    element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.INCOME_FROM_FEES.getValue()).value(incomeFromFeeId).notNull()
+                    .integerGreaterThanZero();
+
+            final Long incomeFromPenaltyId = fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.INCOME_FROM_PENALTIES.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.INCOME_FROM_PENALTIES.getValue()).value(incomeFromPenaltyId)
+                    .notNull().integerGreaterThanZero();
+
+            final Long receivablePenaltyAccountId = this.fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.PENALTIES_RECEIVABLE.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.PENALTIES_RECEIVABLE.getValue())
+                    .value(receivablePenaltyAccountId).notNull().integerGreaterThanZero();
+
+            final Long receivableFeeAccountId = this.fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.FEES_RECEIVABLE.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.FEES_RECEIVABLE.getValue()).value(receivableFeeAccountId)
+                    .notNull().integerGreaterThanZero();
+
+            final Long interestPayableAccountId = this.fromApiJsonHelper
+                    .extractLongNamed(SavingProductAccountingParams.INTEREST_PAYABLE.getValue(), element);
+            baseDataValidator.reset().parameter(SavingProductAccountingParams.INTEREST_PAYABLE.getValue()).value(interestPayableAccountId)
+                    .notNull().integerGreaterThanZero();
+
+            validatePaymentChannelFundSourceMappings(fromApiJsonHelper, baseDataValidator, element);
+            validateChargeToIncomeAccountMappings(fromApiJsonHelper, baseDataValidator, element);
         }
 
         validateTaxWithHoldingParams(baseDataValidator, element, true);
@@ -583,6 +633,29 @@ public class DepositProductDataValidator {
         baseDataValidator.reset().parameter(SavingProductAccountingParams.INCOME_FROM_PENALTIES.getValue()).value(incomeFromPenaltyId)
                 .ignoreIfNull().integerGreaterThanZero();
 
+        // accounting related data validation
+        if (this.fromApiJsonHelper.parameterExists(accountingRuleParamName, element)) {
+            final Integer accountingRuleType = fromApiJsonHelper.extractIntegerNamed(accountingRuleParamName, element, Locale.getDefault());
+            baseDataValidator.reset().parameter(accountingRuleParamName).value(accountingRuleType).notNull().inMinMaxRange(1, 3);
+
+            if (isAccrualAccounting(accountingRuleType)) {
+                final Long receivablePenaltyAccountId = this.fromApiJsonHelper
+                        .extractLongNamed(SavingProductAccountingParams.PENALTIES_RECEIVABLE.getValue(), element);
+                baseDataValidator.reset().parameter(SavingProductAccountingParams.PENALTIES_RECEIVABLE.getValue())
+                        .value(receivablePenaltyAccountId).notNull().integerGreaterThanZero();
+
+                final Long receivableFeeAccountId = this.fromApiJsonHelper
+                        .extractLongNamed(SavingProductAccountingParams.FEES_RECEIVABLE.getValue(), element);
+                baseDataValidator.reset().parameter(SavingProductAccountingParams.FEES_RECEIVABLE.getValue()).value(receivableFeeAccountId)
+                        .notNull().integerGreaterThanZero();
+
+                final Long interestPayableAccountId = this.fromApiJsonHelper
+                        .extractLongNamed(SavingProductAccountingParams.INTEREST_PAYABLE.getValue(), element);
+                baseDataValidator.reset().parameter(SavingProductAccountingParams.INTEREST_PAYABLE.getValue())
+                        .value(interestPayableAccountId).notNull().integerGreaterThanZero();
+            }
+        }
+
         validatePaymentChannelFundSourceMappings(fromApiJsonHelper, baseDataValidator, element);
         validateChargeToIncomeAccountMappings(fromApiJsonHelper, baseDataValidator, element);
         validateTaxWithHoldingParams(baseDataValidator, element, false);
@@ -654,6 +727,10 @@ public class DepositProductDataValidator {
 
     private boolean isCashBasedAccounting(final Integer accountingRuleType) {
         return AccountingRuleType.CASH_BASED.getValue().equals(accountingRuleType);
+    }
+
+    private boolean isAccrualAccounting(final Integer accountingRuleType) {
+        return AccountingRuleType.ACCRUAL_PERIODIC.getValue().equals(accountingRuleType);
     }
 
     /**

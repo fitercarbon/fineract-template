@@ -1,0 +1,25 @@
+{
+  "createPayload":{
+    "foodExpensesAmount": 250,
+    "otherExpensesList": [
+      {
+        "otherExpensesId": "#(otherExpensesId)",
+        "otherExpensesAmount": 4000
+      }
+    ]
+  },
+
+  "updatePayload":{
+    "foodExpensesAmount": 3000,
+    "schoolFessAmount": 190,
+    "rentAmount": 2000,
+    "utilitiesAmount": 300,
+    "otherExpensesList": [
+      {
+        "otherExpensesId": "#(otherExpensesId)",
+        "otherExpensesAmount": 5000
+      }
+    ]
+  }
+
+}

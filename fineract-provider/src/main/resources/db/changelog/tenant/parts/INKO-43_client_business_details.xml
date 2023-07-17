@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet author="bosco@fiter.io" id="add_codes_for_m_business_detail_business_type">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'BusinessType';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="BusinessType" />
+            <column name="is_system_defined" valueBoolean="true" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_codes_for_m_business_detail_source_of_capital">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'SourceOfCapital';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="SourceOfCapital" />
+            <column name="is_system_defined" valueBoolean="true" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_code_values_for_m_business_detail_business_type_retail">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code_value where code_value = 'Retail';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code_value">
+            <column name="code_id" valueComputed="(select id from m_code where code_name='BusinessType')"/>
+            <column name="code_value" value="Retail"/>
+            <column name="code_description"/>
+            <column name="order_position" valueNumeric="1"/>
+            <column name="code_score"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_mandatory" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_code_value_for_m_business_detail_source_of_capital_salary">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code_value where code_value = 'Salary';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code_value">
+            <column name="code_id" valueComputed="(select id from m_code where code_name='SourceOfCapital')"/>
+            <column name="code_value" value="Salary"/>
+            <column name="code_description"/>
+            <column name="order_position" valueNumeric="1"/>
+            <column name="code_score"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_mandatory" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="CREATE_CLIENTBUSINESSDETAIL_CLIENT" author="bosco@fiter.io">
+        <sql>
+            DELETE FROM m_permission WHERE m_permission.code = 'CREATE_CLIENTBUSINESSDETAIL_CLIENT';
+        </sql>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_CREATE_CLIENTBUSINESSDETAIL_3">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'CREATE_CLIENTBUSINESSDETAIL';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="CREATE_CLIENTBUSINESSDETAIL" />
+            <column name="entity_name" value="CLIENTBUSINESSDETAIL" />
+            <column name="action_name" value="CREATE" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="create-m_business_detail" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_business_detail"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_business_detail">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"  />
+            </column>
+            <column name="client_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="FK_m_business_detail-m_client_client_id" references="m_client(id)"/>
+            </column>
+            <column name="external_id" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="business_type_id" type="int">
+                <constraints nullable="false" foreignKeyName="FK_m_business_detail_m_code_value_business_type_id" references="m_code_value(id)"/>
+            </column>
+            <column name="business_creation_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="starting_capital" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_of_capital" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_employee" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_revenue" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="average_monthly_revenue" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="best_month" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="reason_for_best_month" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="worst_month" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="reason_for_worst_month" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="number_of_purchase" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchase_frequency" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="total_purchase_last_month" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_purchase" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="last_purchase_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="business_asset_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount_at_cash" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount_at_saving" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount_at_inventory" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fixed_asset_cost" type="decimal(19,6)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="total_in_tax" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_in_transport" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_in_rent" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_in_communication" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="other_expense" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="other_expense_amount" type="decimal(19,6)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="total_utility" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_worker_salary" type="decimal(19,6)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="total_wage" type="decimal(19,6)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="society" type="decimal(19,6)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="createdby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_business_detail-created_by" references="m_appuser(id)"/>
+            </column>
+            <column name="lastmodifiedby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_business_detail-lastmodifiedby_id" references="m_appuser(id)"/>
+            </column>
+            <column name="created_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+            <column name="lastmodified_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_enable_client_business_details_configurations" >
+
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="c_configuration"/>
+
+            <sqlCheck expectedResult="0">
+                select count(1) from c_configuration where name = 'Enable-Client-Business-Detail';
+            </sqlCheck>
+
+        </preConditions>
+        <insert tableName="c_configuration">
+            <column name="name" value="Enable-Client-Business-Detail" />
+            <column name="value" value="null" />
+            <column name="date_value" value="null" />
+            <column name="enabled" valueBoolean="false" />
+            <column name="is_trap_door" valueBoolean="false" />
+            <column name="description" value="This configuration enables client business details if enabled" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="modify-m_business_detail-business_type_id-data-type-to-int" author="bosco@fiter.io">
+        <modifyDataType tableName="m_business_detail" columnName="business_type_id" newDataType="int"/>
+    </changeSet>
+
+    <changeSet id="modify-m_business_detail-source_of_capital-data-type-to-int" author="bosco@fiter.io">
+        <modifyDataType tableName="m_business_detail" columnName="source_of_capital" newDataType="int"/>
+    </changeSet>
+
+    <changeSet id="drop.modify.FK_m_business_detail_m_code_value_business_type_id.business_type_id" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="FK_m_business_detail_m_code_value_business_type_id"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="m_business_detail"
+                                  constraintName="FK_m_business_detail_m_code_value_business_type_id"/>
+        <addForeignKeyConstraint
+                baseColumnNames="business_type_id" baseTableName="m_business_detail"
+                constraintName="FK_m_business_detail_m_code_value_business_type_id_2" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+    </changeSet>
+
+    <changeSet id="FK-addForeignKeyConstraint-m_business_detail-source_of_capital" author="bosco@fiter.io">
+        <addForeignKeyConstraint
+                baseColumnNames="source_of_capital" baseTableName="m_business_detail"
+                constraintName="FK_m_business_detail_m_code_value_source_of_capital" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+    </changeSet>
+    <changeSet id="DELETE_CLIENTBUSINESSDETAIL_3" author="bosco@fiter.io">
+        <sql>
+            DELETE FROM m_permission WHERE m_permission.code = 'DELETE_CLIENTBUSINESSDETAIL';
+        </sql>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_DELETE_CLIENTBUSINESSDETAIL_3">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'DELETE_CLIENTBUSINESSDETAIL';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="DELETE_CLIENTBUSINESSDETAIL" />
+            <column name="entity_name" value="CLIENTBUSINESSDETAIL" />
+            <column name="action_name" value="DELETE" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_UPDATE_CLIENTBUSINESSDETAIL">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'UPDATE_CLIENTBUSINESSDETAIL';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="UPDATE_CLIENTBUSINESSDETAIL" />
+            <column name="entity_name" value="CLIENTBUSINESSDETAIL" />
+            <column name="action_name" value="UPDATE" />
+        </insert>
+    </changeSet>
+</databaseChangeLog>

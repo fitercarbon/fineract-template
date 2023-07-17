@@ -103,4 +103,20 @@ public final class ClientEnumerations {
         return optionDatas;
     }
 
+    public static EnumOptionData monthEnum(final Integer statusId) {
+        return monthEnum(MonthEnum.fromInt(statusId));
+    }
+
+    public static EnumOptionData monthEnum(final MonthEnum monthEnum) {
+        final EnumOptionData optionData = new EnumOptionData(monthEnum.getValue().longValue(), monthEnum.getCode(), monthEnum.toString());
+        return optionData;
+    }
+
+    public static List<EnumOptionData> monthEnum(final MonthEnum[] monthEnums) {
+        final List<EnumOptionData> optionDatas = new ArrayList<>();
+        for (final MonthEnum monthEnum : monthEnums) {
+            optionDatas.add(monthEnum(monthEnum));
+        }
+        return optionDatas;
+    }
 }

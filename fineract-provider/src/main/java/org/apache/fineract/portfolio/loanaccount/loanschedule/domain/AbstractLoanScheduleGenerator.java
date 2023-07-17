@@ -1141,6 +1141,12 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                             loanTermVariationsData.getDecimalValue().intValue());
                     adjustInstallmentOrPrincipalAmount(loanApplicationTerms, scheduleParams.getTotalCumulativePrincipal(),
                             scheduleParams.getPeriodNumber(), mc);
+
+                    Money totalInterestChargedForFullLoanTerm = loanApplicationTerms
+                            .calculateTotalInterestCharged(this.paymentPeriodsInOneYearCalculator, mc);
+
+                    loanApplicationTerms.updateTotalInterestDue(totalInterestChargedForFullLoanTerm);
+
                     loanTermVariationsData.setProcessed(true);
                 break;
                 case GRACE_ON_PRINCIPAL:
