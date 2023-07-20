@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.service;
+package org.apache.fineract.portfolio.client.exception;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
 
-public interface ClientOtherInfoWritePlatformService {
+/**
+ * A {@link RuntimeException} thrown when client other info resources are not found.
+ */
+public class ClientRecruitmentSurveyAlreadyHadDoneException extends AbstractPlatformResourceNotFoundException {
 
-    CommandProcessingResult create(Long clientId, JsonCommand command);
-
-    CommandProcessingResult update(Long otherInfoId, JsonCommand command);
-
+    public ClientRecruitmentSurveyAlreadyHadDoneException(final Long clientId) {
+        super("error.msg.client.recruitment.survey.already.had.done", "Client Recruitment Survey Already Had Done for client :" + clientId,
+                clientId);
+    }
 }

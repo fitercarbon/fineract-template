@@ -86,5 +86,6 @@
     <include file="parts/OXY-137_add_max_withdrawal_global_config.xml" relativeToChangelogFile="true" />
     <include file="parts/OXY-138_add_on_hold_table_for_savings_account.xml" relativeToChangelogFile="true" />
     <include file="parts/INKO-43_client_business_details.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO-69-modify-loan-account-and-product.xml" relativeToChangelogFile="true" />
     <includeAll path="custom-changelog" relativeToChangelogFile="true"/>
 </databaseChangeLog>

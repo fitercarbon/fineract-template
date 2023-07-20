@@ -134,10 +134,16 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
 
         final GlobalConfigurationPropertyData enableClientBusinessDetail = this.configurationReadPlatformService
                 .retrieveGlobalConfiguration("Enable-Client-Business-Detail");
+        final GlobalConfigurationPropertyData enableClientOtherInfo = this.configurationReadPlatformService
+                .retrieveGlobalConfiguration("Enable-other-client-info");
+        final GlobalConfigurationPropertyData enableClientRecruitmentSurvey = this.configurationReadPlatformService
+                .retrieveGlobalConfiguration("Enable-client-recruitment-survey");
 
         final Boolean isAddressEnabled = configuration.isEnabled();
         final Boolean isbusinessOwnersEnabled = configurationBusinessOwner.isEnabled();
         final Boolean isClientBusinessDetailEnabled = enableClientBusinessDetail.isEnabled();
+        final Boolean isClientOtherInfoEnabled = enableClientOtherInfo.isEnabled();
+        final Boolean isClientRecruitmentSurveyEnabled = enableClientRecruitmentSurvey.isEnabled();
         if (isAddressEnabled) {
             address = this.addressReadPlatformService.retrieveTemplate();
         }
@@ -193,6 +199,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                 new ArrayList<ClientBusinessOwnerData>(Arrays.asList(ownerData)), isbusinessOwnersEnabled, titleOptions);
         clientData.setClientBusinessDetailData(clientBusinessDetailData);
         clientData.setClientBusinessDetailEnabled(isClientBusinessDetailEnabled);
+        clientData.setClientOtherInfoEnabled(isClientOtherInfoEnabled);
+        clientData.setClientRecruitmentSurveyEnabled(isClientRecruitmentSurveyEnabled);
         return clientData;
     }
 

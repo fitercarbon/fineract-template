@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet id="add_client_recruitment_survey_cohort_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Cohort';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Cohort" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_client_recruitment_survey_program_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Program';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Program" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="deepika@fiter.io" id="add_recruitment_survey_create_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_client_recruitment_survey"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_client_recruitment_survey">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="client_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="client_recruitment_survey_Fk_m_client_id" references="m_client(id)"/>
+            </column>
+            <column name="survey_name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="survey_location" type="varchar(200)">
+                <constraints nullable="false" />
+            </column>
+            <column name="country_cv_id" type="int">
+                <constraints nullable="false" />
+            </column>
+            <column name="cohort_cv_id" type="int">
+                <constraints nullable="false" />
+            </column>
+            <column name="program_cv_id" type="int">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseColumnNames="cohort_cv_id" baseTableName="m_client_recruitment_survey"
+                constraintName="FK_client_recruitment_survey_m_code_value_cohort_cv_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+        <addForeignKeyConstraint
+                baseColumnNames="program_cv_id" baseTableName="m_client_recruitment_survey"
+                constraintName="FK_client_recruitment_survey_m_code_value_program_cv_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+        <addForeignKeyConstraint
+                baseColumnNames="country_cv_id" baseTableName="m_client_recruitment_survey"
+                constraintName="FK_client_recruitment_survey_m_code_value_country_cv_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+    </changeSet>
+
+    <changeSet author="deepika@fiter.io" id="add_permission_CREATE_CLIENTRECRUITMENTSURVEY">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'CREATE_CLIENTRECRUITMENTSURVEY';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="CREATE_CLIENTRECRUITMENTSURVEY" />
+            <column name="entity_name" value="CLIENTRECRUITMENTSURVEY" />
+            <column name="action_name" value="CREATE" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_permission_CREATE_CLIENTRECRUITMENTSURVEY_CHECKER">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'CREATE_CLIENTRECRUITMENTSURVEY_CHECKER';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="CREATE_CLIENTRECRUITMENTSURVEY_CHECKER" />
+            <column name="entity_name" value="CLIENTRECRUITMENTSURVEY" />
+            <column name="action_name" value="CREATE_CHECKER" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_permission_UPDATE_CLIENTRECRUITMENTSURVEY">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'UPDATE_CLIENTRECRUITMENTSURVEY';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="UPDATE_CLIENTRECRUITMENTSURVEY" />
+            <column name="entity_name" value="CLIENTRECRUITMENTSURVEY" />
+            <column name="action_name" value="UPDATE" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_permission_UPDATE_CLIENTRECRUITMENTSURVEY_CHECKER">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'UPDATE_CLIENTRECRUITMENTSURVEY_CHECKER';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="UPDATE_CLIENTRECRUITMENTSURVEY_CHECKER" />
+            <column name="entity_name" value="CLIENTRECRUITMENTSURVEY" />
+            <column name="action_name" value="UPDATE_CHECKER" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_permission_READ_CLIENTRECRUITMENTSURVEY">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'READ_CLIENTRECRUITMENTSURVEY';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="READ_CLIENTRECRUITMENTSURVEY" />
+            <column name="entity_name" value="CLIENTRECRUITMENTSURVEY" />
+            <column name="action_name" value="READ" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_enable-client_recruitment_survey_configurations" >
+
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="c_configuration"/>
+
+            <sqlCheck expectedResult="0">
+                select count(1) from c_configuration where name = 'Enable-client-recruitment-survey';
+            </sqlCheck>
+
+        </preConditions>
+        <insert tableName="c_configuration">
+            <column name="name" value="Enable-client-recruitment-survey" />
+            <column name="value" value="null" />
+            <column name="date_value" value="null" />
+            <column name="enabled" valueBoolean="false" />
+            <column name="is_trap_door" valueBoolean="false" />
+            <column name="description" value="null" />
+        </insert>
+    </changeSet>
+</databaseChangeLog>

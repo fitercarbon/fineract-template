@@ -16,15 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.service;
+package org.apache.fineract.portfolio.client.domain;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface ClientOtherInfoWritePlatformService {
+public interface ClientRecruitmentSurveyRepository
+        extends JpaRepository<ClientRecruitmentSurvey, Long>, JpaSpecificationExecutor<ClientOtherInfo> {
 
-    CommandProcessingResult create(Long clientId, JsonCommand command);
-
-    CommandProcessingResult update(Long otherInfoId, JsonCommand command);
-
+    ClientRecruitmentSurvey getByClientId(Long clientId);
 }

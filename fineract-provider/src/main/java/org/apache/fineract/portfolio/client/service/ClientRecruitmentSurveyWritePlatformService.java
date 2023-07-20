@@ -21,10 +21,10 @@ package org.apache.fineract.portfolio.client.service;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 
-public interface ClientOtherInfoWritePlatformService {
+public interface ClientRecruitmentSurveyWritePlatformService {
 
     CommandProcessingResult create(Long clientId, JsonCommand command);
 
-    CommandProcessingResult update(Long otherInfoId, JsonCommand command);
+    CommandProcessingResult update(Long surveyId, JsonCommand command);
 
 }

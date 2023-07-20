@@ -226,7 +226,8 @@ public class LoansApiResource {
             "isFloatingInterestRate", "interestRatesPeriods", LoanApiConstants.canUseForTopup, LoanApiConstants.isTopup,
             LoanApiConstants.loanIdToClose, LoanApiConstants.topupAmount, LoanApiConstants.clientActiveLoanOptions,
             LoanApiConstants.datatables, LoanProductConstants.RATES_PARAM_NAME, LoanApiConstants.MULTIDISBURSE_DETAILS_PARAMNAME,
-            LoanApiConstants.EMI_AMOUNT_VARIATIONS_PARAMNAME, LoanApiConstants.COLLECTION_PARAMNAME));
+            LoanApiConstants.EMI_AMOUNT_VARIATIONS_PARAMNAME, LoanApiConstants.COLLECTION_PARAMNAME, LoanApiConstants.DEPARTMENT_PARAM,
+            "departmentOptions"));
 
     private final Set<String> loanApprovalDataParameters = new HashSet<>(Arrays.asList("approvalDate", "approvalAmount"));
     final Set<String> glimAccountsDataParameters = new HashSet<>(Arrays.asList("glimId", "groupId", "clientId", "parentLoanAccountNo",
@@ -705,6 +706,7 @@ public class LoansApiResource {
         Collection<ChargeData> chargeOptions = null;
         ChargeData chargeTemplate = null;
         Collection<CodeValueData> loanPurposeOptions = null;
+        Collection<CodeValueData> departmentOptions = null;
         Collection<CodeValueData> loanCollateralOptions = null;
         Collection<CalendarData> calendarOptions = null;
         Collection<PortfolioAccountData> accountLinkingOptions = null;
@@ -747,6 +749,7 @@ public class LoansApiResource {
                     staffInSelectedOfficeOnly);
 
             loanPurposeOptions = this.codeValueReadPlatformService.retrieveCodeValuesByCode("LoanPurpose");
+            departmentOptions = this.codeValueReadPlatformService.retrieveCodeValuesByCode("Department");
             loanCollateralOptions = this.codeValueReadPlatformService.retrieveCodeValuesByCode("LoanCollateral");
             final CurrencyData currencyData = loanBasicDetails.currency();
             String currencyCode = null;
@@ -805,6 +808,7 @@ public class LoansApiResource {
         loanAccount.setLinkedVendorAccount(linkedVendorAccount);
         loanAccount.setVendorClientOptions(vendorClientOptions);
         loanAccount.setVendorSavingsAccountOptions(vendorSavingsAccountOptions);
+        loanAccount.setDepartmentOptions(departmentOptions);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters(),
                 mandatoryResponseParameters);

@@ -319,4 +319,22 @@ public class ClientApiConstants {
     public static final String BUSINESS_TYPE_OPTIONS = "BusinessType";
     public static final String SOURCE_OF_CAPITAL_OPTIONS = "SourceOfCapital";
 
+    // Client Recruitment survey
+    public static final String COUNTRY = "COUNTRY";
+    public static final String COHORT = "Cohort";
+    public static final String PROGRAM = "Program";
+
+    public static final String surveyNameParamName = "surveyName";
+    public static final String surveyLocationParamName = "surveyLocation";
+    public static final String startDateParamName = "startDate";
+    public static final String endDateParamName = "endDate";
+    public static final String countryIdParamName = "countryId";
+    public static final String cohortIdParamName = "cohortId";
+    public static final String programIdParamName = "programId";
+
+    public static final String CLIENT_RECRUITMENT_SURVEY_RESOURCE_NAME = "ClientRecruitmentSurvey";
+
+    public static final Set<String> CLIENT_RECRUITMENT_SURVEY_RESPONSE_REQUEST_PARAMETER = new HashSet<>(
+            Arrays.asList(surveyNameParamName, surveyLocationParamName, startDateParamName, endDateParamName, countryIdParamName,
+                    cohortIdParamName, programIdParamName, localeParamName, dateFormatParamName));
 }

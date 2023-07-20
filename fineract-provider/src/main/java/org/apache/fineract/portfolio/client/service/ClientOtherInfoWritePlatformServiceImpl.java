@@ -73,7 +73,7 @@ public class ClientOtherInfoWritePlatformServiceImpl implements ClientOtherInfoW
 
         if (!isClientOtherInfoEnable) {
             throw new GeneralPlatformDomainRuleException("error.msg.enable.client.other.info",
-                    "Enable Client Other Info not for proceeding operation");
+                    "Enable Client Other Info for proceeding operation");
         }
         final Client client = clientRepositoryWrapper.findOneWithNotFoundDetection(clientId);
         fromApiJsonDeserializer.validateForCreate(client.getLegalForm().intValue(), command.json());
@@ -120,7 +120,7 @@ public class ClientOtherInfoWritePlatformServiceImpl implements ClientOtherInfoW
 
             if (!isClientOtherInfoEnable) {
                 throw new GeneralPlatformDomainRuleException("error.msg.enable.client.other.info",
-                        "Enable Client Other Info not for proceeding operation");
+                        "Enable Client Other Info for proceeding operation");
             }
 
             final ClientOtherInfo clientOtherInfo = this.clientOtherInfoRepository.findById(otherInfoId)

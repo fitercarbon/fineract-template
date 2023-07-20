@@ -413,6 +413,10 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
     @Column(name = "equity_contribution_loan_percentage", scale = 6, precision = 19)
     private BigDecimal equityContributionLoanPercentage;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_cv_id", nullable = true)
+    private CodeValue department;
+
     public static Loan newIndividualLoanApplication(final String accountNo, final Client client, final Integer loanType,
             final LoanProduct loanProduct, final Fund fund, final Staff officer, final CodeValue loanPurpose,
             final LoanTransactionProcessingStrategy transactionProcessingStrategy,
@@ -420,14 +424,15 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             final Set<LoanCollateralManagement> collateral, final BigDecimal fixedEmiAmount,
             final List<LoanDisbursementDetails> disbursementDetails, final BigDecimal maxOutstandingLoanBalance,
             final Boolean createStandingInstructionAtDisbursement, final Boolean isFloatingInterestRate,
-            final BigDecimal interestRateDifferential, final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment) {
+            final BigDecimal interestRateDifferential, final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment,
+            CodeValue department) {
         final LoanStatus status = null;
         final Group group = null;
         final Boolean syncDisbursementWithMeeting = null;
         return new Loan(accountNo, client, group, loanType, fund, officer, loanPurpose, transactionProcessingStrategy, loanProduct,
                 loanRepaymentScheduleDetail, status, loanCharges, collateral, syncDisbursementWithMeeting, fixedEmiAmount,
                 disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, isFloatingInterestRate,
-                interestRateDifferential, rates, fixedPrincipalPercentagePerInstallment);
+                interestRateDifferential, rates, fixedPrincipalPercentagePerInstallment, department);
     }
 
     public static Loan newGroupLoanApplication(final String accountNo, final Group group, final Integer loanType,
@@ -440,10 +445,11 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             final BigDecimal interestRateDifferential, final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment) {
         final LoanStatus status = null;
         final Client client = null;
+        final CodeValue department = null;
         return new Loan(accountNo, client, group, loanType, fund, officer, loanPurpose, transactionProcessingStrategy, loanProduct,
                 loanRepaymentScheduleDetail, status, loanCharges, collateral, syncDisbursementWithMeeting, fixedEmiAmount,
                 disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, isFloatingInterestRate,
-                interestRateDifferential, rates, fixedPrincipalPercentagePerInstallment);
+                interestRateDifferential, rates, fixedPrincipalPercentagePerInstallment, department);
     }
 
     public static Loan newIndividualLoanApplicationFromGroup(final String accountNo, final Client client, final Group group,
@@ -453,12 +459,13 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             final Set<LoanCollateralManagement> collateral, final Boolean syncDisbursementWithMeeting, final BigDecimal fixedEmiAmount,
             final List<LoanDisbursementDetails> disbursementDetails, final BigDecimal maxOutstandingLoanBalance,
             final Boolean createStandingInstructionAtDisbursement, final Boolean isFloatingInterestRate,
-            final BigDecimal interestRateDifferential, final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment) {
+            final BigDecimal interestRateDifferential, final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment,
+            final CodeValue department) {
         final LoanStatus status = null;
         return new Loan(accountNo, client, group, loanType, fund, officer, loanPurpose, transactionProcessingStrategy, loanProduct,
                 loanRepaymentScheduleDetail, status, loanCharges, collateral, syncDisbursementWithMeeting, fixedEmiAmount,
                 disbursementDetails, maxOutstandingLoanBalance, createStandingInstructionAtDisbursement, isFloatingInterestRate,
-                interestRateDifferential, rates, fixedPrincipalPercentagePerInstallment);
+                interestRateDifferential, rates, fixedPrincipalPercentagePerInstallment, department);
     }
 
     protected Loan() {
@@ -472,7 +479,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             final BigDecimal fixedEmiAmount, final List<LoanDisbursementDetails> disbursementDetails,
             final BigDecimal maxOutstandingLoanBalance, final Boolean createStandingInstructionAtDisbursement,
             final Boolean isFloatingInterestRate, final BigDecimal interestRateDifferential, final List<Rate> rates,
-            final BigDecimal fixedPrincipalPercentagePerInstallment) {
+            final BigDecimal fixedPrincipalPercentagePerInstallment, final CodeValue department) {
 
         this.loanRepaymentScheduleDetail = loanRepaymentScheduleDetail;
         this.loanRepaymentScheduleDetail.validateRepaymentPeriodWithGraceSettings();
@@ -535,6 +542,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
         // Add net get net disbursal amount from charges and principal
         this.netDisbursalAmount = this.approvedPrincipal.subtract(deriveSumTotalOfChargesDueAtDisbursement());
+        this.department = department;
 
     }
 
@@ -1142,6 +1150,10 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         this.loanPurpose = loanPurpose;
     }
 
+    public void updateDepartment(final CodeValue department) {
+        this.department = department;
+    }
+
     public void updateLoanOfficerOnLoanApplication(final Staff newLoanOfficer) {
         if (!isSubmittedAndPendingApproval()) {
             Long loanOfficerId = null;
@@ -1693,6 +1705,16 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(LoanApiConstants.equityContributionLoanPercentageParamName);
             actualChanges.put(LoanApiConstants.equityContributionLoanPercentageParamName, newValue);
             this.equityContributionLoanPercentage = newValue;
+        }
+
+        Long departmentId = null;
+        if (this.department != null) {
+            departmentId = this.department.getId();
+        }
+
+        if (command.isChangeInLongParameterNamed(LoanApiConstants.DEPARTMENT_PARAM, departmentId)) {
+            final Long newValue = command.longValueOfParameterNamed(LoanApiConstants.DEPARTMENT_PARAM);
+            actualChanges.put(LoanApiConstants.DEPARTMENT_PARAM, newValue);
         }
 
         return actualChanges;
@@ -4194,7 +4216,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         Money cumulativePaid = Money.zero(loanCurrency());
 
         for (final LoanTransaction repayment : this.loanTransactions) {
-            if (repayment.isRepaymentType() && !repayment.isReversed()) {
+            if ((repayment.isRepaymentType() || repayment.isPayoff()) && !repayment.isReversed()) {
                 cumulativePaid = cumulativePaid.plus(repayment.getAmount(loanCurrency()));
             }
         }

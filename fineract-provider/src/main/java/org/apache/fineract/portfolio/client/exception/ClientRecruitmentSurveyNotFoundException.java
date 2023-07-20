@@ -16,15 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.client.service;
+package org.apache.fineract.portfolio.client.exception;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
 
-public interface ClientOtherInfoWritePlatformService {
+/**
+ * A {@link RuntimeException} thrown when client recruitment survey resources are not found.
+ */
+public class ClientRecruitmentSurveyNotFoundException extends AbstractPlatformResourceNotFoundException {
 
-    CommandProcessingResult create(Long clientId, JsonCommand command);
-
-    CommandProcessingResult update(Long otherInfoId, JsonCommand command);
-
+    public ClientRecruitmentSurveyNotFoundException(final Long id) {
+        super("error.msg.client.recruitment.survey.id.invalid", "Client Recruitment Survey with identifier " + id + " does not exist", id);
+    }
 }

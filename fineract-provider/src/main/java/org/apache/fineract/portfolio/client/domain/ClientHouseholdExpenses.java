@@ -60,7 +60,7 @@ public class ClientHouseholdExpenses extends AbstractAuditableCustom {
     @Column(name = "external_id", length = 100, unique = true)
     private String externalId;
 
-    @OneToMany(mappedBy = "clientHouseholdExpenses", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "clientHouseholdExpenses", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private Set<OtherClientHouseholdExpenses> otherExpenses;
 
     public ClientHouseholdExpenses() {}

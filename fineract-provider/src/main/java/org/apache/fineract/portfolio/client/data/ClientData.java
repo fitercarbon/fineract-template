@@ -139,6 +139,10 @@ public final class ClientData implements Comparable<ClientData>, Serializable {
     private ClientBusinessDetailData clientBusinessDetailData;
     private Boolean isClientBusinessDetailEnabled;
 
+    private Boolean isClientOtherInfoEnabled;
+
+    private Boolean isClientRecruitmentSurveyEnabled;
+
     public static ClientData importClientEntityInstance(Long legalFormId, Integer rowIndex, String fullname, Long officeId,
             Long clientTypeId, Long clientClassificationId, Long staffId, Boolean active, LocalDate activationDate,
             LocalDate submittedOnDate, String externalId, LocalDate dateOfBirth, String mobileNo,
@@ -782,5 +786,13 @@ public final class ClientData implements Comparable<ClientData>, Serializable {
 
     public void setClientBusinessDetailEnabled(Boolean clientBusinessDetailEnabled) {
         isClientBusinessDetailEnabled = clientBusinessDetailEnabled;
+    }
+
+    public void setClientOtherInfoEnabled(Boolean clientOtherInfoEnabled) {
+        isClientOtherInfoEnabled = clientOtherInfoEnabled;
+    }
+
+    public void setClientRecruitmentSurveyEnabled(Boolean clientRecruitmentSurveyEnabled) {
+        isClientRecruitmentSurveyEnabled = clientRecruitmentSurveyEnabled;
     }
 }

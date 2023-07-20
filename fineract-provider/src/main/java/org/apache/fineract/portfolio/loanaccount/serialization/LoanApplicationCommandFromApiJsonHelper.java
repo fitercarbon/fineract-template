@@ -97,7 +97,8 @@ public final class LoanApplicationCommandFromApiJsonHelper {
             LoanApiConstants.daysInYearTypeParameterName, LoanApiConstants.fixedPrincipalPercentagePerInstallmentParamName,
             LoanApiConstants.LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM, LoanApiConstants.NUMBER_OF_REPAYMENT_TO_CARRY_FORWARD,
             LoanApiConstants.linkVendorAccountIdParamName, LoanApiConstants.LOAN_TERM_TO_TOP_UP, LoanApiConstants.isBnplLoanParamName,
-            LoanApiConstants.requiresEquityContributionParamName, LoanApiConstants.equityContributionLoanPercentageParamName));
+            LoanApiConstants.requiresEquityContributionParamName, LoanApiConstants.equityContributionLoanPercentageParamName,
+            LoanApiConstants.DEPARTMENT_PARAM));
 
     private final FromJsonHelper fromApiJsonHelper;
     private final CalculateLoanScheduleQueryFromApiJsonHelper apiJsonHelper;
@@ -204,6 +205,11 @@ public final class LoanApplicationCommandFromApiJsonHelper {
         if (this.fromApiJsonHelper.parameterExists(fundIdParameterName, element)) {
             final Long fundId = this.fromApiJsonHelper.extractLongNamed(fundIdParameterName, element);
             baseDataValidator.reset().parameter(fundIdParameterName).value(fundId).ignoreIfNull().integerGreaterThanZero();
+        }
+        final String departmentParameterName = "department";
+        if (this.fromApiJsonHelper.parameterExists(departmentParameterName, element)) {
+            final Integer department = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(departmentParameterName, element);
+            baseDataValidator.reset().parameter(departmentParameterName).value(department).ignoreIfNull().integerGreaterThanZero();
         }
 
         final String loanOfficerIdParameterName = "loanOfficerId";
@@ -1127,6 +1133,11 @@ public final class LoanApplicationCommandFromApiJsonHelper {
 
         validateBnplValues(baseDataValidator, isBnplLoan == null ? false : isBnplLoan,
                 requiresEquityContribution == null ? false : requiresEquityContribution, equityContributionLoanPercentage);
+
+        if (this.fromApiJsonHelper.parameterExists(LoanApiConstants.DEPARTMENT_PARAM, element)) {
+            final Integer departmentId = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(LoanApiConstants.DEPARTMENT_PARAM, element);
+            baseDataValidator.reset().parameter(LoanApiConstants.DEPARTMENT_PARAM).value(departmentId).zeroOrPositiveAmount();
+        }
 
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist", "Validation errors exist.",

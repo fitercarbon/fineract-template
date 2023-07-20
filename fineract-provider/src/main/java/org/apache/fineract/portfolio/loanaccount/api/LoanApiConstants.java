@@ -83,6 +83,7 @@ public interface LoanApiConstants {
     String MULTIDISBURSE_DETAILS_PARAMNAME = "multiDisburseDetails";
     String EMI_AMOUNT_VARIATIONS_PARAMNAME = "emiAmountVariations";
     String COLLECTION_PARAMNAME = "collection";
+    String DEPARTMENT_PARAM = "department";
 
     // Interest recalculation related
     String isInterestRecalculationEnabledParameterName = "isInterestRecalculationEnabled";

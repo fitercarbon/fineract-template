@@ -18,13 +18,15 @@
  */
 package org.apache.fineract.portfolio.client.service;
 
-import org.apache.fineract.infrastructure.core.api.JsonCommand;
-import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import java.util.Collection;
+import org.apache.fineract.portfolio.client.data.ClientRecruitmentSurveyData;
 
-public interface ClientOtherInfoWritePlatformService {
+public interface ClientRecruitmentSurveyReadPlatformService {
 
-    CommandProcessingResult create(Long clientId, JsonCommand command);
+    public Collection<ClientRecruitmentSurveyData> retrieveAll(long clientId);
 
-    CommandProcessingResult update(Long otherInfoId, JsonCommand command);
+    public ClientRecruitmentSurveyData retrieveOne(Long id);
+
+    public ClientRecruitmentSurveyData retrieveTemplate();
 
 }

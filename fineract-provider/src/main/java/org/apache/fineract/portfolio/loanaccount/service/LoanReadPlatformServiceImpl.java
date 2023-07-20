@@ -704,7 +704,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.is_bnpl_loan as isBnplLoan, l.requires_equity_contribution as requiresEquityContribution, l.equity_contribution_loan_percentage as equityContributionLoanPercentage, "
                     + " lp.can_use_for_topup as canUseForTopup, " + " l.is_topup as isTopup, " + " topup.closure_loan_id as closureLoanId, "
                     + " l.total_recovered_derived as totalRecovered" + ", topuploan.account_no as closureLoanAccountNo, "
-                    + " topup.topup_amount as topupAmount " + " from m_loan l" //
+                    + " topup.topup_amount as topupAmount ,l.department_cv_id as departmentId,departmentV.code_value as departmentCode "
+                    + " from m_loan l" //
                     + " join m_product_loan lp on lp.id = l.product_id" //
                     + " left join m_loan_recalculation_details lir on lir.loan_id = l.id " + " join m_currency rc on rc."
                     + sqlGenerator.escape("code") + " = l.currency_code" //
@@ -719,6 +720,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " left join m_appuser dbu on dbu.id = l.disbursedon_userid" + " left join m_appuser cbu on cbu.id = l.closedon_userid"
                     + " left join m_code_value cv on cv.id = l.loanpurpose_cv_id"
                     + " left join m_code_value codev on codev.id = l.writeoff_reason_cv_id"
+                    + " left join m_code_value departmentV on departmentV.id = l.department_cv_id"
                     + " left join ref_loan_transaction_processing_strategy lps on lps.id = l.loan_transaction_strategy_id"
                     + " left join m_product_loan_variable_installment_config lpvi on lpvi.loan_product_id = l.product_id"
                     + " left join m_loan_topup as topup on l.id = topup.loan_id"
@@ -818,6 +820,10 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final Boolean isvariableInstallmentsAllowed = rs.getBoolean("isvariableInstallmentsAllowed");
             final Integer minimumGap = rs.getInt("minimuminstallmentgap");
             final Integer maximumGap = rs.getInt("maximuminstallmentgap");
+
+            final Long departmentId = JdbcSupport.getLong(rs, "departmentId");
+            final String departmentCode = rs.getString("departmentCode");
+            final CodeValueData department = CodeValueData.instance(departmentId, departmentCode);
 
             final LoanApplicationTimelineData timeline = new LoanApplicationTimelineData(submittedOnDate, submittedByUsername,
                     submittedByFirstname, submittedByLastname, rejectedOnDate, rejectedByUsername, rejectedByFirstname, rejectedByLastname,
@@ -1051,6 +1057,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             loanAccountData.setBnplLoan(isBnplLoan);
             loanAccountData.setRequiresEquityContribution(requiresEquityContribution);
             loanAccountData.setEquityContributionLoanPercentage(equityContributionLoanPercentage);
+            loanAccountData.setDepartment(department);
             return loanAccountData;
         }
     }
@@ -1476,6 +1483,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         final Collection<CodeValueData> loanPurposeOptions = this.codeValueReadPlatformService.retrieveCodeValuesByCode("LoanPurpose");
         final Collection<CodeValueData> loanCollateralOptions = this.codeValueReadPlatformService
                 .retrieveCodeValuesByCode("LoanCollateral");
+        final Collection<CodeValueData> departmentOptions = this.codeValueReadPlatformService.retrieveCodeValuesByCode("Department");
         Collection<ChargeData> chargeOptions = null;
         if (loanProduct.getMultiDisburseLoan()) {
             chargeOptions = this.chargeReadPlatformService.retrieveLoanProductApplicableCharges(productId,
@@ -1509,6 +1517,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         loanAccountData.setBnplLoan(loanProduct.getBnplLoanProduct());
         loanAccountData.setEquityContributionLoanPercentage(loanProduct.getEquityContributionLoanPercentage());
         loanAccountData.setRequiresEquityContribution(loanProduct.getRequiresEquityContribution());
+        loanAccountData.setDepartmentOptions(departmentOptions);
         return loanAccountData;
     }
 
