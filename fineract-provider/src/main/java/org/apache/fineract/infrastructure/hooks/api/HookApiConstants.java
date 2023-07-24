@@ -72,6 +72,8 @@ public final class HookApiConstants {
 
     public static final String BasicAuthParamName = "Basic Auth Credentials";
 
+    public static final String Conditions = "Conditions";
+
     public static final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList(nameParamName, displayNameParamName,
             templateIdParamName, isActiveParamName, configParamName, eventsParamName, templateNameParamName));
 
