@@ -131,7 +131,9 @@ public class InterestRateChartReadPlatformServiceImpl implements InterestRateCha
     public InterestRateChartData retrieveOneWithSlabs(Long chartId) {
         this.context.authenticatedUser();
         final String sql = "select " + this.chartExtractor.schema() + " where irc.id = ? order by ircd.id asc";
-        Collection<InterestRateChartData> chartDatas = this.jdbcTemplate.query(sql, this.chartExtractor, new Object[] { chartId }); // NOSONAR
+        Collection<InterestRateChartData> chartDatas = this.jdbcTemplate.query(
+                con -> con.prepareStatement(sql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE), ps -> ps.setLong(1, chartId),
+                this.chartExtractor); // NOSONAR
         if (chartDatas == null || chartDatas.isEmpty()) {
             throw new InterestRateChartNotFoundException(chartId);
         }

@@ -1,0 +1,15 @@
+{
+ "groupNewPayload": {
+  "clientMembers": [
+    "#(clientId_1)",
+    "#(clientId_2)"
+  ],
+  "officeId": 1,
+  "name": "#(faker.name().firstName())",
+  "active": true,
+  "activationDate": "#(groupCreationDate)",
+  "submittedOnDate": "#(groupCreationDate)",
+  "locale": "en",
+  "dateFormat": "#(format)"
+}
+}

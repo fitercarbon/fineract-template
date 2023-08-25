@@ -146,7 +146,12 @@ public class GenericDataServiceImpl implements GenericDataService {
 
             row = data.get(i).getRow();
             rSize = row.size();
-            for (int j = 0; j < rSize; j++) {
+            // TODO: Hanlde better. While working on Cl18-255 i discovered statement columnHeaders.get(j) throws an
+            // index out of bounds exception because in method
+            // fillResultsetColumnHeaders(final String datatable, boolean fieldsSkip)
+            // fieldsSkip is passed as true so last two columns are skipped. This means the row data is less 2 columns.
+            // For now hack is to check against columnHeaders size
+            for (int j = 0; j < columnHeaders.size() && j < rSize; j++) {
 
                 writer.append(doubleQuote + columnHeaders.get(j).getColumnName() + doubleQuote + ": ");
                 currColType = columnHeaders.get(j).getColumnDisplayType();

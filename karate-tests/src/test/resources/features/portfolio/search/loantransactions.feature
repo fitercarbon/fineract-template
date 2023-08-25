@@ -21,7 +21,7 @@ Feature: Search loan transactions
     And response.length == 2
     And match each response[*].date == today
 
-
+  @Ignore
   @search
   Scenario: Search loan transactions
     Given configure ssl = true

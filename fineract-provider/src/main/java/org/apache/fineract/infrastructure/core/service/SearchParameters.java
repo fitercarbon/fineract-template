@@ -52,6 +52,11 @@ public final class SearchParameters {
 
     private final String clientType;
 
+    // Loan Repayments Search Params
+    private final String startDueDate;
+
+    private final String endDueDate;
+
     public static SearchParameters from(final String sqlSearch, final Long officeId, final String externalId, final String name,
             final String hierarchy) {
         final Long staffId = null;
@@ -67,11 +72,11 @@ public final class SearchParameters {
     public static SearchParameters forClients(final String sqlSearch, final Long officeId, final String externalId,
             final String displayName, final String firstname, final String lastname, final String status, final String hierarchy,
             final Integer offset, final Integer limit, final String orderBy, final String sortOrder, final Boolean orphansOnly,
-            final boolean isSelfUser, final String clientType) {
+            final boolean isSelfUser, final String clientType, final String accountNo) {
 
         final Integer maxLimitAllowed = getCheckedLimit(limit);
         final Long staffId = null;
-        final String accountNo = null;
+        // final String accountNo = null;
         final Long loanId = null;
         final Long savingsId = null;
 
@@ -245,6 +250,22 @@ public final class SearchParameters {
                 staffId, accountNo, loanId, savingsId, orphansOnly, isSelfUser);
     }
 
+    // Cl18-254 used for loan repayment schedule
+    public static SearchParameters forLoanRepayments(final String sqlSearch, final String externalId, final Integer offset,
+            final Integer limit, final String orderBy, final String sortOrder, final String accountNo, final String clientType,
+            final String startDueDate, final String endDueDate) {
+
+        final Integer maxLimitAllowed = getCheckedLimit(limit);
+        final Long staffId = null;
+        final Long loanId = null;
+        final Long savingsId = null;
+        final Boolean orphansOnly = false;
+        final boolean isSelfUser = false;
+
+        return new SearchParameters(sqlSearch, null, externalId, null, null, null, null, offset, maxLimitAllowed, orderBy, sortOrder,
+                staffId, accountNo, loanId, savingsId, orphansOnly, isSelfUser, clientType, startDueDate, endDueDate);
+    }
+
     private SearchParameters(final String sqlSearch, final Long officeId, final String externalId, final String name,
             final String hierarchy, final String firstname, final String lastname, final Integer offset, final Integer limit,
             final String orderBy, final String sortOrder, final Long staffId, final String accountNo, final Long loanId,
@@ -272,6 +293,8 @@ public final class SearchParameters {
         this.isSelfUser = isSelfUser;
         this.status = null;
         this.clientType = null;
+        this.startDueDate = null;
+        this.endDueDate = null;
 
     }
 
@@ -302,6 +325,8 @@ public final class SearchParameters {
         this.isSelfUser = isSelfUser;
         this.status = status;
         this.clientType = clientType;
+        this.startDueDate = null;
+        this.endDueDate = null;
 
     }
 
@@ -332,6 +357,8 @@ public final class SearchParameters {
         this.isSelfUser = isSelfUser;
         this.status = null;
         this.clientType = null;
+        this.startDueDate = null;
+        this.endDueDate = null;
     }
 
     private SearchParameters(final Long provisioningEntryId, final Long officeId, final Long productId, final Long categoryId,
@@ -359,6 +386,8 @@ public final class SearchParameters {
         this.isSelfUser = false;
         this.status = null;
         this.clientType = null;
+        this.startDueDate = null;
+        this.endDueDate = null;
     }
 
     public SearchParameters(final String sqlSearch, final Long officeId, final String externalId, final String name, final String hierarchy,
@@ -388,6 +417,42 @@ public final class SearchParameters {
         this.isSelfUser = false;
         this.status = null;
         this.clientType = null;
+        this.startDueDate = null;
+        this.endDueDate = null;
+
+    }
+
+    // Cl18-254 used for loan repayments api to get all repayments that are due with a period
+    private SearchParameters(final String sqlSearch, final Long officeId, final String externalId, final String name,
+            final String hierarchy, final String firstname, final String lastname, final Integer offset, final Integer limit,
+            final String orderBy, final String sortOrder, final Long staffId, final String accountNo, final Long loanId,
+            final Long savingsId, final Boolean orphansOnly, boolean isSelfUser, final String clientType, final String startDueDate,
+            final String endDueDate) {
+        this.sqlSearch = sqlSearch;
+        this.officeId = officeId;
+        this.externalId = externalId;
+        this.name = name;
+        this.hierarchy = hierarchy;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.offset = offset;
+        this.limit = limit;
+        this.orderBy = orderBy;
+        this.sortOrder = sortOrder;
+        this.staffId = staffId;
+        this.accountNo = accountNo;
+        this.loanId = loanId;
+        this.savingsId = savingsId;
+        this.orphansOnly = orphansOnly;
+        this.currencyCode = null;
+        this.provisioningEntryId = null;
+        this.productId = null;
+        this.categoryId = null;
+        this.isSelfUser = isSelfUser;
+        this.status = null;
+        this.startDueDate = startDueDate;
+        this.endDueDate = endDueDate;
+        this.clientType = clientType;
 
     }
 
@@ -578,5 +643,13 @@ public final class SearchParameters {
 
     public String getClientType() {
         return clientType;
+    }
+
+    public String getStartDueDate() {
+        return startDueDate;
+    }
+
+    public String getEndDueDate() {
+        return endDueDate;
     }
 }

@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import org.apache.fineract.infrastructure.core.filters.FilterElement;
 
 /**
  * Created by Chirag Gupta on 01/13/18.
@@ -554,5 +555,20 @@ final class ClientsApiResourceSwagger {
 
         public Set<GetClientsLoanAccounts> loanAccounts;
         public Set<GetClientsSavingsAccounts> savingsAccounts;
+    }
+
+    @Schema(description = "FilterConstraintRequest")
+    public static final class FilterConstraintRequest {
+
+        @Schema(example = "SINGLE_WITHDRAW_LIMIT")
+        public String filterSelection;
+        @Schema(example = "BETWEEN")
+        public FilterElement filterElement;
+        @Schema(example = "10000")
+        public String value;
+        @Schema(example = "100000")
+        public String secondValue;
+
+        private FilterConstraintRequest() {}
     }
 }

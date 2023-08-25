@@ -51,6 +51,7 @@ import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.portfolio.collateralmanagement.data.ClientCollateralManagementAdditionalData;
 import org.apache.fineract.portfolio.collateralmanagement.data.ClientCollateralManagementData;
 import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralTemplateData;
 import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagement;
@@ -194,6 +195,18 @@ public class ClientCollateralManagementApiResource {
         final CommandProcessingResult commandProcessingResult = this.commandsSourceWritePlatformService.logCommandSource(commandWrapper);
         return this.apiJsonSerializerService.serialize(commandProcessingResult);
 
+    }
+
+    @GET
+    @Path("additionalDetailsTemplate")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "Get Client Collateral Additional Details Template", description = "Get Client Collateral Additional Details Template")
+    public String getClientCollateralAdditionalDetailsTemplate(@Context final UriInfo uriInfo,
+            @PathParam("clientId") @Parameter(description = "clientId") final Long clientId) {
+        ClientCollateralManagementAdditionalData additionalData = this.clientCollateralManagementReadPlatformService
+                .getClientCollateralAdditionalTemplate(clientId);
+        return this.apiJsonSerializerForLoanCollateralTemplateService.serialize(additionalData);
     }
 
 }

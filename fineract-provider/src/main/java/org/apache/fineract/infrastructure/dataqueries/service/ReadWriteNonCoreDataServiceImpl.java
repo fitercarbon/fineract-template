@@ -58,6 +58,7 @@ import org.apache.fineract.infrastructure.core.exception.PlatformServiceUnavaila
 import org.apache.fineract.infrastructure.core.serialization.DatatableCommandFromApiJsonDeserializer;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.serialization.JsonParserHelper;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseTypeResolver;
 import org.apache.fineract.infrastructure.dataqueries.api.DataTableApiConstant;
@@ -1307,7 +1308,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
     @Override
     public GenericResultsetData retrieveDataTableGenericResultSet(final String dataTableName, final Long appTableId, final String order,
-            final Long id) {
+            final Long id, final String columnFilter, final String valueFilter) {
 
         final String appTable = queryForApplicationTableName(dataTableName);
 
@@ -1318,6 +1319,10 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         final boolean multiRow = isMultirowDatatable(columnHeaders);
 
         String whereClause = getFKField(appTable) + " = " + appTableId;
+
+        // Check for new search columns
+        whereClause = buildColumnFilterWhereClause(whereClause, columnFilter, valueFilter, columnHeaders);
+
         SQLInjectionValidator.validateSQLInput(whereClause);
         String sql = "select * from " + sqlGenerator.escape(dataTableName) + " where " + whereClause;
 
@@ -1334,6 +1339,50 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         final List<ResultsetRowData> result = fillDatatableResultSetDataRows(sql);
 
         return new GenericResultsetData(columnHeaders, result);
+    }
+
+    private String buildColumnFilterWhereClause(String whereClause, String columnFilter, String valueFilter,
+            final List<ResultsetColumnHeaderData> columnHeaders) {
+        if (StringUtils.isNotBlank(columnFilter) && StringUtils.isNotBlank(valueFilter) && columnHeaders != null
+                && !columnHeaders.isEmpty()) {
+            // verify colum exists and get data type
+            ResultsetColumnHeaderData columnHeader = columnHeaders.stream().filter(header -> header.getColumnName().equals(columnFilter))
+                    .findFirst()
+                    .orElseThrow(() -> new DatatableSystemErrorException("System Error: Column Filter does not exist on datatable"));
+
+            StringBuilder append = new StringBuilder(whereClause);
+            append.append(" and ");
+            append.append(sqlGenerator.escape(columnFilter) + " = ");
+            if (columnHeader.getColumnType().equals("DECIMAL")) {
+                append.append(new BigDecimal(valueFilter));
+            } else if (columnHeader.getColumnType().equals("INTEGER")) {
+                append.append(Long.valueOf(valueFilter));
+            } else {
+                if (columnHeader.getColumnType().equals("DATE")) {
+                    final LocalDate localDate = LocalDate.parse(valueFilter);
+                    append.append(localDate);
+                } else if (columnHeader.getColumnType().equals("DATETIME")) {
+                    final LocalDateTime localDateTime = LocalDateTime.parse(formatDateTimeValue(valueFilter),
+                            DateUtils.DEFAULT_DATETIME_FORMATER);
+                    append.append(localDateTime);
+                } else {
+                    append.append(valueFilter);
+                }
+            }
+            whereClause = append.toString();
+        }
+
+        return whereClause;
+    }
+
+    private String formatDateTimeValue(String dateTimeValue) {
+        if (dateTimeValue.length() > 19) {
+            dateTimeValue = dateTimeValue.substring(0, 19);
+        }
+        if (dateTimeValue.contains("T")) {
+            dateTimeValue = dateTimeValue.replace("T", " ");
+        }
+        return dateTimeValue;
     }
 
     private GenericResultsetData retrieveDataTableGenericResultSetForUpdate(final String appTable, final String dataTableName,

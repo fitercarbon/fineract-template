@@ -163,4 +163,10 @@ public interface LoanRepository extends JpaRepository<Loan, Long>, JpaSpecificat
 
     boolean existsByExternalId(@Param("externalId") String externalId);
 
+    @Query("select loan from Loan loan where loan.client.id = :clientId and loan.loanStatus in (300,600,601,602,700) and loan.loanType in (1,3) ")
+    List<Loan> findLoanCounterByClientId(@Param("clientId") Long clientId);
+
+    @Query("select loan from Loan loan where loan.group.id = :groupId and loan.loanStatus in (300,600,601,602,700) and loan.loanType = 2 ")
+    List<Loan> findLoanCounterByGroupId(@Param("groupId") Long groupId);
+
 }

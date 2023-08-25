@@ -416,6 +416,8 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_cv_id", nullable = true)
     private CodeValue department;
+    @Column(name = "loan_decision_state")
+    private Integer loanDecisionState;
 
     public static Loan newIndividualLoanApplication(final String accountNo, final Client client, final Integer loanType,
             final LoanProduct loanProduct, final Fund fund, final Staff officer, final CodeValue loanPurpose,
@@ -6996,5 +6998,13 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
     public void setEquityContributionLoanPercentage(BigDecimal equityContributionLoanPercentage) {
         this.equityContributionLoanPercentage = equityContributionLoanPercentage;
+    }
+
+    public void setLoanDecisionState(Integer loanDecisionState) {
+        this.loanDecisionState = loanDecisionState;
+    }
+
+    public Integer getLoanDecisionState() {
+        return loanDecisionState;
     }
 }

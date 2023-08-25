@@ -36,7 +36,8 @@ class KarateTestApplicationTest implements BaseKarate {
         System.setProperty("testpass", testpass.orElse("password"));
         System.setProperty("tenantId", tenantId.orElse("default"));
 
-        Karate karate = new Karate().path("classpath:features/");
+        Karate karate = new Karate().path("classpath:features");
+
         karate.outputHtmlReport(true);
         return karate;
     }

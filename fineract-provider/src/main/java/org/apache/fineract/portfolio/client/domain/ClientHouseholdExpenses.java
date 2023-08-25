@@ -57,7 +57,7 @@ public class ClientHouseholdExpenses extends AbstractAuditableCustom {
     @Column(name = "utilities_amount", scale = 6, precision = 19)
     private BigDecimal utilitiesAmount;
 
-    @Column(name = "external_id", length = 100, unique = true)
+    @Column(name = "external_id", length = 100)
     private String externalId;
 
     @OneToMany(mappedBy = "clientHouseholdExpenses", cascade = CascadeType.PERSIST, orphanRemoval = true)

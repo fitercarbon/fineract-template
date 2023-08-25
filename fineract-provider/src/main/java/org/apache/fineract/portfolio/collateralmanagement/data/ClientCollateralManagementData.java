@@ -37,6 +37,10 @@ public final class ClientCollateralManagementData {
 
     private final List<LoanTransactionData> loanTransactionData;
 
+    private ClientCollateralManagementAdditionalData additionalDetails;
+
+    private boolean additionalDetailsEnabled;
+
     private ClientCollateralManagementData(final String name, final BigDecimal quantity, final BigDecimal total,
             final BigDecimal totalCollateral, final Long clientId, final List<LoanTransactionData> loanTransactionData, final Long id) {
         this.clientId = clientId;
@@ -81,4 +85,11 @@ public final class ClientCollateralManagementData {
         return this.loanTransactionData;
     }
 
+    public void setAdditionalDetailsEnabled(boolean additionalDetailsEnabled) {
+        this.additionalDetailsEnabled = additionalDetailsEnabled;
+    }
+
+    public void setAdditionalDetails(ClientCollateralManagementAdditionalData additionalDetails) {
+        this.additionalDetails = additionalDetails;
+    }
 }

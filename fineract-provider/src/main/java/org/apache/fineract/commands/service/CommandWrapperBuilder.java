@@ -3794,4 +3794,112 @@ public class CommandWrapperBuilder {
         this.entityId = surveyId;
         return this;
     }
+
+    public CommandWrapperBuilder acceptLoanApplicationReview(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANAPPLICATIONREVIEW";
+        this.href = "/loans/decision/reviewapplication/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder applyDueDiligence(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "DUEDILIGENCE";
+        this.href = "/loans/decision/duediligence/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptLoanCollateralReview(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANCOLLATERALREVIEW";
+        this.href = "/loans/decision/collateralreview/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder createLoanApprovalMatrix() {
+        this.actionName = "CREATE";
+        this.entityName = "LOANAPPROVALMATRIX";
+        this.entityId = null;
+        this.href = "/loans/decision/approvalmatrix/template/";
+
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteLoanApprovalMatrix(final long matrixId) {
+        this.actionName = "DELETE";
+        this.entityName = "LOANAPPROVALMATRIX";
+        this.entityId = matrixId;
+        this.href = "/loans/decision/approvalmatrix/" + matrixId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder updateLoanApprovalMatrix(final long matrixId) {
+        this.actionName = "UPDATE";
+        this.entityName = "LOANAPPROVALMATRIX";
+        this.entityId = matrixId;
+        this.href = "/loans/decision/approvalmatrix/update/" + matrixId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptIcReviewDecisionLevelOne(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANICREVIEWDECISIONLEVELONE";
+        this.href = "/loans/decision/icReviewDecisionLevelOne/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptIcReviewDecisionLevelTwo(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANICREVIEWDECISIONLEVELTWO";
+        this.href = "/loans/decision/icReviewDecisionLevelTwo/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptIcReviewDecisionLevelThree(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANICREVIEWDECISIONLEVELTHREE";
+        this.href = "/loans/decision/icReviewDecisionLevelThree/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptIcReviewDecisionLevelFour(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANICREVIEWDECISIONLEVELFOUR";
+        this.href = "/loans/decision/icReviewDecisionLevelFour/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptIcReviewDecisionLevelFive(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANICREVIEWDECISIONLEVELFIVE";
+        this.href = "/loans/decision/icReviewDecisionLevelFive/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
+
+    public CommandWrapperBuilder acceptPrepareAndSignContract(final long loanId) {
+        this.actionName = "ACCEPT";
+        this.entityName = "LOANPREPAREANDSIGNCONTRACT";
+        this.href = "/loans/decision/prepareAndSignContract/" + loanId;
+        this.loanId = loanId;
+
+        return this;
+    }
 }

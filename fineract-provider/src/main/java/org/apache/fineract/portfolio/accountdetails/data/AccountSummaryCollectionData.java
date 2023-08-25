@@ -36,6 +36,8 @@ public class AccountSummaryCollectionData {
     private final Collection<SavingsAccountSummaryData> memberSavingsAccounts;
     private final Collection<GuarantorAccountSummaryData> memberGuarantorAccounts;
 
+    private Boolean isExtendLoanLifeCycleConfig;
+
     /*
      * METHOD SIGNATURE CHANGE NOTICE: Method's signature was changed for GLIM & GSIM implementation
      */
@@ -102,5 +104,9 @@ public class AccountSummaryCollectionData {
             returnCollection = collection;
         }
         return returnCollection;
+    }
+
+    public void setExtendLoanLifeCycleConfig(Boolean extendLoanLifeCycleConfig) {
+        isExtendLoanLifeCycleConfig = extendLoanLifeCycleConfig;
     }
 }

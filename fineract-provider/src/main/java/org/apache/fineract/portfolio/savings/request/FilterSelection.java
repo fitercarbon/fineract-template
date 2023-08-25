@@ -61,4 +61,17 @@ public interface FilterSelection {
             .put(INTEREST_PAID, "tr.interest_portion_derived").put(PRINCIPAL_BALANCE, "tr.principal_portion_derived")
             .put(FEES_PAID, "tr.fee_charges_portion_derived").put(PENALTY_PAID, "tr.penalty_charges_portion_derived")
             .put(AMOUNT, "tr.amount").build();
+
+    Map<String, String> CLIENT_SEARCH_REQUEST_MAP = ImmutableMap.<String, String>builder().put("FIRST_NAME", "c.firstname")
+            .put("LAST_NAME", "c.lastname").put("ID", "c.id").put("DAILY_WITHDRAW_LIMIT", "ctl.daily_withdraw_limit")
+            .put("DISPLAY_NAME", "c.display_name").put("ACCOUNT_NUMBER", "c.account_no").put("EXTERNAL_ID", "c.external_id")
+            .put("STATUS", "c.status_enum").put("SUB_STATUS", "c.sub_status").put("GENDER", "cv.code_value")
+            .put("CREATED_DATE", "c.created_on_utc").put("SUBMITTED_DATE", "c.submittedon_date").put("EMAIL_ADDRESS", "c.email_address")
+            .put("SINGLE_WITHDRAW_LIMIT", "ctl.single_withdraw_limit").put("DATE_OF_BIRTH", "c.date_of_birth")
+            .put("CLIENT_TYPE", "cvclienttype.code_value").put("SUBMITTED_BY_FIRST_NAME", "sbu.firstname")
+            .put("SUBMITTED_BY_USER_NAME", "sbu.username").put("SUBMITTED_BY_LASTNAME", "sbu.lastname")
+            .put("ACTIVATED_DATE", "c.activation_date").put("ACTIVATED_BY_USERNAME", "acu.username").put("CLOSED_DATE", "")
+            .put("CLOSED_BY_USERNAME", "").put("MOBILE_NUMBER", "c.mobile_no").put("IS_STAFF", "c.is_staff").put("OFFICE_ID", "c.office_id")
+            .put("OFFICE_NAME", "o.name").build();
+
 }

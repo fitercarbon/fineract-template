@@ -20,7 +20,6 @@ package org.apache.fineract.portfolio.loanaccount.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -754,7 +753,8 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
     }
 
     @Override
-    public Map<String, Object> foreCloseLoan(final Loan loan, final LocalDate foreClosureDate, final String noteText) {
+    public Map<String, Object> foreCloseLoan(final Loan loan, final LocalDate foreClosureDate, final String noteText,
+            final boolean isTopup) {
         businessEventNotifierService.notifyPreBusinessEvent(new LoanForeClosurePreBusinessEvent(loan));
         MonetaryCurrency currency = loan.getCurrency();
         final Map<String, Object> changes = new LinkedHashMap<>();
@@ -805,27 +805,27 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
         loan.updateInstallmentsPostDate(foreClosureDate);
 
         LoanTransaction payment = null;
-
-        if (payPrincipal.plus(interestPayable).plus(feePayable).plus(penaltyPayable).isGreaterThanZero()) {
-            final PaymentDetail paymentDetail = null;
-            String externalId = null;
-            final LocalDateTime currentDateTime = DateUtils.getLocalDateTimeOfTenant();
-            payment = LoanTransaction.repayment(loan.getOffice(), payPrincipal.plus(interestPayable).plus(feePayable).plus(penaltyPayable),
-                    paymentDetail, foreClosureDate, externalId);
+        final boolean isRepayGreater = payPrincipal.plus(interestPayable).plus(feePayable).plus(penaltyPayable).isGreaterThanZero();
+        Money repaymentAmt = isRepayGreater ? payPrincipal.plus(interestPayable).plus(feePayable).plus(penaltyPayable)
+                : Money.of(currency, loan.getSummary().getTotalPrincipalOutstanding());
+        List<Long> transactionIds = new ArrayList<>();
+        if (isRepayGreater || isTopup) {
+            payment = LoanTransaction.repayment(loan.getOffice(), isRepayGreater ? repaymentAmt : Money.zero(currency), null,
+                    foreClosureDate, null);
             payment.updateLoan(loan);
             newTransactions.add(payment);
+        } else {
+            final String errorMessage = "Loan Interest over paid ";
+            throw new InvalidLoanStateTransitionException("transaction", "loan.interest.over.paid", errorMessage);
         }
-
-        List<Long> transactionIds = new ArrayList<>();
         final ChangedTransactionDetail changedTransactionDetail = loan.handleForeClosureTransactions(payment,
-                defaultLoanLifecycleStateMachine(), scheduleGeneratorDTO);
+                defaultLoanLifecycleStateMachine(), null);
 
         /***
          * TODO Vishwas Batch save is giving me a HibernateOptimisticLockingFailureException, looping and saving for the
          * time being, not a major issue for now as this loop is entered only in edge cases (when a payment is made
          * before the latest payment recorded against the loan)
          ***/
-
         for (LoanTransaction newTransaction : newTransactions) {
             saveLoanTransactionWithDataIntegrityViolationChecks(newTransaction);
             transactionIds.add(newTransaction.getId());
@@ -852,6 +852,16 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds, false);
         businessEventNotifierService.notifyPostBusinessEvent(new LoanForeClosurePostBusinessEvent(payment));
+        if (!isRepayGreater && isTopup) {
+            Money refundAmount = Money.of(currency,
+                    payPrincipal.plus(interestPayable).plus(feePayable).plus(penaltyPayable).getAmount().abs());
+            final LoanTransaction newCreditBalanceRefundTransaction = LoanTransaction.creditBalanceRefund(loan, loan.getOffice(),
+                    refundAmount, foreClosureDate, null);
+
+            loan.creditBalanceRefund(newCreditBalanceRefundTransaction, defaultLoanLifecycleStateMachine(), existingTransactionIds,
+                    existingReversedTransactionIds);
+            saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
+        }
         return changes;
 
     }

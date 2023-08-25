@@ -71,4 +71,1160 @@
                 referencedTableName="m_code_value" />
     </changeSet>
 
+
+
+    <changeSet author="bosco@fiter.io" id="add_Add-More-Stages-To-A-Loan-Life-Cycle_configurations" >
+
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="c_configuration"/>
+
+            <sqlCheck expectedResult="0">
+                select count(1) from c_configuration where name = 'Add-More-Stages-To-A-Loan-Life-Cycle';
+            </sqlCheck>
+
+        </preConditions>
+        <insert tableName="c_configuration">
+            <column name="name" value="Add-More-Stages-To-A-Loan-Life-Cycle" />
+            <column name="value" value="null" />
+            <column name="date_value" value="null" />
+            <column name="enabled" valueBoolean="false" />
+            <column name="is_trap_door" valueBoolean="false" />
+            <column name="description" value="This configuration adds more stages to a loan life cycle if enabled. Extra stages are Application Review,Due Diligence,Collateral review, IC Review etc" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANAPPLICATIONREVIEW">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANAPPLICATIONREVIEW';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANAPPLICATIONREVIEW" />
+            <column name="entity_name" value="LOANAPPLICATIONREVIEW" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="create-m_loan_decision" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_loan_decision"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_loan_decision">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"  />
+            </column>
+            <column name="loan_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_decision-m_loan_loan_id" references="m_loan(id)"/>
+            </column>
+            <column name="review_application_note" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="is_review_application_signed" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_reject_review_application" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_application_on" type="date">
+                <constraints nullable="true" />
+            </column>
+            <column name="review_application_by" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-review_application_by" references="m_appuser(id)"/>
+            </column>
+            <column name="createdby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-created_by" references="m_appuser(id)"/>
+            </column>
+            <column name="created_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+            <column name="lastmodifiedby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-lastmodifiedby_id" references="m_appuser(id)"/>
+            </column>
+            <column name="lastmodified_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="create.uk.m_loan_decision.loan_id" author="bosco@fiter.io">
+        <addUniqueConstraint tableName="m_loan_decision" columnNames="loan_id"/>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_loan_decision_state_column_to_m_loan_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan" columnName="loan_decision_state"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan">
+            <column name="loan_decision_state" type="int" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_loan_decision_state_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="loan_decision_state"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="loan_decision_state" type="int" >
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_due_diligence_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="due_diligence_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="due_diligence_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_due_diligence_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_due_diligence_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_due_diligence_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_due_diligence_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_due_diligence"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_due_diligence"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_due_diligence_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="due_diligence_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="due_diligence_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_due_diligence_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="due_diligence_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="due_diligence_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-due_diligence_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_DUEDILIGENCE">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_DUEDILIGENCE';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_DUEDILIGENCE" />
+            <column name="entity_name" value="DUEDILIGENCE" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="create-m_loan_due_diligence_info" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_loan_due_diligence_info"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_loan_due_diligence_info">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"  />
+            </column>
+            <column name="loan_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_due_diligence_info-m_loan_loan_id" references="m_loan(id)"/>
+            </column>
+            <column name="loan_decision_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_due_diligence_info-m_loan_decision_loan_decision_id" references="m_loan_decision(id)"/>
+            </column>
+            <column name="survey_name" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="start_date" type="date">
+                <constraints nullable="false" />
+            </column>
+            <column name="end_date" type="date">
+                <constraints nullable="false" />
+            </column>
+            <column name="survey_location_cv_id" type="int">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_due_diligence_info_m_code_value_survey_location_cv_id" references="m_code_value(id)"/>
+            </column>
+            <column name="cohort_cv_id" type="int">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_due_diligence_info_m_code_value_cohort_cv_id" references="m_code_value(id)"/>
+            </column>
+            <column name="program_cv_id" type="int">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_due_diligence_info_m_code_value_program_cv_id" references="m_code_value(id)"/>
+            </column>
+            <column name="country_cv_id" type="int">
+                <constraints nullable="false" foreignKeyName="FK_m_loan_due_diligence_info_m_code_value_country_cv_id" references="m_code_value(id)"/>
+            </column>
+            <column name="createdby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_due_diligence_info-created_by" references="m_appuser(id)"/>
+            </column>
+            <column name="created_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+            <column name="lastmodifiedby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_due_diligence_info-lastmodifiedby_id" references="m_appuser(id)"/>
+            </column>
+            <column name="lastmodified_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_code_values_for_loan_due_diligence_info_cohort_cv_id_September-Cohort">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code_value where code_value = 'September-Cohort';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code_value">
+            <column name="code_id" valueComputed="(select id from m_code where code_name='Cohort')"/>
+            <column name="code_value" value="September-Cohort"/>
+            <column name="code_description"/>
+            <column name="order_position" valueNumeric="1"/>
+            <column name="code_score"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_mandatory" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_code_values_for_loan_due_diligence_info_program_cv_id_Startup-Program">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code_value where code_value = 'Startup-Program';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code_value">
+            <column name="code_id" valueComputed="(select id from m_code where code_name='Program')"/>
+            <column name="code_value" value="Startup-Program"/>
+            <column name="code_description"/>
+            <column name="order_position" valueNumeric="1"/>
+            <column name="code_score"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_mandatory" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_code_values_for_loan_due_diligence_info_country_cv_id_Rwanda">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code_value where code_value = 'Rwanda';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code_value">
+            <column name="code_id" valueComputed="(select id from m_code where code_name='COUNTRY')"/>
+            <column name="code_value" value="Rwanda"/>
+            <column name="code_description"/>
+            <column name="order_position" valueNumeric="1"/>
+            <column name="code_score"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_mandatory" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+
+    <changeSet author="bosco@fiter.io" id="add_codes_for_m_loan_due_diligence_info_survey_location_cv_id">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'SurveyLocation';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="SurveyLocation" />
+            <column name="is_system_defined" valueBoolean="true" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_code_values_for_loan_due_diligence_info_survey_location_cv_id_Kenya">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code_value where code_value = 'Kenya';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code_value">
+            <column name="code_id" valueComputed="(select id from m_code where code_name='SurveyLocation')"/>
+            <column name="code_value" value="Kenya"/>
+            <column name="code_description"/>
+            <column name="order_position" valueNumeric="1"/>
+            <column name="code_score"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="is_mandatory" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANCOLLATERALREVIEW">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANCOLLATERALREVIEW';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANCOLLATERALREVIEW" />
+            <column name="entity_name" value="LOANCOLLATERALREVIEW" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_collateral_review_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="collateral_review_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="collateral_review_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_collateral_review_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_collateral_review_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_collateral_review_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_collateral_review_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_collateral_review"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_collateral_review"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_collateral_review_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="collateral_review_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="collateral_review_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_collateral_review_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="collateral_review_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="collateral_review_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-collateral_review_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+
+    <changeSet id="create-m_loan_approval_matrix" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_loan_approval_matrix"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_loan_approval_matrix">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true"  />
+            </column>
+            <column name="currency" type="varchar(10)">
+                <constraints nullable="false" />
+            </column>
+
+            <column name="level_one_unsecured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_unsecured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_unsecured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_one_unsecured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_unsecured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_unsecured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_one_secured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_secured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_secured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_one_secured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_secured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_one_secured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+
+            <column name="level_two_unsecured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_unsecured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_unsecured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_two_unsecured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_unsecured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_unsecured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_two_secured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_secured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_secured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_two_secured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_secured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_two_secured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_unsecured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_unsecured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_unsecured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_three_unsecured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_unsecured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_unsecured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_three_secured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_secured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_secured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_three_secured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_secured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_three_secured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_four_unsecured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_unsecured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_unsecured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_four_unsecured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_unsecured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_unsecured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_four_secured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_secured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_secured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_four_secured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_secured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_four_secured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_five_unsecured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_unsecured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_unsecured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_five_unsecured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_unsecured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_unsecured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_five_secured_first_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_secured_first_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_secured_first_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="level_five_secured_second_cycle_max_amount" type="decimal(19,6)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_secured_second_cycle_min_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="level_five_secured_second_cycle_max_term" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="createdby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_approval_matrix-created_by" references="m_appuser(id)"/>
+            </column>
+            <column name="created_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+            <column name="lastmodifiedby_id" type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_approval_matrix-lastmodifiedby_id" references="m_appuser(id)"/>
+            </column>
+            <column name="lastmodified_date" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_CREATE_LOANAPPROVALMATRIX">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'CREATE_LOANAPPROVALMATRIX';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="CREATE_LOANAPPROVALMATRIX" />
+            <column name="entity_name" value="LOANAPPROVALMATRIX" />
+            <column name="action_name" value="CREATE" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_DELETE_LOANAPPROVALMATRIX">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'DELETE_LOANAPPROVALMATRIX';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="DELETE_LOANAPPROVALMATRIX" />
+            <column name="entity_name" value="LOANAPPROVALMATRIX" />
+            <column name="action_name" value="DELETE" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_UPDATE_LOANAPPROVALMATRIX">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'UPDATE_LOANAPPROVALMATRIX';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="UPDATE_LOANAPPROVALMATRIX" />
+            <column name="entity_name" value="LOANAPPROVALMATRIX" />
+            <column name="action_name" value="UPDATE" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANICREVIEWDECISIONLEVELONE">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANICREVIEWDECISIONLEVELONE';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANICREVIEWDECISIONLEVELONE" />
+            <column name="entity_name" value="LOANICREVIEWDECISIONLEVELONE" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_one_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_one_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_one_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_ic_review_decision_level_one_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_ic_review_decision_level_one_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_ic_review_decision_level_one_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_ic_review_decision_level_one_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_ic_review_decision_level_one"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_ic_review_decision_level_one"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_one_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_one_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_one_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_one_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_one_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_one_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-ic_review_decision_level_one_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_next_loan_ic_review_decision_state_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="next_loan_ic_review_decision_state"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="next_loan_ic_review_decision_state"  type="int">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANICREVIEWDECISIONLEVELTWO">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANICREVIEWDECISIONLEVELTWO';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANICREVIEWDECISIONLEVELTWO" />
+            <column name="entity_name" value="LOANICREVIEWDECISIONLEVELTWO" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_two_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_two_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_two_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_ic_review_decision_level_two_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_ic_review_decision_level_two_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_ic_review_decision_level_two_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_ic_review_decision_level_two_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_ic_review_decision_level_two"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_ic_review_decision_level_two"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_two_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_two_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_two_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_two_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_two_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_two_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-ic_review_decision_level_two_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANICREVIEWDECISIONLEVELTHREE">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANICREVIEWDECISIONLEVELTHREE';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANICREVIEWDECISIONLEVELTHREE" />
+            <column name="entity_name" value="LOANICREVIEWDECISIONLEVELTHREE" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_three_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_three_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_three_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_ic_review_decision_level_three_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_ic_review_decision_level_three_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_ic_review_decision_level_three_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_ic_review_decision_level_three_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_ic_review_decision_level_three"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_ic_review_decision_level_three"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_three_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_three_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_three_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_three_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_three_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_three_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-ic_review_decision_level_three_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANICREVIEWDECISIONLEVELFOUR">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANICREVIEWDECISIONLEVELFOUR';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANICREVIEWDECISIONLEVELFOUR" />
+            <column name="entity_name" value="LOANICREVIEWDECISIONLEVELFOUR" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_four_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_four_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_four_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_ic_review_decision_level_four_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_ic_review_decision_level_four_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_ic_review_decision_level_four_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_ic_review_decision_level_four_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_ic_review_decision_level_four"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_ic_review_decision_level_four"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_four_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_four_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_four_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_four_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_four_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_four_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-ic_review_decision_level_four_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANICREVIEWDECISIONLEVELFIVE">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANICREVIEWDECISIONLEVELFIVE';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANICREVIEWDECISIONLEVELFIVE" />
+            <column name="entity_name" value="LOANICREVIEWDECISIONLEVELFIVE" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_five_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_five_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_five_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_ic_review_decision_level_five_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_ic_review_decision_level_five_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_ic_review_decision_level_five_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_ic_review_decision_level_five_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_ic_review_decision_level_five"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_ic_review_decision_level_five"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_five_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_five_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_five_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_ic_review_decision_level_five_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="ic_review_decision_level_five_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="ic_review_decision_level_five_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-ic_review_decision_level_five_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_permission_ACCEPT_LOANPREPAREANDSIGNCONTRACT">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_permission where code = 'ACCEPT_LOANPREPAREANDSIGNCONTRACT';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="portfolio" />
+            <column name="code" value="ACCEPT_LOANPREPAREANDSIGNCONTRACT" />
+            <column name="entity_name" value="LOANPREPAREANDSIGNCONTRACT" />
+            <column name="action_name" value="ACCEPT" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_prepare_and_sign_contract_note_note_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="prepare_and_sign_contract_note"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="prepare_and_sign_contract_note" type="varchar(255)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_prepare_and_sign_contract_signed_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_prepare_and_sign_contract_signed"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_prepare_and_sign_contract_signed"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_is_reject_prepare_and_sign_contract_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="is_reject_prepare_and_sign_contract"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="is_reject_prepare_and_sign_contract"  type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_prepare_and_sign_contract_on_on_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="prepare_and_sign_contract_on"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="prepare_and_sign_contract_on"  type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_prepare_and_sign_contract_by_by_column_to_m_loan_decision_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_loan_decision" columnName="prepare_and_sign_contract_by"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_loan_decision">
+            <column name="prepare_and_sign_contract_by"  type="bigint">
+                <constraints nullable="true" foreignKeyName="FK_m_loan_decision-m_appuser-prepare_and_sign_contract_by" references="m_appuser(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+
 </databaseChangeLog>

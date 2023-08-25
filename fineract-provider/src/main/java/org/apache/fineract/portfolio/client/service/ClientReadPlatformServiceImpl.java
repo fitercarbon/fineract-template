@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.portfolio.client.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,6 +43,7 @@ import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
+import org.apache.fineract.infrastructure.core.filters.FilterConstraint;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.PaginationHelper;
@@ -78,7 +81,10 @@ import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollatera
 import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagementRepositoryWrapper;
 import org.apache.fineract.portfolio.group.data.GroupGeneralData;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
+import org.apache.fineract.portfolio.savings.exception.SavingsAccountSearchParameterNotProvidedException;
+import org.apache.fineract.portfolio.savings.request.FilterSelection;
 import org.apache.fineract.portfolio.savings.service.SavingsProductReadPlatformService;
+import org.apache.fineract.portfolio.search.service.SearchReadPlatformService;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -113,6 +119,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     private final ClientCollateralManagementRepositoryWrapper clientCollateralManagementRepositoryWrapper;
     private final ClientBusinessOwnerReadPlatformService clientBusinessOwnerReadPlatformService;
     private final ClientBusinessDetailRepositoryWrapper clientBusinessDetailRepositoryWrapper;
+
+    private final SearchReadPlatformService searchReadPlatformService;
 
     @Override
     public ClientData retrieveTemplate(final Long officeId, final boolean staffInSelectedOfficeOnly) {
@@ -276,11 +284,13 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
         final String lastname = searchParameters.getLastname();
         final String status = searchParameters.getStatus();
         final String clientType = searchParameters.getClientType();
+        final String accountNumber = searchParameters.getAccountNo();
 
         String extraCriteria = "";
         if (sqlSearch != null) {
             sqlSearch = sqlSearch.replaceAll(" display_name ", " c.display_name ");
             sqlSearch = sqlSearch.replaceAll("display_name ", "c.display_name ");
+            sqlSearch = sqlSearch.replaceAll("account_no", "c.account_no");
             extraCriteria = " and (" + sqlSearch + ")";
             this.columnValidator.validateSqlInjection(schemaSql, sqlSearch);
         }
@@ -299,7 +309,14 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             // extraCriteria += " and concatcoalesce(c.firstname, ''),
             // if(c.firstname > '',' ', '') , coalesce(c.lastname, '')) like "
             paramList.add("%" + displayName + "%");
-            extraCriteria += " and c.display_name like ? ";
+            extraCriteria += " and (c.display_name like ? "; // For Carbon search should be by display_name or
+                                                             // account_no so we use OR to support either
+        }
+
+        if (accountNumber != null) {
+            paramList.add("%" + accountNumber + "%");
+            extraCriteria += " or c.account_no like ? ) "; // For Carbon search should be by display_name or account_no
+                                                           // so we use OR to support either
         }
 
         if (status != null) {
@@ -996,5 +1013,41 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                 this.codeValueReadPlatformService.retrieveCodeValuesByCode(ClientApiConstants.SOURCE_OF_CAPITAL_OPTIONS));
         final List<EnumOptionData> monthEnumOptions = ClientEnumerations.monthEnum(MonthEnum.values());
         return ClientBusinessDetailData.template(businessTypeOptions, sourceOfCapitalOptions, monthEnumOptions, monthEnumOptions, null);
+    }
+
+    @Override
+    public Collection<ClientData> retrieveClients(String filterConstraintJson, Integer limit, Integer offset) {
+        this.context.authenticatedUser();
+        ObjectMapper mapper = new ObjectMapper();
+        if (StringUtils.isEmpty(filterConstraintJson)) {
+            throw new SavingsAccountSearchParameterNotProvidedException();
+        }
+
+        try {
+
+            List<Object> params = new ArrayList<>();
+            final String userOfficeHierarchy = this.context.officeHierarchy();
+            final String underHierarchySearchString = userOfficeHierarchy + "%";
+            List<Object> paramList = new ArrayList<>(Arrays.asList(underHierarchySearchString, underHierarchySearchString));
+            final StringBuilder sqlBuilder = new StringBuilder(200);
+            sqlBuilder.append("select " + sqlGenerator.calcFoundRows() + " ");
+            sqlBuilder.append(this.clientMapper.schema());
+            sqlBuilder.append(" where (o.hierarchy like ? or transferToOffice.hierarchy like ?) ");
+
+            FilterConstraint[] filterConstraints = mapper.readValue(filterConstraintJson, FilterConstraint[].class);
+            final String extraCriteria = searchReadPlatformService.buildSqlStringFromFilterConstraints(filterConstraints, params,
+                    FilterSelection.CLIENT_SEARCH_REQUEST_MAP);
+            sqlBuilder.append(extraCriteria);
+            sqlBuilder.append("LIMIT ? OFFSET ?");
+
+            paramList.addAll(params);
+            paramList.add(limit);
+            paramList.add(offset);
+
+            return this.jdbcTemplate.query(sqlBuilder.toString(), this.clientMapper, paramList.toArray());
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

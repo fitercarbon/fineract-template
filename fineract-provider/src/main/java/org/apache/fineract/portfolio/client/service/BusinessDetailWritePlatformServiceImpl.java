@@ -213,12 +213,14 @@ public class BusinessDetailWritePlatformServiceImpl implements BusinessDetailWri
 
         final Long businessTypeId = command.longValueOfParameterNamed(ClientApiConstants.BUSINESS_TYPE);
         if (businessTypeId != null) {
-            businessType = this.codeValueRepository.findOneWithNotFoundDetection(businessTypeId);
+            businessType = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.BUSINESS_TYPE_CODE,
+                    businessTypeId);
         }
 
         final Long sourceOfCapitalId = command.longValueOfParameterNamed(ClientApiConstants.SOURCE_OF_CAPITAL);
         if (sourceOfCapitalId != null) {
-            sourceOfCapital = this.codeValueRepository.findOneWithNotFoundDetection(sourceOfCapitalId);
+            sourceOfCapital = this.codeValueRepository
+                    .findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.SOURCE_OF_CAPITAL_CODE, sourceOfCapitalId);
         }
         final LocalDate businessCreationDate = command.localDateValueOfParameterNamed(ClientApiConstants.BUSINESS_CREATION_DATE);
         BigDecimal startingCapital = command.bigDecimalValueOfParameterNamed(ClientApiConstants.STARTING_CAPITAL);

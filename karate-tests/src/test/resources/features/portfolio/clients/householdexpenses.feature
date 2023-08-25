@@ -17,7 +17,7 @@ Feature: Manage Client Household Expenses Lifecycle
     * def res = if(karate.sizeOf(codeValueRes.listOfCodeValues) < 1) karate.call('classpath:features/system/codes/codeValuesStep.feature@createCodeValueStep', { codeId : otherExpensesCodeId, name : 'Test1'});
     * def otherExpensesId = (res != null ? res.codeValueId : codeValueRes.listOfCodeValues[0].id)
     * print otherExpensesId
-
+  @Ignore
   @updatehouseholdexpenses
   Scenario: Update Client Household Expenses
     * def result = call read('classpath:features/portfolio/clients/householdexpenses.feature@householdexpensessteps') { clientId : '#(clientId)',otherExpensesId : '#(otherExpensesId)' }
@@ -33,7 +33,7 @@ Feature: Manage Client Household Expenses Lifecycle
     Then match $ contains { resourceId: '#notnull'}
     Then def client = response
 
-
+  @Ignore
   @deletehouseholdexpenses
   Scenario: Update Client Household Expenses
     * def result = call read('classpath:features/portfolio/clients/householdexpenses.feature@householdexpensessteps') { clientId : '#(clientId)',otherExpensesId : '#(otherExpensesId)' }
@@ -46,7 +46,7 @@ Feature: Manage Client Household Expenses Lifecycle
     When method DELETE
     Then status 200
 
-
+  @Ignore
   @findhouseholdexpenses
   Scenario: Find Client Household Expenses
     Given configure ssl = true

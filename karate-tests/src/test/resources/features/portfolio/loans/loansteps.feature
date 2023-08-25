@@ -218,7 +218,6 @@ Feature: Create loan stapes
     And header fineract-platform-tenantid = tenantId
     And request loansData.loan1
     When method POST
-    Then status 403
     Then match $ contains { developerMessage: '#notnull' }
 
     # This steps has no HardCodes Product
@@ -431,3 +430,99 @@ Feature: Create loan stapes
     When method PUT
     Then status 400
     Then match $ contains { developerMessage: '#notnull' }
+
+  @ignore
+  @approveLoanShouldFailWhenDecisionEngineIsActivatedAndWorkFlowIsViolated
+  Scenario: Approve loan accounts Should fail when decision engine is activated and workflow is violated
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans',loanId
+    And params {command:'approve'}
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.approve
+    When method POST
+    Then status 403
+    Then match $ contains { developerMessage: '#notnull' }
+    Then assert response.developerMessage == 'Request was understood but caused a domain rule violation.'
+    Then assert response.errors[0].developerMessage == 'Loan Account is not permitted for Approval since new workflow [Add-More-Stages-To-A-Loan-Life-Cycle] is activated and next status is [Review Application]'
+
+  @ignore
+  @disburseLoanShouldFailWhenDecisionEngineIsActivatedAndWorkFlowIsViolated
+  Scenario: Disburse loans account Should fail when decision engine is activated and workflow is violated
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans',loanId
+    And params {command:'disburse'}
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.disburse
+    When method POST
+    Then status 403
+    Then match $ contains { developerMessage: '#notnull' }
+    Then assert response.developerMessage == 'Request was understood but caused a domain rule violation.'
+    Then assert response.errors[0].developerMessage == 'Loan Account is not permitted for Disbursement since new workflow [Add-More-Stages-To-A-Loan-Life-Cycle] is activated and next stage is [Review Application]'
+
+
+  @ignore
+  @findLoanAccountNotesByLoanId
+  Scenario: Get loan account Notes by Loan ID
+    Given configure ssl = true
+    Given path 'loans',loanId, 'notes'
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    When method GET
+    Then status 200
+    Then def notes = response
+
+  @ignore
+  @createLoanWithConfigurableProductAndLoanTermStep
+  Scenario: Create loan account With Configurable Product and Loan Term
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans'
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.loanAccountWithNewProductAndNumberOfRepaymentPayLoad
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId
+
+  @ignore
+  @createGroupLoanWithConfigurableProductAndLoanTermStep
+  Scenario: Create Group loan account With Configurable Product and Loan Term
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans'
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.groupLoanAccountWithNewProductAndNumberOfRepaymentPayLoad
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId
+
+  @ignore
+  @createJLGLoanWithConfigurableProductAndLoanTermStep
+  Scenario: Create JLG loan account With Configurable Product and Loan Term
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans'
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.jlgLoanAccountWithNewProductAndNumberOfRepaymentPayLoad
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId

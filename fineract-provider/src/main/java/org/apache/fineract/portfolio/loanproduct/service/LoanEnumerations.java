@@ -26,6 +26,7 @@ import org.apache.fineract.portfolio.common.domain.NthDayType;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
 import org.apache.fineract.portfolio.loanaccount.data.LoanStatusEnumData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionEnumData;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanDecisionState;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTermVariationType;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
@@ -796,6 +797,16 @@ public final class LoanEnumerations {
             case NONE:
             break;
         }
+        return optionData;
+    }
+
+    public static EnumOptionData loanDecisionState(final Integer statusId) {
+        return loanDecisionState(LoanDecisionState.fromInt(statusId));
+    }
+
+    public static EnumOptionData loanDecisionState(final LoanDecisionState decisionState) {
+        final EnumOptionData optionData = new EnumOptionData(decisionState.getValue().longValue(), decisionState.getCode(),
+                decisionState.toString());
         return optionData;
     }
 

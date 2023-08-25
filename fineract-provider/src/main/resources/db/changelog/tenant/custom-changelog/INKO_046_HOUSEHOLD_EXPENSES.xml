@@ -145,4 +145,24 @@
             <column defaultValueComputed="now()"  name="lastmodified_date" type="datetime"/>
         </createTable>
     </changeSet>
+
+    <changeSet id="drop-m_client_household_expenses.external_id" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="m_client_household_expenses" columnName="external_id"/>
+        </preConditions>
+        <dropColumn tableName="m_client_household_expenses" columnName="external_id"/>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_external_id_column_to_m_client_household_expenses_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_client_household_expenses" columnName="external_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_client_household_expenses">
+            <column name="external_id" type="varchar(30)" >
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

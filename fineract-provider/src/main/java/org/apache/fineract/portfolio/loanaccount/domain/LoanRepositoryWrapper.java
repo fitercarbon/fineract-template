@@ -291,4 +291,28 @@ public class LoanRepositoryWrapper {
 
         return loanRedrawAccount;
     }
+
+    @Transactional(readOnly = true)
+    public List<Loan> findLoanCounterByClientId(@Param("clientId") Long clientId) {
+        List<Loan> loans = this.repository.findLoanCounterByClientId(clientId);
+        if (loans != null && loans.size() > 0) {
+            for (Loan loan : loans) {
+                loan.initilizeTransactions();
+                loan.initializeLoanOfficerHistory();
+            }
+        }
+        return loans;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Loan> findLoanCounterByGroupId(@Param("groupId") Long groupId) {
+        List<Loan> loans = this.repository.findLoanCounterByGroupId(groupId);
+        if (loans != null && loans.size() > 0) {
+            for (Loan loan : loans) {
+                loan.initilizeTransactions();
+                loan.initializeLoanOfficerHistory();
+            }
+        }
+        return loans;
+    }
 }

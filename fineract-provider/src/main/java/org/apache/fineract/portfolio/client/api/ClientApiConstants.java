@@ -337,4 +337,30 @@ public class ClientApiConstants {
     public static final Set<String> CLIENT_RECRUITMENT_SURVEY_RESPONSE_REQUEST_PARAMETER = new HashSet<>(
             Arrays.asList(surveyNameParamName, surveyLocationParamName, startDateParamName, endDateParamName, countryIdParamName,
                     cohortIdParamName, programIdParamName, localeParamName, dateFormatParamName));
+
+    public static final String upiNoParamName = "upiNo";
+    public static final String chassisNoParamName = "chassisNo";
+    public static final String collateralOwnerFirstParamName = "collateralOwnerFirst";
+    public static final String collateralOwnerSecondParamName = "collateralOwnerSecond";
+    public static final String idNoOfCollateralOwnerFirstParamName = "idNoOfCollateralOwnerFirst";
+    public static final String idNoOfCollateralOwnerSecondParamName = "idNoOfCollateralOwnerSecond";
+    public static final String provinceIdParamName = "provinceId";
+    public static final String districtIdParamName = "districtId";
+    public static final String sectorIdParamName = "sectorId";
+    public static final String cellIdParamName = "cellId";
+    public static final String villageIdParamName = "villageId";
+
+    public static final String worthOfCollateralParamName = "worthOfCollateral";
+
+    public static final String PROVINCE = "Province";
+    public static final String DISTRICT = "District";
+    public static final String SECTOR = "Sector";
+    public static final String CELL = "Cell";
+    public static final String VILLAGE = "Village";
+    public static final String CLIENT_COLLATERAL_ADDITIONAL_DATA_RESOURCE_NAME = "ClientCollateralAdditionalData";
+    public static final Set<String> CLIENT_COLLATERAL_ADDITIONAL_DATA_RESPONSE_REQUEST_PARAMETER = new HashSet<>(Arrays.asList(
+            upiNoParamName, chassisNoParamName, collateralOwnerFirstParamName, collateralOwnerSecondParamName,
+            idNoOfCollateralOwnerFirstParamName, idNoOfCollateralOwnerSecondParamName, worthOfCollateralParamName, provinceIdParamName,
+            districtIdParamName, sectorIdParamName, cellIdParamName, villageIdParamName, localeParamName, "quantity", "collateralId"));
+
 }

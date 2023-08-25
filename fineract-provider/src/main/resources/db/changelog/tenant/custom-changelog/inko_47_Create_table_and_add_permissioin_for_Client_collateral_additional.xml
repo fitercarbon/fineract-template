@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet id="add_client_collateral_additional_province_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Province';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Province" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+
+    <changeSet id="add_client_collateral_additional_district_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'District';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="District" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet id="add_client_collateral_additional_Village_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Village';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Village" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet id="add_client_collateral_additional_sector_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Sector';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Sector" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+    <changeSet id="add_client_collateral_additional_Cell_code" author="deepika@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Cell';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Cell" />
+            <column name="is_system_defined" valueBoolean="false" />
+        </insert>
+    </changeSet>
+
+    <changeSet author="deepika@fiter.io" id="create_table_client_collateral_additional_details">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_client_collateral_management_additional_details"/>
+            </not>
+        </preConditions>
+        <createTable tableName="m_client_collateral_management_additional_details">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="client_collateral_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="client_collateral_additional_details_Fk_client_collateral_id" references="m_client_collateral_management(id)"/>
+            </column>
+            <column name="UPI_NO" type="varchar(200)">
+            </column>
+            <column name="chassis_no" type="varchar(200)">
+            </column>
+            <column name="collateral_owner_first" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="id_no_of_collateral_owner_first" type="varchar(200)">
+                <constraints nullable="false" />
+            </column>
+            <column name="collateral_owner_second" type="varchar(200)">
+            </column>
+            <column name="id_no_of_collateral_owner_second" type="varchar(200)">
+            </column>
+            <column name="worth_of_collateral" type="decimal(19,6)">
+            </column>
+            <column name="province_cv_id" type="int">
+            </column>
+            <column name="district_cv_id" type="int">
+            </column>
+            <column name="sector_cv_id" type="int">
+            </column>
+            <column name="cell_cv_id" type="int">
+            </column>
+            <column name="village_cv_id" type="int">
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                baseColumnNames="province_cv_id" baseTableName="m_client_collateral_management_additional_details"
+                constraintName="FK_province_cv_id_m_code_value_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+        <addForeignKeyConstraint
+                baseColumnNames="district_cv_id" baseTableName="m_client_collateral_management_additional_details"
+                constraintName="FK_district_cv_id_m_code_value_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+        <addForeignKeyConstraint
+                baseColumnNames="sector_cv_id" baseTableName="m_client_collateral_management_additional_details"
+                constraintName="FK_sector_cv_id_m_code_value_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+        <addForeignKeyConstraint
+                baseColumnNames="cell_cv_id" baseTableName="m_client_collateral_management_additional_details"
+                constraintName="FK_cell_cv_id_m_code_value_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+        <addForeignKeyConstraint
+                baseColumnNames="village_cv_id" baseTableName="m_client_collateral_management_additional_details"
+                constraintName="FK_village_cv_id_m_code_value_id" onDelete="CASCADE"
+                onUpdate="RESTRICT" referencedColumnNames="id"
+                referencedTableName="m_code_value" />
+    </changeSet>
+    <changeSet author="deepika@fiter.io" id="add_enable-client_collateral_management_additional_details_configurations" >
+
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="c_configuration"/>
+
+            <sqlCheck expectedResult="0">
+                select count(1) from c_configuration where name = 'Enable-Client-Collateral-Addition_Details';
+            </sqlCheck>
+
+        </preConditions>
+        <insert tableName="c_configuration">
+            <column name="name" value="Enable-Client-Collateral-Addition_Details" />
+            <column name="value" value="null" />
+            <column name="date_value" value="null" />
+            <column name="enabled" valueBoolean="false" />
+            <column name="is_trap_door" valueBoolean="false" />
+            <column name="description" value="null" />
+        </insert>
+    </changeSet>
+</databaseChangeLog>

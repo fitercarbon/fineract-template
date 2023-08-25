@@ -29,7 +29,9 @@ import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,12 +71,17 @@ public class WebHookProcessor implements HookProcessor {
                 return;
             }
             if (responseMap.get("loanId") != null) {
-                Long loanId = Long.parseLong(String.valueOf(responseMap.get("loanId")));
-                Loan loan = loanRepository.findOneWithNotFoundDetection(loanId);
-                payLoadMap.put("loan", loan);
+                if (!"DELETE".equals(actionName)) {
+                    Long loanId = Long.parseLong(String.valueOf(responseMap.get("loanId")));
+                    Loan loan = loanRepository.findOneWithNotFoundDetection(loanId);
+                    payLoadMap.put("loan", loan);
+                }
+                payLoadMap.put("loanId", responseMap.get("loanId"));
+
             }
             if (responseMap.get("clientId") != null) {
                 clientId = Long.parseLong(String.valueOf(responseMap.get("clientId")));
+                payLoadMap.put("clientId", clientId);
             }
         }
 
@@ -84,11 +91,17 @@ public class WebHookProcessor implements HookProcessor {
                 clientId = Long.parseLong(String.valueOf(requestMap.get("clientId")));
             }
         }
-        if (clientId != null || payLoadMap.containsKey("clientId")) {
+        if ((clientId != null || payLoadMap.containsKey("clientId")) && !"DELETE".equals(actionName)) {
             clientId = null != clientId ? clientId : Long.parseLong(String.valueOf(payLoadMap.containsKey("clientId")));
             Client client = clientRepository.findOneWithNotFoundDetection(clientId);
             payLoadMap.put("client", client);
         }
+
+        payLoadMap.put("activity", actionName);
+        Date currentDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+        String formattedDate = dateFormat.format(currentDate);
+        payLoadMap.put("time", formattedDate);
         final Set<HookConfiguration> config = hook.getHookConfig();
 
         String url = "";

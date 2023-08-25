@@ -64,7 +64,9 @@ import org.apache.fineract.infrastructure.bulkimport.service.BulkImportWorkbookP
 import org.apache.fineract.infrastructure.bulkimport.service.BulkImportWorkbookService;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.codes.service.CodeValueReadPlatformService;
+import org.apache.fineract.infrastructure.configuration.data.GlobalConfigurationPropertyData;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
+import org.apache.fineract.infrastructure.configuration.service.ConfigurationReadPlatformService;
 import org.apache.fineract.infrastructure.core.api.ApiParameterHelper;
 import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.api.JsonQuery;
@@ -116,6 +118,7 @@ import org.apache.fineract.portfolio.loanaccount.data.LoanAccountData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanApprovalData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanChargeData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanCollateralManagementData;
+import org.apache.fineract.portfolio.loanaccount.data.LoanDueDiligenceData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTermVariationsData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionData;
 import org.apache.fineract.portfolio.loanaccount.data.PaidInAdvanceData;
@@ -126,6 +129,7 @@ import org.apache.fineract.portfolio.loanaccount.exception.NotSupportedLoanTempl
 import org.apache.fineract.portfolio.loanaccount.guarantor.data.GuarantorData;
 import org.apache.fineract.portfolio.loanaccount.guarantor.service.GuarantorReadPlatformService;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanScheduleData;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanSchedulePeriodData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanTopUpData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleModel;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.service.LoanScheduleCalculationPlatformService;
@@ -227,11 +231,21 @@ public class LoansApiResource {
             LoanApiConstants.loanIdToClose, LoanApiConstants.topupAmount, LoanApiConstants.clientActiveLoanOptions,
             LoanApiConstants.datatables, LoanProductConstants.RATES_PARAM_NAME, LoanApiConstants.MULTIDISBURSE_DETAILS_PARAMNAME,
             LoanApiConstants.EMI_AMOUNT_VARIATIONS_PARAMNAME, LoanApiConstants.COLLECTION_PARAMNAME, LoanApiConstants.DEPARTMENT_PARAM,
-            "departmentOptions"));
+            "departmentOptions", "loanDecisionState", "loanDueDiligenceData"));
 
     private final Set<String> loanApprovalDataParameters = new HashSet<>(Arrays.asList("approvalDate", "approvalAmount"));
     final Set<String> glimAccountsDataParameters = new HashSet<>(Arrays.asList("glimId", "groupId", "clientId", "parentLoanAccountNo",
             "parentPrincipalAmount", "childLoanAccountNo", "childPrincipalAmount", "clientName"));
+
+    private final Set<String> loanRepaymentInstallmentDataParameters = new HashSet<>(Arrays.asList("id", "installmentId", "period",
+            "fromDate", "dueDate", "obligationsMetOnDate", "complete", "daysInPeriod", "principalDisbursed", "principalOriginalDue",
+            "principalDue", "principalPaid", "principalWrittenOff", "principalOutstanding", "principalLoanBalanceOutstanding",
+            "interestOriginalDue", "interestDue", "interestPaid", "interestWaived", "interestWrittenOff," + "interestOutstanding",
+            "feeChargesDue", "feeChargesPaid", "feeChargesWaived", "feeChargesWrittenOff", "feeChargesOutstanding", "penaltyChargesDue",
+            "penaltyChargesPaid", "penaltyChargesWaived", "penaltyChargesWrittenOff", "penaltyChargesOutstanding",
+            "totalOriginalDueForPeriod", "totalDueForPeriod", "totalPaidForPeriod", "totalPaidInAdvanceForPeriod", "totalPaidLateForPeriod",
+            "totalWaivedForPeriod", "totalWrittenOffForPeriod", "totalOutstandingForPeriod", "totalActualCostOfLoanForPeriod",
+            "totalInstallmentAmountForPeriod", "totalOverdue"));
     private final String resourceNameForPermissions = "LOAN";
 
     private final PlatformSecurityContext context;
@@ -269,6 +283,9 @@ public class LoansApiResource {
     private final ClientReadPlatformService clientReadPlatformService;
 
     private final DefaultToApiJsonSerializer<LoanTransactionData> loanTransactionApiJsonSerializer;
+    private final ConfigurationReadPlatformService configurationReadPlatformService;
+
+    private final DefaultToApiJsonSerializer<LoanSchedulePeriodData> loanRepaymentScheduleInstallmentDataDefaultToApiJsonSerializer;
 
     public LoansApiResource(final PlatformSecurityContext context, final LoanReadPlatformService loanReadPlatformService,
             final LoanProductReadPlatformService loanProductReadPlatformService,
@@ -295,7 +312,9 @@ public class LoansApiResource {
             final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService,
             final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService,
             final ClientReadPlatformService clientReadPlatformService, InterestRateChartReadPlatformService chartReadPlatformService,
-            DefaultToApiJsonSerializer<LoanTransactionData> loanTransactionApiJsonSerializer) {
+            DefaultToApiJsonSerializer<LoanTransactionData> loanTransactionApiJsonSerializer,
+            final ConfigurationReadPlatformService configurationReadPlatformService,
+            final DefaultToApiJsonSerializer<LoanSchedulePeriodData> loanRepaymentScheduleInstallmentDataDefaultToApiJsonSerializer) {
         this.context = context;
         this.loanReadPlatformService = loanReadPlatformService;
         this.loanProductReadPlatformService = loanProductReadPlatformService;
@@ -330,6 +349,8 @@ public class LoansApiResource {
         this.chartReadPlatformService = chartReadPlatformService;
         this.clientReadPlatformService = clientReadPlatformService;
         this.loanTransactionApiJsonSerializer = loanTransactionApiJsonSerializer;
+        this.configurationReadPlatformService = configurationReadPlatformService;
+        this.loanRepaymentScheduleInstallmentDataDefaultToApiJsonSerializer = loanRepaymentScheduleInstallmentDataDefaultToApiJsonSerializer;
     }
 
     /*
@@ -797,6 +818,12 @@ public class LoansApiResource {
             rates = this.rateReadService.retrieveLoanRates(loanId);
         }
 
+        final GlobalConfigurationPropertyData extendLoanLifeCycleConfig = this.configurationReadPlatformService
+                .retrieveGlobalConfiguration("Add-More-Stages-To-A-Loan-Life-Cycle");
+        final Boolean isExtendLoanLifeCycleConfig = extendLoanLifeCycleConfig.isEnabled();
+
+        LoanDueDiligenceData loanDueDiligenceData = this.loanReadPlatformService.retrieveLoanDueDiligenceData(loanId);
+
         LoanAccountData loanAccount = LoanAccountData.associationsAndTemplate(loanBasicDetails, repaymentSchedule, loanRepayments, charges,
                 loanCollateralManagementData, guarantors, meeting, productOptions, loanTermFrequencyTypeOptions,
                 repaymentFrequencyTypeOptions, repaymentFrequencyNthDayTypeOptions, repaymentFrequencyDayOfWeekTypeOptions,
@@ -809,6 +836,8 @@ public class LoansApiResource {
         loanAccount.setVendorClientOptions(vendorClientOptions);
         loanAccount.setVendorSavingsAccountOptions(vendorSavingsAccountOptions);
         loanAccount.setDepartmentOptions(departmentOptions);
+        loanAccount.setExtendLoanLifeCycleConfig(isExtendLoanLifeCycleConfig);
+        loanAccount.setLoanDueDiligenceData(loanDueDiligenceData);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters(),
                 mandatoryResponseParameters);
@@ -1147,5 +1176,35 @@ public class LoansApiResource {
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
 
         return this.loanTransactionApiJsonSerializer.serialize(settings, currentTransactions, loanDataParameters);
+    }
+
+    @GET
+    @Path("/repayments")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    @Operation(summary = "List Loan Repayments for active loans whose due date is between startDueDate and endDueDate.", description = "The list capability of repayments can support pagination and sorting.\n"
+            + "Example Requests:\n" + "\n" + "loans/repayments\n" + "\n"
+            + "loans/repayments?isCompleted=false&offset=10&limit=100&startDueDate=2022-07-22&endDueDate=2023-08-19\n")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = LoansApiResourceSwagger.GetLoansLoanIdResponse.GetLoansLoanIdRepaymentPeriod.class))) })
+    public String getLoanRepayments(@Context final UriInfo uriInfo,
+            @QueryParam("offset") @Parameter(description = "offset") final Integer offset,
+            @QueryParam("limit") @Parameter(description = "limit") final Integer limit,
+            @QueryParam("orderBy") @Parameter(description = "orderBy") final String orderBy,
+            @QueryParam("sortOrder") @Parameter(description = "sortOrder") final String sortOrder,
+            @QueryParam("startDueDate") @Parameter(description = "startDueDate") final String startDueDate,
+            @QueryParam("endDueDate") @Parameter(description = "endDueDate") final String endDueDate,
+            @QueryParam("dateFormat") final String dateFormat, @QueryParam("locale") final String locale,
+            @QueryParam("isCompleted") @Parameter(description = "isCompleted") final boolean isCompleted) {
+        this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermissions);
+
+        final SearchParameters searchParameters = SearchParameters.forLoanRepayments(null, null, offset, limit, orderBy, sortOrder, null,
+                null, startDueDate, endDueDate);
+        final Page<LoanSchedulePeriodData> loanRepaymentScheduleInstallmentDataPage = this.loanReadPlatformService
+                .getAllLoanRepayments(searchParameters, isCompleted);
+
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+        return this.loanRepaymentScheduleInstallmentDataDefaultToApiJsonSerializer.serialize(settings,
+                loanRepaymentScheduleInstallmentDataPage, this.loanRepaymentInstallmentDataParameters);
     }
 }

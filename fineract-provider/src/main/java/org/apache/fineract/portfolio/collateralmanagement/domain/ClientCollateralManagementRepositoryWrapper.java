@@ -21,8 +21,10 @@ package org.apache.fineract.portfolio.collateralmanagement.domain;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
+import org.apache.fineract.portfolio.collateralmanagement.data.ClientCollateralManagementAdditionalData;
 import org.apache.fineract.portfolio.collateralmanagement.data.ClientCollateralManagementData;
 import org.apache.fineract.portfolio.collateralmanagement.exception.ClientCollateralNotFoundException;
 import org.apache.fineract.portfolio.loanproduct.domain.LoanProduct;
@@ -38,12 +40,16 @@ public class ClientCollateralManagementRepositoryWrapper {
     private final ClientRepositoryWrapper clientRepositoryWrapper;
     private final LoanProductRepository loanProductRepository;
 
+    private final ClientCollateralManagementAdditionalDetailsRepository clientCollateralManagementAdditionalDetailsRepository;
+
     @Autowired
     public ClientCollateralManagementRepositoryWrapper(final ClientCollateralManagementRepository clientCollateralManagementRepository,
-            final ClientRepositoryWrapper clientRepositoryWrapper, final LoanProductRepository loanProductRepository) {
+            final ClientRepositoryWrapper clientRepositoryWrapper, final LoanProductRepository loanProductRepository,
+            ClientCollateralManagementAdditionalDetailsRepository clientCollateralManagementAdditionalDetailsRepository) {
         this.clientCollateralManagementRepository = clientCollateralManagementRepository;
         this.clientRepositoryWrapper = clientRepositoryWrapper;
         this.loanProductRepository = loanProductRepository;
+        this.clientCollateralManagementAdditionalDetailsRepository = clientCollateralManagementAdditionalDetailsRepository;
     }
 
     public List<ClientCollateralManagement> getCollateralsPerClient(final Long clientId) {
@@ -66,13 +72,28 @@ public class ClientCollateralManagementRepositoryWrapper {
             BigDecimal total = clientCollateralManagement.getTotal();
             BigDecimal totalCollateralValue = clientCollateralManagement.getTotalCollateral(total);
             if (prodId != null && clientCollateralManagement.getCollaterals().getCurrency().getCode().equals(currency)) {
-                clientCollateralManagementDataSet
-                        .add(ClientCollateralManagementData.instance(clientCollateralManagement.getCollaterals().getName(), quantity, total,
-                                totalCollateralValue, clientId, null, clientCollateralManagement.getId()));
+                ClientCollateralManagementAdditionalDetails details = this.clientCollateralManagementAdditionalDetailsRepository
+                        .findByCollateralId(clientCollateralManagement);
+                ClientCollateralManagementData data = ClientCollateralManagementData.instance(
+                        clientCollateralManagement.getCollaterals().getName(), quantity, total, totalCollateralValue, clientId, null,
+                        clientCollateralManagement.getId());
+                if (details != null) {
+                    data.setAdditionalDetails(prepareAdditionalData(details));
+                }
+                clientCollateralManagementDataSet.add(data);
             }
         }
 
         return clientCollateralManagementDataSet;
+    }
+
+    private ClientCollateralManagementAdditionalData prepareAdditionalData(ClientCollateralManagementAdditionalDetails details) {
+        CodeValueData province = CodeValueData.instance(details.getProvince().getId(), details.getProvince().label());
+        CodeValueData district = CodeValueData.instance(details.getDistrict().getId(), details.getDistrict().label());
+        CodeValueData sector = CodeValueData.instance(details.getSector().getId(), details.getSector().label());
+        CodeValueData cell = CodeValueData.instance(details.getCell().getId(), details.getCell().label());
+        CodeValueData village = CodeValueData.instance(details.getVillage().getId(), details.getVillage().label());
+        return ClientCollateralManagementAdditionalData.instance(details, province, district, sector, cell, village);
     }
 
     public ClientCollateralManagement getCollateral(final Long collateralId) {

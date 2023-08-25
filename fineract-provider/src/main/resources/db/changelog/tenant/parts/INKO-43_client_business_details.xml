@@ -303,4 +303,27 @@
             <column name="action_name" value="UPDATE" />
         </insert>
     </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_codes_for_Cohort">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Cohort';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Cohort" />
+            <column name="is_system_defined" valueBoolean="true" />
+        </insert>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_codes_for_Program">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(1) from m_code where code_name = 'Program';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_code">
+            <column name="code_name" value="Program" />
+            <column name="is_system_defined" valueBoolean="true" />
+        </insert>
+    </changeSet>
 </databaseChangeLog>

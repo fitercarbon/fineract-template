@@ -23,15 +23,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.transaction.Transactional;
+import org.apache.fineract.infrastructure.codes.domain.CodeValue;
+import org.apache.fineract.infrastructure.codes.domain.CodeValueRepositoryWrapper;
+import org.apache.fineract.infrastructure.configuration.data.GlobalConfigurationPropertyData;
+import org.apache.fineract.infrastructure.configuration.service.ConfigurationReadPlatformService;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
+import org.apache.fineract.portfolio.client.api.ClientApiConstants;
+import org.apache.fineract.portfolio.client.data.ClientCollateralAdditionalDataValidator;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
 import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagement;
+import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagementAdditionalDetails;
+import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagementAdditionalDetailsRepository;
 import org.apache.fineract.portfolio.collateralmanagement.domain.ClientCollateralManagementRepositoryWrapper;
 import org.apache.fineract.portfolio.collateralmanagement.domain.CollateralManagementDomain;
 import org.apache.fineract.portfolio.collateralmanagement.domain.CollateralManagementRepositoryWrapper;
@@ -48,15 +56,27 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
     private final ClientCollateralManagementRepositoryWrapper clientCollateralManagementRepositoryWrapper;
     private final CollateralManagementRepositoryWrapper collateralManagementRepositoryWrapper;
     private final ClientRepositoryWrapper clientRepositoryWrapper;
+    private final ClientCollateralAdditionalDataValidator clientCollateralAdditionalDataValidator;
+    private final ConfigurationReadPlatformService configurationReadPlatformService;
+    private final ClientCollateralManagementAdditionalDetailsRepository clientCollateralManagementAdditionalDetailsRepository;
+    private final CodeValueRepositoryWrapper codeValueRepository;
 
     @Autowired
     public ClientCollateralManagementWritePlatformServiceImpl(
             final ClientCollateralManagementRepositoryWrapper clientCollateralManagementRepositoryWrapper,
             final CollateralManagementRepositoryWrapper collateralManagementRepositoryWrapper,
-            final ClientRepositoryWrapper clientRepositoryWrapper) {
+            final ClientRepositoryWrapper clientRepositoryWrapper,
+            ClientCollateralAdditionalDataValidator clientCollateralAdditionalDataValidator,
+            ConfigurationReadPlatformService configurationReadPlatformService,
+            ClientCollateralManagementAdditionalDetailsRepository clientCollateralManagementAdditionalDetailsRepository,
+            CodeValueRepositoryWrapper codeValueRepository) {
         this.clientCollateralManagementRepositoryWrapper = clientCollateralManagementRepositoryWrapper;
         this.collateralManagementRepositoryWrapper = collateralManagementRepositoryWrapper;
         this.clientRepositoryWrapper = clientRepositoryWrapper;
+        this.clientCollateralAdditionalDataValidator = clientCollateralAdditionalDataValidator;
+        this.configurationReadPlatformService = configurationReadPlatformService;
+        this.clientCollateralManagementAdditionalDetailsRepository = clientCollateralManagementAdditionalDetailsRepository;
+        this.codeValueRepository = codeValueRepository;
     }
 
     @Transactional
@@ -73,7 +93,16 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
         final CollateralManagementDomain collateralManagementData = this.collateralManagementRepositoryWrapper.getCollateral(collateralId);
         final ClientCollateralManagement clientCollateralManagement = ClientCollateralManagement.createNew(quantity, client,
                 collateralManagementData);
+
         this.clientCollateralManagementRepositoryWrapper.saveAndFlush(clientCollateralManagement);
+
+        final GlobalConfigurationPropertyData clientCollateralAdditionalDataConfig = this.configurationReadPlatformService
+                .retrieveGlobalConfiguration("Enable-Client-Collateral-Addition_Details");
+        final Boolean isClientCollateralAdditionalDataConfigEnable = clientCollateralAdditionalDataConfig.isEnabled();
+
+        if (isClientCollateralAdditionalDataConfigEnable) {
+            createClientCollateralAdditionalDetails(command, clientCollateralManagement);
+        }
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withClientId(command.getClientId())
                 .withEntityId(clientCollateralManagement.getId()).build();
     }
@@ -102,6 +131,44 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
         }
     }
 
+    private void createClientCollateralAdditionalDetails(final JsonCommand command,
+            final ClientCollateralManagement clientCollateralManagement) {
+
+        this.clientCollateralAdditionalDataValidator.validateForCreate(command.json());
+        CodeValue province = null;
+        final Long provinceId = command.longValueOfParameterNamed(ClientApiConstants.provinceIdParamName);
+        if (provinceId != null) {
+            province = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.PROVINCE, provinceId);
+        }
+
+        CodeValue district = null;
+        final Long districtId = command.longValueOfParameterNamed(ClientApiConstants.districtIdParamName);
+        if (districtId != null) {
+            district = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.DISTRICT, districtId);
+        }
+        CodeValue sector = null;
+        final Long sectorId = command.longValueOfParameterNamed(ClientApiConstants.sectorIdParamName);
+        if (sectorId != null) {
+            sector = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.SECTOR, sectorId);
+        }
+
+        CodeValue cell = null;
+        final Long cellId = command.longValueOfParameterNamed(ClientApiConstants.cellIdParamName);
+        if (cellId != null) {
+            cell = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.CELL, cellId);
+        }
+        CodeValue village = null;
+        final Long villageId = command.longValueOfParameterNamed(ClientApiConstants.villageIdParamName);
+        if (villageId != null) {
+            village = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.VILLAGE, villageId);
+        }
+
+        final ClientCollateralManagementAdditionalDetails clientCollateralManagementAdditionalDetails = ClientCollateralManagementAdditionalDetails
+                .createNew(clientCollateralManagement, command, province, district, sector, cell, village);
+        this.clientCollateralManagementAdditionalDetailsRepository.saveAndFlush(clientCollateralManagementAdditionalDetails);
+
+    }
+
     @Transactional
     @Override
     public CommandProcessingResult updateClientCollateralProduct(final JsonCommand command) {
@@ -109,6 +176,12 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
         final ClientCollateralManagement collateral = this.clientCollateralManagementRepositoryWrapper.getCollateral(command.entityId());
         final Map<String, Object> changes = collateral.update(command);
         this.clientCollateralManagementRepositoryWrapper.updateClientCollateralProduct(collateral);
+        final GlobalConfigurationPropertyData clientCollateralAdditionalDataConfig = this.configurationReadPlatformService
+                .retrieveGlobalConfiguration("Enable-Client-Collateral-Addition_Details");
+        final Boolean isClientCollateralAdditionalDataConfigEnable = clientCollateralAdditionalDataConfig.isEnabled();
+        if (isClientCollateralAdditionalDataConfigEnable) {
+            this.updateClientCollateralAdditionalDetails(command, collateral);
+        }
         return new CommandProcessingResultBuilder().withCommandId(command.commandId()).withEntityId(command.entityId())
                 .withClientId(command.getClientId()).with(changes).build();
     }
@@ -148,6 +221,66 @@ public class ClientCollateralManagementWritePlatformServiceImpl implements Clien
 
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
+        }
+
+    }
+
+    private void updateClientCollateralAdditionalDetails(final JsonCommand command,
+            final ClientCollateralManagement clientCollateralManagement) {
+
+        ClientCollateralManagementAdditionalDetails details = this.clientCollateralManagementAdditionalDetailsRepository
+                .findByCollateralId(clientCollateralManagement);
+
+        if (details != null) {
+            this.clientCollateralAdditionalDataValidator.validateForUpdate(command.json());
+            final Map<String, Object> changes = details.update(command);
+            if (changes.containsKey(ClientApiConstants.provinceIdParamName)) {
+                final Long provinceId = command.longValueOfParameterNamed(ClientApiConstants.provinceIdParamName);
+                CodeValue provinceCodeValue = null;
+                if (provinceId != null) {
+                    provinceCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.PROVINCE,
+                            provinceId);
+                }
+                details.updateProvince(provinceCodeValue);
+            }
+            if (changes.containsKey(ClientApiConstants.districtIdParamName)) {
+                final Long districtId = command.longValueOfParameterNamed(ClientApiConstants.districtIdParamName);
+                CodeValue districtCodeValue = null;
+                if (districtId != null) {
+                    districtCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.DISTRICT,
+                            districtId);
+                }
+                details.updateDistrict(districtCodeValue);
+            }
+            if (changes.containsKey(ClientApiConstants.sectorIdParamName)) {
+                final Long sectorId = command.longValueOfParameterNamed(ClientApiConstants.sectorIdParamName);
+                CodeValue sectorCodeValue = null;
+                if (sectorId != null) {
+                    sectorCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.SECTOR,
+                            sectorId);
+                }
+                details.updateSector(sectorCodeValue);
+            }
+            if (changes.containsKey(ClientApiConstants.cellIdParamName)) {
+                final Long cellId = command.longValueOfParameterNamed(ClientApiConstants.cellIdParamName);
+                CodeValue cellCodeValue = null;
+                if (cellId != null) {
+                    cellCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.CELL, cellId);
+                }
+                details.updateCell(cellCodeValue);
+            }
+            if (changes.containsKey(ClientApiConstants.villageIdParamName)) {
+                final Long villageId = command.longValueOfParameterNamed(ClientApiConstants.villageIdParamName);
+                CodeValue villageCodeValue = null;
+                if (villageId != null) {
+                    villageCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.VILLAGE,
+                            villageId);
+                }
+                details.updateVillage(villageCodeValue);
+            }
+            this.clientCollateralManagementAdditionalDetailsRepository.saveAndFlush(details);
+        } else {
+            this.createClientCollateralAdditionalDetails(command, clientCollateralManagement);
         }
 
     }

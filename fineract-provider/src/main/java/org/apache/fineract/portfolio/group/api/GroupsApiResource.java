@@ -57,6 +57,8 @@ import org.apache.fineract.commands.service.PortfolioCommandSourceWritePlatformS
 import org.apache.fineract.infrastructure.bulkimport.data.GlobalEntityType;
 import org.apache.fineract.infrastructure.bulkimport.service.BulkImportWorkbookPopulatorService;
 import org.apache.fineract.infrastructure.bulkimport.service.BulkImportWorkbookService;
+import org.apache.fineract.infrastructure.configuration.data.GlobalConfigurationPropertyData;
+import org.apache.fineract.infrastructure.configuration.service.ConfigurationReadPlatformService;
 import org.apache.fineract.infrastructure.core.api.ApiParameterHelper;
 import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.api.JsonQuery;
@@ -133,6 +135,7 @@ public class GroupsApiResource {
     private final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService;
     private final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService;
     private final GSIMReadPlatformService gsimReadPlatformService;
+    private final ConfigurationReadPlatformService configurationReadPlatformService;
 
     @Autowired
     public GroupsApiResource(final PlatformSecurityContext context, final GroupReadPlatformService groupReadPlatformService,
@@ -152,7 +155,8 @@ public class GroupsApiResource {
             final BulkImportWorkbookService bulkImportWorkbookService,
             final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService,
             final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService,
-            final GSIMReadPlatformService gsimReadPlatformService) {
+            final GSIMReadPlatformService gsimReadPlatformService,
+            final ConfigurationReadPlatformService configurationReadPlatformService) {
         this.context = context;
         this.groupReadPlatformService = groupReadPlatformService;
         this.centerReadPlatformService = centerReadPlatformService;
@@ -175,6 +179,7 @@ public class GroupsApiResource {
         this.bulkImportWorkbookService = bulkImportWorkbookService;
         this.glimAccountInfoReadPlatformService = glimAccountInfoReadPlatformService;
         this.gsimReadPlatformService = gsimReadPlatformService;
+        this.configurationReadPlatformService = configurationReadPlatformService;
 
     }
 
@@ -556,7 +561,12 @@ public class GroupsApiResource {
 
         this.context.authenticatedUser().validateHasReadPermission("GROUP");
 
+        final GlobalConfigurationPropertyData extendLoanLifeCycleConfig = this.configurationReadPlatformService
+                .retrieveGlobalConfiguration("Add-More-Stages-To-A-Loan-Life-Cycle");
+        final Boolean isExtendLoanLifeCycleConfig = extendLoanLifeCycleConfig.isEnabled();
+
         final AccountSummaryCollectionData groupAccount = this.accountDetailsReadPlatformService.retrieveGroupAccountDetails(groupId);
+        groupAccount.setExtendLoanLifeCycleConfig(isExtendLoanLifeCycleConfig);
 
         final Set<String> GROUP_ACCOUNTS_DATA_PARAMETERS = new HashSet<>(Arrays.asList("loanAccounts",
                 "groupLoanIndividualMonitoringAccounts", "savingsAccounts", "memberLoanAccounts", "memberSavingsAccounts"));

@@ -60,4 +60,6 @@ public interface ClientReadPlatformService {
     LocalDate retrieveClientTransferProposalDate(Long clientId);
 
     void validateClient(Long clientId);
+
+    Collection<ClientData> retrieveClients(final String filterConstraintJson, final Integer limit, final Integer offset);
 }

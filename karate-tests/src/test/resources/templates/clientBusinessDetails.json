@@ -3,7 +3,7 @@
   "businessType": "#(businessType)",
   "sourceOfCapital": "#(sourceOfCapital)",
   "startingCapital": "11111",
-  "externalId": "#(faker.number().randomNumber())",
+  "externalId": "#(faker.lorem().characters(70))",
   "totalEmployee": "22222",
   "businessRevenue": "33333",
   "averageMonthlyRevenue": "44444",

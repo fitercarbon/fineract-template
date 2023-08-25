@@ -210,7 +210,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
     private final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService;
     private final LoanAccountDomainService loanAccountDomainService;
 
-    private final LoanWritePlatformService loanWritePlatformService;
+    private final LoanDecisionStateUtilService loanDecisionStateUtilService;
 
     private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
         final List<LoanStatus> allowedLoanStatuses = Arrays.asList(LoanStatus.values());
@@ -1416,6 +1416,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
 
         final Loan loan = retrieveLoanBy(loanId);
         this.validateActiveLoanCount(loan.getClientId());
+        this.loanDecisionStateUtilService.validateLoanAccountWithExtraLoanDecisionStagesConfiguredGlobally(loan, command);
 
         final JsonArray disbursementDataArray = command.arrayOfParameterNamed(LoanApiConstants.disbursementDataParameterName);
 

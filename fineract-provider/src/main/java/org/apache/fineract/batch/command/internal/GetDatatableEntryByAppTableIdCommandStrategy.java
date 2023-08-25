@@ -81,7 +81,7 @@ public class GetDatatableEntryByAppTableIdCommandStrategy implements CommandStra
 
         // Calls 'getDatatable' function from 'DatatablesApiResource' to
         // get the datatable details based on the appTableId
-        responseBody = dataTablesApiResource.getDatatable(dataTableName, appTableId, null, parameterizedUriInfo);
+        responseBody = dataTablesApiResource.getDatatable(dataTableName, appTableId, null, parameterizedUriInfo, null, null);
 
         response.setStatusCode(HttpStatus.SC_OK);
 

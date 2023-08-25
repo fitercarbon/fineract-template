@@ -253,6 +253,14 @@ public final class LoanAccountData {
     private PortfolioAccountData linkedVendorAccount;
     private CodeValueData department;
     private Collection<CodeValueData> departmentOptions;
+    private Collection<CodeValueData> surveyLocationOptions;
+    private Collection<CodeValueData> programOptions;
+    private Collection<CodeValueData> countryOptions;
+    private Collection<CodeValueData> cohortOptions;
+    private EnumOptionData loanDecisionState;
+    private EnumOptionData nextLoanIcReviewDecisionState;
+    private Boolean isExtendLoanLifeCycleConfig;
+    private LoanDueDiligenceData loanDueDiligenceData;
 
     public static LoanAccountData importInstanceIndividual(EnumOptionData loanTypeEnumOption, Long clientId, Long productId,
             Long loanOfficerId, LocalDate submittedOnDate, Long fundId, BigDecimal principal, Integer numberOfRepayments,
@@ -809,7 +817,14 @@ public final class LoanAccountData {
         loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
         loanAccountData.setVendorClientOptions(clientAcc.vendorClientOptions);
+        loanAccountData.setDepartment(acc.department);
         loanAccountData.setDepartmentOptions(acc.departmentOptions);
+        loanAccountData.setLoanDecisionState(acc.loanDecisionState);
+        loanAccountData.setSurveyLocationOptions(acc.surveyLocationOptions);
+        loanAccountData.setCohortOptions(acc.cohortOptions);
+        loanAccountData.setCountryOptions(acc.countryOptions);
+        loanAccountData.setProgramOptions(acc.programOptions);
+        loanAccountData.setNextLoanIcReviewDecisionState(acc.nextLoanIcReviewDecisionState);
         return loanAccountData;
     }
 
@@ -1377,6 +1392,12 @@ public final class LoanAccountData {
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
         loanAccountData.setDepartment(acc.department);
         loanAccountData.setDepartmentOptions(acc.departmentOptions);
+        loanAccountData.setLoanDecisionState(acc.loanDecisionState);
+        loanAccountData.setSurveyLocationOptions(acc.surveyLocationOptions);
+        loanAccountData.setCohortOptions(acc.cohortOptions);
+        loanAccountData.setCountryOptions(acc.countryOptions);
+        loanAccountData.setProgramOptions(acc.programOptions);
+        loanAccountData.setNextLoanIcReviewDecisionState(acc.nextLoanIcReviewDecisionState);
         return loanAccountData;
     }
 
@@ -1396,7 +1417,14 @@ public final class LoanAccountData {
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
         loanAccountData.setVendorClientOptions(acc.vendorClientOptions);
         loanAccountData.setVendorSavingsAccountOptions(acc.vendorSavingsAccountOptions);
+        loanAccountData.setDepartment(acc.department);
         loanAccountData.setDepartmentOptions(acc.departmentOptions);
+        loanAccountData.setLoanDecisionState(acc.loanDecisionState);
+        loanAccountData.setSurveyLocationOptions(acc.surveyLocationOptions);
+        loanAccountData.setCohortOptions(acc.cohortOptions);
+        loanAccountData.setCountryOptions(acc.countryOptions);
+        loanAccountData.setProgramOptions(acc.programOptions);
+        loanAccountData.setNextLoanIcReviewDecisionState(acc.nextLoanIcReviewDecisionState);
         return loanAccountData;
     }
 
@@ -1433,6 +1461,14 @@ public final class LoanAccountData {
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
         loanAccountData.setVendorClientOptions(acc.vendorClientOptions);
         loanAccountData.setVendorSavingsAccountOptions(acc.vendorSavingsAccountOptions);
+        loanAccountData.setDepartment(acc.department);
+        loanAccountData.setDepartmentOptions(acc.departmentOptions);
+        loanAccountData.setLoanDecisionState(acc.loanDecisionState);
+        loanAccountData.setSurveyLocationOptions(acc.surveyLocationOptions);
+        loanAccountData.setCohortOptions(acc.cohortOptions);
+        loanAccountData.setCountryOptions(acc.countryOptions);
+        loanAccountData.setProgramOptions(acc.programOptions);
+        loanAccountData.setNextLoanIcReviewDecisionState(acc.nextLoanIcReviewDecisionState);
         return loanAccountData;
     }
 
@@ -1537,6 +1573,14 @@ public final class LoanAccountData {
         loanAccountData.setBnplLoan(acc.isBnplLoan);
         loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        loanAccountData.setDepartment(acc.department);
+        loanAccountData.setDepartmentOptions(acc.departmentOptions);
+        loanAccountData.setLoanDecisionState(acc.loanDecisionState);
+        loanAccountData.setSurveyLocationOptions(acc.surveyLocationOptions);
+        loanAccountData.setCohortOptions(acc.cohortOptions);
+        loanAccountData.setCountryOptions(acc.countryOptions);
+        loanAccountData.setProgramOptions(acc.programOptions);
+        loanAccountData.setNextLoanIcReviewDecisionState(acc.nextLoanIcReviewDecisionState);
         return loanAccountData;
     }
 
@@ -1570,6 +1614,14 @@ public final class LoanAccountData {
         loanAccountData.setBnplLoan(acc.isBnplLoan);
         loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        loanAccountData.setDepartment(acc.department);
+        loanAccountData.setDepartmentOptions(acc.departmentOptions);
+        loanAccountData.setLoanDecisionState(acc.loanDecisionState);
+        loanAccountData.setSurveyLocationOptions(acc.surveyLocationOptions);
+        loanAccountData.setCohortOptions(acc.cohortOptions);
+        loanAccountData.setCountryOptions(acc.countryOptions);
+        loanAccountData.setProgramOptions(acc.programOptions);
+        loanAccountData.setNextLoanIcReviewDecisionState(acc.nextLoanIcReviewDecisionState);
         return loanAccountData;
     }
 
@@ -2076,5 +2128,37 @@ public final class LoanAccountData {
 
     public void setDepartmentOptions(Collection<CodeValueData> departmentOptions) {
         this.departmentOptions = departmentOptions;
+    }
+
+    public void setLoanDecisionState(EnumOptionData loanDecisionState) {
+        this.loanDecisionState = loanDecisionState;
+    }
+
+    public void setExtendLoanLifeCycleConfig(Boolean extendLoanLifeCycleConfig) {
+        isExtendLoanLifeCycleConfig = extendLoanLifeCycleConfig;
+    }
+
+    public void setSurveyLocationOptions(Collection<CodeValueData> surveyLocationOptions) {
+        this.surveyLocationOptions = surveyLocationOptions;
+    }
+
+    public void setProgramOptions(Collection<CodeValueData> programOptions) {
+        this.programOptions = programOptions;
+    }
+
+    public void setCountryOptions(Collection<CodeValueData> countryOptions) {
+        this.countryOptions = countryOptions;
+    }
+
+    public void setCohortOptions(Collection<CodeValueData> cohortOptions) {
+        this.cohortOptions = cohortOptions;
+    }
+
+    public void setLoanDueDiligenceData(LoanDueDiligenceData loanDueDiligenceData) {
+        this.loanDueDiligenceData = loanDueDiligenceData;
+    }
+
+    public void setNextLoanIcReviewDecisionState(EnumOptionData nextLoanIcReviewDecisionState) {
+        this.nextLoanIcReviewDecisionState = nextLoanIcReviewDecisionState;
     }
 }

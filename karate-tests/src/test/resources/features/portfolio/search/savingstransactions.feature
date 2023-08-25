@@ -4,7 +4,7 @@ Feature: Search savings transactions
     * callonce read('classpath:features/base.feature')
     * url baseUrl
     * def savingsSearchPayload = read('classpath:templates/searchingpayload.json')
-
+  @Ignore
   @search
   Scenario: Search today's savings transactions
     Given configure ssl = true

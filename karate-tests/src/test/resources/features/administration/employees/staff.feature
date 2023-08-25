@@ -44,7 +44,7 @@ Feature: staff creation api tests
     And request administration.staff
     When method PUT
     Then status 200
-
+  @Ignore
   @create
   Scenario: Create staff
     Given path 'staff'

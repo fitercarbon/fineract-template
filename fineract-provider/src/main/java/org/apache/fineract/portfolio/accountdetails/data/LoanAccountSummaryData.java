@@ -44,6 +44,7 @@ public class LoanAccountSummaryData {
     private final BigDecimal originalLoan;
     private final BigDecimal loanBalance;
     private final BigDecimal amountPaid;
+    private EnumOptionData loanDecisionState;
 
     public LoanAccountSummaryData(final Long id, final String accountNo, final String externalId, final Long productId,
             final String loanProductName, final String shortLoanProductName, final LoanStatusEnumData loanStatus,
@@ -69,7 +70,7 @@ public class LoanAccountSummaryData {
     public LoanAccountSummaryData(final Long id, final String accountNo, final String parentAccountNumber, final String externalId,
             final Long productId, final String loanProductName, final String shortLoanProductName, final LoanStatusEnumData loanStatus,
             final EnumOptionData loanType, final Integer loanCycle, final LoanApplicationTimelineData timeline, final Boolean inArrears,
-            final BigDecimal originalLoan, final BigDecimal loanBalance, final BigDecimal amountPaid) {
+            final BigDecimal originalLoan, final BigDecimal loanBalance, final BigDecimal amountPaid, EnumOptionData loanDecisionState) {
         this.id = id;
         this.accountNo = accountNo;
         this.parentAccountNumber = parentAccountNumber;
@@ -85,6 +86,7 @@ public class LoanAccountSummaryData {
         this.loanBalance = loanBalance;
         this.originalLoan = originalLoan;
         this.amountPaid = amountPaid;
+        this.loanDecisionState = loanDecisionState;
     }
 
     public LoanStatusEnumData getStatus() {

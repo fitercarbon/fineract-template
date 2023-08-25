@@ -6,7 +6,7 @@ Feature:  Create Client Business Details APIs
   @createClientBusinessDetails
   Scenario: Create Client Business Details
 
-        #- Disable configuration  ---Enable-Client-Business-Detail---
+        #- Enable configuration  ---Enable-Client-Business-Detail---
     *  def configName = 'Enable-Client-Business-Detail'
     *  def response = call read('classpath:features/portfolio/configuration/configurationsteps.feature@findByNameStep') { configName : '#(configName)' }
     *  def configResponse = call read('classpath:features/portfolio/configuration/configurationsteps.feature@enable_global_config') { configurationsId : '#(response.globalConfig.id)' }
