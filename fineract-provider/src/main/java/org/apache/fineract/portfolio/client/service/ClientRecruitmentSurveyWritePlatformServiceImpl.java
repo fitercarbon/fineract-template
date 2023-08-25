@@ -94,7 +94,15 @@ public class ClientRecruitmentSurveyWritePlatformServiceImpl implements ClientRe
         if (programId != null) {
             program = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.PROGRAM, programId);
         }
-        ClientRecruitmentSurvey survey = ClientRecruitmentSurvey.createNew(command, client, country, cohort, program);
+
+        CodeValue surveyLocation = null;
+        final Long surveyLocationId = command.longValueOfParameterNamed(ClientApiConstants.surveyLocationIdParamName);
+        if (surveyLocationId != null) {
+            surveyLocation = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.SURVEY_LOCATION,
+                    surveyLocationId);
+        }
+
+        ClientRecruitmentSurvey survey = ClientRecruitmentSurvey.createNew(command, client, country, cohort, program, surveyLocation);
 
         ClientRecruitmentSurvey newRecruitmentSurvey = clientRecruitmentSurveyRepository.saveAndFlush(survey);
 
@@ -151,6 +159,18 @@ public class ClientRecruitmentSurveyWritePlatformServiceImpl implements ClientRe
                 }
                 survey.setProgram(programCodeValue);
             }
+
+            if (changes.containsKey(ClientApiConstants.surveyLocationIdParamName)) {
+                final Long surveyLocationId = command.longValueOfParameterNamed(ClientApiConstants.surveyLocationIdParamName);
+                CodeValue surveyLocationCodeValue = null;
+                if (surveyLocationId != null) {
+
+                    surveyLocationCodeValue = this.codeValueRepository
+                            .findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.SURVEY_LOCATION, surveyLocationId);
+                }
+                survey.setSurveyLocation(surveyLocationCodeValue);
+            }
+
             if (!changes.isEmpty()) {
                 this.clientRecruitmentSurveyRepository.saveAndFlush(survey);
                 LOG.info("Update successfully");

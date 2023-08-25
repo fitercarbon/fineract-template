@@ -52,11 +52,12 @@ public class ClientRecruitmentSurvey extends AbstractPersistableCustom {
     @JoinColumn(name = "program_cv_id", nullable = false)
     private CodeValue program;
 
+    @ManyToOne
+    @JoinColumn(name = "survey_location_cv_id", nullable = false)
+    private CodeValue surveyLocation;
+
     @Column(name = "survey_name", nullable = false)
     private String surveyName;
-
-    @Column(name = "survey_location", nullable = false)
-    private String surveyLocation;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -67,7 +68,7 @@ public class ClientRecruitmentSurvey extends AbstractPersistableCustom {
     public ClientRecruitmentSurvey() {}
 
     public ClientRecruitmentSurvey(Client client, CodeValue country, CodeValue cohort, CodeValue program, String surveyName,
-            String surveyLocation, LocalDate startDate, LocalDate endDate) {
+            CodeValue surveyLocation, LocalDate startDate, LocalDate endDate) {
         this.client = client;
         this.country = country;
         this.cohort = cohort;
@@ -79,10 +80,9 @@ public class ClientRecruitmentSurvey extends AbstractPersistableCustom {
     }
 
     public static ClientRecruitmentSurvey createNew(JsonCommand command, Client client, final CodeValue country, final CodeValue cohort,
-            final CodeValue program) {
+            final CodeValue program, final CodeValue surveyLocation) {
 
         final String surveyName = command.stringValueOfParameterNamed(ClientApiConstants.surveyNameParamName);
-        final String surveyLocation = command.stringValueOfParameterNamed(ClientApiConstants.surveyLocationParamName);
         final LocalDate startDate = command.localDateValueOfParameterNamed(ClientApiConstants.startDateParamName);
         final LocalDate endDate = command.localDateValueOfParameterNamed(ClientApiConstants.endDateParamName);
         return new ClientRecruitmentSurvey(client, country, cohort, program, surveyName, surveyLocation, startDate, endDate);
@@ -98,10 +98,9 @@ public class ClientRecruitmentSurvey extends AbstractPersistableCustom {
             this.surveyName = newValue;
         }
 
-        if (command.isChangeInStringParameterNamed(ClientApiConstants.surveyLocationParamName, this.surveyLocation)) {
-            final String newValue = command.stringValueOfParameterNamed(ClientApiConstants.surveyLocationParamName);
-            actualChanges.put(ClientApiConstants.surveyLocationParamName, newValue);
-            this.surveyLocation = newValue;
+        if (command.isChangeInLongParameterNamed(ClientApiConstants.surveyLocationIdParamName, surveyLocationId())) {
+            final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.surveyLocationIdParamName);
+            actualChanges.put(ClientApiConstants.surveyLocationIdParamName, newValue);
         }
 
         if (command.isChangeInLocalDateParameterNamed(ClientApiConstants.startDateParamName, this.startDate)) {
@@ -151,6 +150,14 @@ public class ClientRecruitmentSurvey extends AbstractPersistableCustom {
         return program;
     }
 
+    private Long surveyLocationId() {
+        Long surveyLocation = null;
+        if (this.surveyLocation != null) {
+            surveyLocation = this.surveyLocation.getId();
+        }
+        return surveyLocation;
+    }
+
     private Long countryId() {
         Long country = null;
         if (this.country != null) {
@@ -169,6 +176,10 @@ public class ClientRecruitmentSurvey extends AbstractPersistableCustom {
 
     public void setProgram(CodeValue program) {
         this.program = program;
+    }
+
+    public void setSurveyLocation(CodeValue surveyLocation) {
+        this.surveyLocation = surveyLocation;
     }
 
 }

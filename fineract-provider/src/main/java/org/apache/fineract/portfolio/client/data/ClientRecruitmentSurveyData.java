@@ -35,7 +35,7 @@ public final class ClientRecruitmentSurveyData implements Serializable {
     private Long clientId;
 
     private String surveyName;
-    private String surveyLocation;
+    private CodeValueData surveyLocation;
 
     private CodeValueData country;
     private CodeValueData cohort;
@@ -46,13 +46,15 @@ public final class ClientRecruitmentSurveyData implements Serializable {
     private Collection<CodeValueData> countryOptions;
     private Collection<CodeValueData> cohortOptions;
     private Collection<CodeValueData> programOptions;
+    private Collection<CodeValueData> surveyLocationOptions;
 
     private LocalDate startDate;
     private LocalDate endDate;
 
-    public ClientRecruitmentSurveyData(Long id, Long clientId, String surveyName, String surveyLocation, CodeValueData country,
+    public ClientRecruitmentSurveyData(Long id, Long clientId, String surveyName, CodeValueData surveyLocation, CodeValueData country,
             CodeValueData cohort, CodeValueData program, Collection<CodeValueData> countryOptions, Collection<CodeValueData> cohortOptions,
-            Collection<CodeValueData> programOptions, LocalDate startDate, LocalDate endDate) {
+            Collection<CodeValueData> programOptions, LocalDate startDate, LocalDate endDate,
+            Collection<CodeValueData> surveyLocationOptions) {
         this.id = id;
         this.clientId = clientId;
         this.surveyName = surveyName;
@@ -63,37 +65,39 @@ public final class ClientRecruitmentSurveyData implements Serializable {
         this.countryOptions = countryOptions;
         this.cohortOptions = cohortOptions;
         this.programOptions = programOptions;
+        this.surveyLocationOptions = surveyLocationOptions;
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
     public static ClientRecruitmentSurveyData template(final Collection<CodeValueData> countryOptions,
-            final Collection<CodeValueData> cohortOptions, final Collection<CodeValueData> programOptions) {
+            final Collection<CodeValueData> cohortOptions, final Collection<CodeValueData> programOptions,
+            final Collection<CodeValueData> surveyLocationOptions) {
         Long id = null;
         Long clientId = null;
         String surveyName = null;
-        String surveyLocation = null;
         CodeValueData country = null;
         CodeValueData cohort = null;
         CodeValueData program = null;
+        CodeValueData surveyLocation = null;
         LocalDate startDate = null;
         LocalDate endDate = null;
 
         return new ClientRecruitmentSurveyData(id, clientId, surveyName, surveyLocation, country, cohort, program, countryOptions,
-                cohortOptions, programOptions, startDate, endDate);
+                cohortOptions, programOptions, startDate, endDate, surveyLocationOptions);
     }
 
     public static ClientRecruitmentSurveyData instance(final Long id, final Long clientId, final String surveyName,
-            final String surveyLocation, final CodeValueData country, final CodeValueData cohort, final CodeValueData program,
+            final CodeValueData surveyLocation, final CodeValueData country, final CodeValueData cohort, final CodeValueData program,
             final LocalDate startDate, final LocalDate endDate) {
         return new ClientRecruitmentSurveyData(id, clientId, surveyName, surveyLocation, country, cohort, program, null, null, null,
-                startDate, endDate);
+                startDate, endDate, null);
     }
 
     public static ClientRecruitmentSurveyData templateWithData(ClientRecruitmentSurveyData data, ClientRecruitmentSurveyData templateData) {
         return new ClientRecruitmentSurveyData(data.id, data.clientId, data.surveyName, data.surveyLocation, data.country, data.cohort,
                 data.program, templateData.countryOptions, templateData.cohortOptions, templateData.programOptions, data.startDate,
-                data.endDate);
+                data.endDate, templateData.surveyLocationOptions);
     }
 
 }

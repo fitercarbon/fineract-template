@@ -187,4 +187,30 @@
             <column name="description" value="null" />
         </insert>
     </changeSet>
+    <changeSet id="drop-m_client_recruitment_survey.survey_location" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="m_client_recruitment_survey" columnName="survey_location"/>
+        </preConditions>
+        <dropColumn tableName="m_client_recruitment_survey" columnName="survey_location"/>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_survey_location_cv_id_column_to_m_client_recruitment_survey_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_client_recruitment_survey" columnName="survey_location_cv_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_client_recruitment_survey">
+            <column name="survey_location_cv_id" type="int" >
+                <constraints nullable="true" foreignKeyName="FK_m_client_recruitment_survey_to_m_code_value_survey_location_cv_id" references="m_code_value(id)"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="drop-m_client_recruitment_survey.surveyLocation_cv_id" author="bosco@fiter.io">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="m_client_recruitment_survey" columnName="surveyLocation_cv_id"/>
+        </preConditions>
+        <dropColumn tableName="m_client_recruitment_survey" columnName="surveyLocation_cv_id"/>
+    </changeSet>
 </databaseChangeLog>

@@ -54,10 +54,10 @@ public class ClientRecruitmentSurveyReadPlatformServiceImpl implements ClientRec
     private static final class ClientRecruitmentSurveyMapper implements RowMapper<ClientRecruitmentSurveyData> {
 
         public String schema() {
-            return "s.id AS id, s.client_id AS clientId, s.country_cv_id AS countryId, s.cohort_cv_id AS cohortId, cv.code_value as countryName, s.program_cv_id AS programId,"
-                    + "cvn.code_value AS cohortName, cy.code_value AS programName, s.survey_name AS surveyName, s.survey_location AS surveyLocation, s.start_date as startDate, s.end_date as endDate"
-                    + " FROM m_client_recruitment_survey s" + " left join m_code_value cvn on s.cohort_cv_id=cvn.id"
-                    + " left join m_code_value cv on s.country_cv_id=cv.id left join m_code_value cy on s.program_cv_id=cy.id";
+            return "s.id AS id, s.client_id AS clientId, s.country_cv_id AS countryId, s.cohort_cv_id AS cohortId, cv.code_value as countryName, s.program_cv_id AS programId, s.survey_location_cv_id AS surveyLocationId, "
+                    + "cvn.code_value AS cohortName, cy.code_value AS programName, s.survey_name AS surveyName, sv.code_value AS surveyLocationName, s.start_date as startDate, s.end_date as endDate "
+                    + " FROM m_client_recruitment_survey s " + " left join m_code_value cvn on s.cohort_cv_id=cvn.id"
+                    + " left join m_code_value cv on s.country_cv_id=cv.id left join m_code_value cy on s.program_cv_id=cy.id left join m_code_value sv on s.survey_location_cv_id = sv.id";
         }
 
         @Override
@@ -77,8 +77,11 @@ public class ClientRecruitmentSurveyReadPlatformServiceImpl implements ClientRec
             final String programName = rs.getString("programName");
             final CodeValueData program = CodeValueData.instance(programId, programName);
 
+            final Long surveyLocationId = rs.getLong("surveyLocationId");
+            final String surveyLocationName = rs.getString("surveyLocationName");
+            final CodeValueData surveyLocation = CodeValueData.instance(surveyLocationId, surveyLocationName);
+
             final String surveyName = rs.getString("surveyName");
-            final String surveyLocation = rs.getString("surveyLocation");
             final LocalDate startDate = JdbcSupport.getLocalDate(rs, "startDate");
             final LocalDate endDate = JdbcSupport.getLocalDate(rs, "endDate");
             return ClientRecruitmentSurveyData.instance(id, clientId, surveyName, surveyLocation, country, cohort, program, startDate,
@@ -117,7 +120,9 @@ public class ClientRecruitmentSurveyReadPlatformServiceImpl implements ClientRec
                 this.codeValueReadPlatformService.retrieveCodeValuesByCode(ClientApiConstants.COHORT));
         final List<CodeValueData> programOptions = new ArrayList<>(
                 this.codeValueReadPlatformService.retrieveCodeValuesByCode(ClientApiConstants.PROGRAM));
-        return ClientRecruitmentSurveyData.template(countryOptions, cohortOptions, programOptions);
+        final List<CodeValueData> surveyLocationOptions = new ArrayList<>(
+                this.codeValueReadPlatformService.retrieveCodeValuesByCode(ClientApiConstants.SURVEY_LOCATION));
+        return ClientRecruitmentSurveyData.template(countryOptions, cohortOptions, programOptions, surveyLocationOptions);
     }
 
 }

@@ -76,11 +76,12 @@ public final class ClientRecruitmentSurveyDataValidator {
         final Integer programId = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(ClientApiConstants.programIdParamName, element);
         baseDataValidator.reset().parameter(ClientApiConstants.programIdParamName).value(programId).integerGreaterThanZero();
 
+        final Integer surveyLocationId = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(ClientApiConstants.surveyLocationIdParamName,
+                element);
+        baseDataValidator.reset().parameter(ClientApiConstants.surveyLocationIdParamName).value(surveyLocationId).integerGreaterThanZero();
+
         final String surveyName = this.fromApiJsonHelper.extractStringNamed(ClientApiConstants.surveyNameParamName, element);
         baseDataValidator.reset().parameter(ClientApiConstants.surveyNameParamName).value(surveyName).notBlank();
-
-        final String surveyLocation = this.fromApiJsonHelper.extractStringNamed(ClientApiConstants.surveyLocationParamName, element);
-        baseDataValidator.reset().parameter(ClientApiConstants.surveyLocationParamName).value(surveyLocation).notBlank();
 
         final LocalDate startDate = this.fromApiJsonHelper.extractLocalDateNamed(ClientApiConstants.startDateParamName, element);
         baseDataValidator.reset().parameter(ClientApiConstants.startDateParamName).value(startDate).notNull();

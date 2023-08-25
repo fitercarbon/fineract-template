@@ -323,6 +323,7 @@ public class ClientApiConstants {
     public static final String COUNTRY = "COUNTRY";
     public static final String COHORT = "Cohort";
     public static final String PROGRAM = "Program";
+    public static final String SURVEY_LOCATION = "SurveyLocation";
 
     public static final String surveyNameParamName = "surveyName";
     public static final String surveyLocationParamName = "surveyLocation";
@@ -331,12 +332,13 @@ public class ClientApiConstants {
     public static final String countryIdParamName = "countryId";
     public static final String cohortIdParamName = "cohortId";
     public static final String programIdParamName = "programId";
+    public static final String surveyLocationIdParamName = "surveyLocationId";
 
     public static final String CLIENT_RECRUITMENT_SURVEY_RESOURCE_NAME = "ClientRecruitmentSurvey";
 
     public static final Set<String> CLIENT_RECRUITMENT_SURVEY_RESPONSE_REQUEST_PARAMETER = new HashSet<>(
             Arrays.asList(surveyNameParamName, surveyLocationParamName, startDateParamName, endDateParamName, countryIdParamName,
-                    cohortIdParamName, programIdParamName, localeParamName, dateFormatParamName));
+                    cohortIdParamName, programIdParamName, localeParamName, dateFormatParamName, surveyLocationIdParamName));
 
     public static final String upiNoParamName = "upiNo";
     public static final String chassisNoParamName = "chassisNo";
