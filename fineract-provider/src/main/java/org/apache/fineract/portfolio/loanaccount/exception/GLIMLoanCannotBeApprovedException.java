@@ -16,33 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.template.domain;
+package org.apache.fineract.portfolio.loanaccount.exception;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.gson.annotations.SerializedName;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainRuleException;
 
-@JsonSerialize(using = TemplateEntitySerializer.class)
-public enum TemplateEntity {
+public class GLIMLoanCannotBeApprovedException extends AbstractPlatformDomainRuleException {
 
-    @SerializedName("client")
-    CLIENT(0, "client"), @SerializedName("loan")
-    LOAN(1, "loan"), @SerializedName("savingsaccount")
-    SAVING(2, "savingsaccount"), GROUP(3, "group");
-
-    private final int id;
-    private final String name;
-
-    TemplateEntity(final int id, final String name) {
-        this.id = id;
-        this.name = name;
+    public GLIMLoanCannotBeApprovedException(final Long id) {
+        super("error.msg.glim.loan.cannot.be.approved.directly",
+                "GLIM Loan [ " + id + " ] cannot be approved directly. Please approve the GLIM Account associated to this loan", id);
     }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public int getId() {
-        return this.id;
-    }
-
 }

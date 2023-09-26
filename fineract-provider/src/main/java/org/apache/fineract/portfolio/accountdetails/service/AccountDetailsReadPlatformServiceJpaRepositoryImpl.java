@@ -483,7 +483,8 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
                     .append(" cbu.username as closedByUsername, cbu.firstname as closedByFirstname, cbu.lastname as closedByLastname,")
                     .append(" la.overdue_since_date_derived as overdueSinceDate,")
                     .append(" l.writtenoffon_date as writtenOffOnDate, l.expected_maturedon_date as expectedMaturityDate, ")
-                    .append(" ds.loan_decision_state as loanDecisionState ")
+                    .append(" ds.loan_decision_state as loanDecisionState , ")
+                    .append(" glim.actual_principal_amount as actualPrincipalAmount ")
 
                     .append(" from m_loan l ").append("LEFT JOIN m_product_loan AS lp ON lp.id = l.product_id")
                     .append(" left join m_appuser sbu on sbu.id = l.created_by")
@@ -549,6 +550,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
             final BigDecimal originalLoan = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "originalLoan");
             final BigDecimal loanBalance = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "loanBalance");
             final BigDecimal amountPaid = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "amountPaid");
+            final BigDecimal actualPrincipalAmount = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "actualPrincipalAmount");
 
             final LocalDate writtenOffOnDate = JdbcSupport.getLocalDate(rs, "writtenOffOnDate");
 
@@ -575,7 +577,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
 
             return new LoanAccountSummaryData(id, accountNo, parentAccountNumber, externalId, productId, loanProductName,
                     shortLoanProductName, loanStatus, loanType, loanCycle, timeline, inArrears, originalLoan, loanBalance, amountPaid,
-                    loanDecisionStateEnumData);
+                    loanDecisionStateEnumData, actualPrincipalAmount);
         }
 
     }
