@@ -234,7 +234,9 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
             switch (filterConstraint.getFilterElement()) {
                 case EQUALS:
                     Object val = filterConstraint.getValue();
-                    if (!filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.ACCOUNT_NUMBER)
+                    if (filterConstraint.getFilterSelection().contains("DATE")) {
+                        val = LocalDate.parse(val.toString());
+                    } else if (!filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.ACCOUNT_NUMBER)
                             && !filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.MOBILE_NUMBER)
                             && !filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.EXTERNAL_ID)) {
                         val = convertValue(val);
