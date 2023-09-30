@@ -87,5 +87,13 @@
     <include file="parts/OXY-138_add_on_hold_table_for_savings_account.xml" relativeToChangelogFile="true" />
     <include file="parts/INKO-43_client_business_details.xml" relativeToChangelogFile="true" />
     <include file="parts/INKO-69-modify-loan-account-and-product.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_71_add_client_statement_table_report_reports_table.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_72_update_report_sql_obligations_met_table_report.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_73_add_loan_in_arrears_to_reports_table.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_74_add_collateral_report_to_reports_table.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_76_update_client_id_select_all_report_parameter_query.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_75_update_loan_aging_summary_reports.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_77_add_loan_fully_paid_table_report.xml" relativeToChangelogFile="true" />
+    <include file="parts/INKO_78_add_secured_and_non_secured_table_report.xml" relativeToChangelogFile="true" />
     <includeAll path="custom-changelog" relativeToChangelogFile="true"/>
 </databaseChangeLog>

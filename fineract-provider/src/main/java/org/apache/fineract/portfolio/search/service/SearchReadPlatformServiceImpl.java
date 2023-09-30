@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
@@ -47,6 +48,7 @@ import org.apache.fineract.portfolio.loanproduct.data.LoanProductData;
 import org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations;
 import org.apache.fineract.portfolio.loanproduct.service.LoanProductReadPlatformService;
 import org.apache.fineract.portfolio.savings.exception.UnsupportedFilterException;
+import org.apache.fineract.portfolio.savings.request.FilterSelection;
 import org.apache.fineract.portfolio.savings.service.SavingsEnumerations;
 import org.apache.fineract.portfolio.search.SearchConstants;
 import org.apache.fineract.portfolio.search.data.AdHocQuerySearchConditions;
@@ -231,7 +233,13 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
 
             switch (filterConstraint.getFilterElement()) {
                 case EQUALS:
-                    Object val = convertValue(filterConstraint.getValue());
+                    Object val = filterConstraint.getValue();
+                    if (!filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.ACCOUNT_NUMBER)
+                            && !filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.MOBILE_NUMBER)
+                            && !filterConstraint.getFilterSelection().equalsIgnoreCase(FilterSelection.EXTERNAL_ID)) {
+                        val = convertValue(val);
+                    }
+
                     queryBuilder.append(" AND ");
                     String filterSelection = getFilterSelection(filterConstraint.getFilterSelection(), searchRequestMap);
                     if (val instanceof String) {
@@ -310,7 +318,11 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
                     queryBuilder.append(" AND ").append(getFilterSelection(filterConstraint.getFilterSelection(), searchRequestMap))
                             .append(" IN (").append(String.join(",", Collections.nCopies(filterConstraint.getValues().size(), "?")))
                             .append(") ");
-                    params.addAll(filterConstraint.getValues());
+                    if (filterConstraint.getFilterSelection().equals(FilterSelection.TRANSACTION_TYPE)) {
+                        params.addAll(filterConstraint.getValues().stream().map(Integer::parseInt).collect(Collectors.toList()));
+                    } else {
+                        params.addAll(filterConstraint.getValues());
+                    }
                 break;
 
                 case STARTS_WITH:

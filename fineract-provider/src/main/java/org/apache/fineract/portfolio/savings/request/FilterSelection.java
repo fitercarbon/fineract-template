@@ -47,6 +47,12 @@ public interface FilterSelection {
 
     String TRANSACTION_TYPE = "TRANSACTION_TYPE";
 
+    String MOBILE_NUMBER = "MOBILE_NUMBER";
+
+    String ACCOUNT_NUMBER = "ACCOUNT_NUMBER";
+
+    String EXTERNAL_ID = "EXTERNAL_ID";
+
     Map<String, String> SAVINGS_SEARCH_REQUEST_MAP = ImmutableMap.<String, String>builder().put(USER_ID, "au.id")
             .put(ACCOUNT_OWNER_ID, "mc.id").put(PRODUCT_ID, "sp.id").put(TRANSACTION_TYPE, "tr.transaction_type_enum")
             .put(OFFICE_ID, "tr.office_id").put(CURRENCY_CODE, "sa.currency_code").put(WAS_REVERSED, "tr.is_reversal")
