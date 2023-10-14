@@ -86,12 +86,11 @@ public final class SearchParameters {
                 maxLimitAllowed, orderBy, sortOrder, staffId, accountNo, loanId, savingsId, orphansOnly, isSelfUser, clientType, mobileNo);
     }
 
-    public static SearchParameters forGroups(final Long officeId, final Long staffId, final String externalId, final String name,
-            final String hierarchy, final Integer offset, final Integer limit, final String orderBy, final String sortOrder,
-            final Boolean orphansOnly) {
+    public static SearchParameters forGroups(final Long officeId, final Long staffId, final String externalId, final String accountNo,
+            final String name, final String hierarchy, final Integer offset, final Integer limit, final String orderBy,
+            final String sortOrder, final Boolean orphansOnly) {
 
         final Integer maxLimitAllowed = getCheckedLimit(limit);
-        final String accountNo = null;
         final Long loanId = null;
         final Long savingsId = null;
         final boolean isSelfUser = false;
@@ -190,12 +189,11 @@ public final class SearchParameters {
         return new SearchParameters(provisioningEntryId, officeId, productId, categoryId, offset, limit);
     }
 
-    public static SearchParameters forSavings(final String sqlSearch, final String externalId, final Integer offset, final Integer limit,
-            final String orderBy, final String sortOrder) {
+    public static SearchParameters forSavings(final String sqlSearch, final String externalId, final String accountNo, final Integer offset,
+            final Integer limit, final String orderBy, final String sortOrder) {
 
         final Integer maxLimitAllowed = getCheckedLimit(limit);
         final Long staffId = null;
-        final String accountNo = null;
         final Long loanId = null;
         final Long savingsId = null;
         final Boolean orphansOnly = false;

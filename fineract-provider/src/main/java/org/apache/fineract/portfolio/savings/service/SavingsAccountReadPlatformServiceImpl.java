@@ -238,6 +238,11 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                 objectArray[arrayPos] = searchParameters.getExternalId();
                 arrayPos = arrayPos + 1;
             }
+            if (StringUtils.isNotBlank(searchParameters.getAccountNo())) {
+                sqlBuilder.append(" and sa.account_no = ?");
+                objectArray[arrayPos] = searchParameters.getAccountNo();
+                arrayPos = arrayPos + 1;
+            }
             if (searchParameters.getOfficeId() != null) {
                 sqlBuilder.append("and c.office_id =?");
                 objectArray[arrayPos] = searchParameters.getOfficeId();
