@@ -324,7 +324,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             }
 
             if (accountNumber != null) {
-                paramList.add("%" + accountNumber + "%");
+                paramList.add(accountNumber);
                 if (displayName != null)
                     extraCriteria += " or c.account_no = ? "; // For Carbon search should be by display_name or
                                                               // account_no
@@ -334,13 +334,13 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             }
 
             if (mobileNo != null) {
-                paramList.add("%" + mobileNo + "%");
+                paramList.add(mobileNo);
                 if (displayName != null || accountNumber != null)
-                    extraCriteria += " or c.mobile_no like ? "; // For Carbon search should be by display_name or
-                                                                // account_no or
-                else
-                    extraCriteria += " c.mobile_no like ? "; // For Carbon search should be by display_name or
+                    extraCriteria += " or c.mobile_no = ? "; // For Carbon search should be by display_name or
                                                              // account_no or
+                else
+                    extraCriteria += " c.mobile_no = ? "; // For Carbon search should be by display_name or
+                                                          // account_no or
                 // mobile_no
                 // so we use OR to support either
             }

@@ -146,7 +146,7 @@ public class AccountDetailsReadPlatformServiceJpaRepositoryImpl implements Accou
 
         // Supported search fields are "loanAccounts, savingsAccounts, shareAccounts, glimAccounts,
         // guarantorLoanAccounts"
-        final List<String> requiredFilter = getRequiredAccountFilters(5, fields);
+        final List<String> requiredFilter = getRequiredAccountFilters(7, fields);
         // Check if group exists
         this.groupReadPlatformService.validateGroup(groupId);
 
