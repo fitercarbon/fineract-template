@@ -2970,21 +2970,25 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final BigDecimal principalPaid = rs.getBigDecimal("principalPaid");
             final BigDecimal principalWrittenOff = rs.getBigDecimal("principalWrittenOff");
             final BigDecimal principalOutstanding = null;
-            final BigDecimal interestAmount = rs.getBigDecimal("interestAmount");
-            final BigDecimal interestPaid = rs.getBigDecimal("interestPaid");
-            final BigDecimal interestWrittenOff = rs.getBigDecimal("interestWrittenOff");
-            final BigDecimal interestOutstanding = null;
-            final BigDecimal interestWaived = null;
-            final BigDecimal feeChargesDue = rs.getBigDecimal("feeChargesDue");
-            final BigDecimal feeChargesPaid = rs.getBigDecimal("feeChargesPaid");
-            final BigDecimal feeChargesWaived = rs.getBigDecimal("feeChargesWaived");
-            final BigDecimal feeChargesWrittenOff = rs.getBigDecimal("feeChargesWrittenOff");
-            final BigDecimal feeChargesOutstanding = null;
-            final BigDecimal penaltyChargesDue = rs.getBigDecimal("penaltyChargesDue");
-            final BigDecimal penaltyChargesPaid = rs.getBigDecimal("penaltyChargesPaid");
-            final BigDecimal penaltyChargesWaived = rs.getBigDecimal("penaltyChargesWaived");
-            final BigDecimal penaltyChargesWrittenOff = rs.getBigDecimal("penaltyChargesWrittenOff");
-            final BigDecimal penaltyChargesOutstanding = null;
+            final BigDecimal interestAmount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestAmount");
+            final BigDecimal interestPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestPaid");
+            final BigDecimal interestWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestWrittenOff");
+            final BigDecimal interestWaived = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "interestWaived");
+            final BigDecimal interestOutstanding = interestAmount.subtract(interestPaid).subtract(interestWrittenOff)
+                    .subtract(interestWaived);
+
+            final BigDecimal feeChargesDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesDue");
+            final BigDecimal feeChargesPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesPaid");
+            final BigDecimal feeChargesWaived = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesWaived");
+            final BigDecimal feeChargesWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "feeChargesWrittenOff");
+            final BigDecimal feeChargesOutstanding = feeChargesDue.subtract(feeChargesWaived).subtract(feeChargesPaid)
+                    .subtract(feeChargesWrittenOff);
+            final BigDecimal penaltyChargesDue = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "penaltyChargesDue");
+            final BigDecimal penaltyChargesPaid = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "penaltyChargesPaid");
+            final BigDecimal penaltyChargesWaived = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "penaltyChargesWaived");
+            final BigDecimal penaltyChargesWrittenOff = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "penaltyChargesWrittenOff");
+            final BigDecimal penaltyChargesOutstanding = penaltyChargesDue.subtract(penaltyChargesWaived).subtract(penaltyChargesPaid)
+                    .subtract(penaltyChargesWrittenOff);
             final BigDecimal accrualPenaltyCharges = rs.getBigDecimal("accrualPenaltyCharges");
 
             final BigDecimal totalDueForPeriod = null;
