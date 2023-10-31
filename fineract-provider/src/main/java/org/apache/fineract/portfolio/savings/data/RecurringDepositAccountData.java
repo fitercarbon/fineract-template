@@ -166,7 +166,7 @@ public final class RecurringDepositAccountData extends DepositAccountData {
         final Collection<EnumOptionData> preClosurePenalInterestOnTypeOptions = null;
         final Collection<EnumOptionData> periodFrequencyTypeOptions = null;
 
-        final EnumOptionData depositType = SavingsEnumerations.depositType(DepositAccountType.FIXED_DEPOSIT.getValue());
+        final EnumOptionData depositType = SavingsEnumerations.depositType(DepositAccountType.RECURRING_DEPOSIT.getValue());
         final Collection<EnumOptionData> onAccountClosureOptions = null;
         final Collection<PaymentTypeData> paymentTypeOptions = null;
         final Collection<SavingsAccountData> savingsAccountDatas = null;
