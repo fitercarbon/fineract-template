@@ -60,7 +60,7 @@ public interface DepositAccountDomainService {
     Long handleRDAccountPreMatureClosure(RecurringDepositAccount account, PaymentDetail paymentDetail, AppUser user, JsonCommand command,
             LocalDate tenantsTodayDate, Map<String, Object> changes);
 
-    AccountAssociations getLinkedSavingsAccount(Long accountId);
+    AccountAssociations getLinkedSavingsAccount(Long accountId, boolean topUp);
 
     Long prematurelyCloseFDAccount(FixedDepositAccount account, PaymentDetail paymentDetail,
             FixedDepositPreClosureReq fixedDepositPreclosureReq, Map<String, Object> changes);

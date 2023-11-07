@@ -655,10 +655,10 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
     }
 
     @Override
-    public AccountAssociations getLinkedSavingsAccount(Long accountId) {
+    public AccountAssociations getLinkedSavingsAccount(Long accountId, boolean topUp) {
         AccountAssociations accountAssociations = this.accountAssociationsRepository.findBySavingsIdAndType(accountId,
                 AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue());
-        if (accountAssociations == null) {
+        if (accountAssociations == null && !topUp) {
             throw new SavingsAccountNotFoundException("error.msg.saving.account.cannot.perform.this.action.without.linked.savings.account",
                     "Cannot perform this action on Fixed Deposit Account with no associated Savings Account");
         }
@@ -708,11 +708,11 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                 }
             }
         }
-        if (closureType.isTransferToSavings()) {
+        final Long toSavingsId = fixedDepositPreclosureReq.getToSavingsAccountId();
+        SavingsAccount toSavingsAccount = fixedDepositPreclosureReq.getLinkedSavingsAccount();
+        if (closureType.isTransferToSavings() && (null != toSavingsId || null != toSavingsAccount)) {
             final boolean isExceptionForBalanceCheck = false;
-            final Long toSavingsId = fixedDepositPreclosureReq.getToSavingsAccountId();
             final String transferDescription = fixedDepositPreclosureReq.getTransferDescription();
-            SavingsAccount toSavingsAccount = fixedDepositPreclosureReq.getLinkedSavingsAccount();
             if (toSavingsAccount == null) {
                 toSavingsAccount = this.depositAccountAssembler.assembleFrom(toSavingsId, DepositAccountType.SAVINGS_DEPOSIT);
             }
