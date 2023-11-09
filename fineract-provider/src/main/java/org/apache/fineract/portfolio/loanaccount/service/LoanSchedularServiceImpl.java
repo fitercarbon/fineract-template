@@ -20,25 +20,22 @@ package org.apache.fineract.portfolio.loanaccount.service;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.security.SecureRandom;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.cob.loan.ApplyChargeToOverdueLoansBusinessStep;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
-import org.apache.fineract.infrastructure.core.data.ApiParameterError;
-import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainRuleException;
-import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
+import org.apache.fineract.infrastructure.core.domain.FineractContext;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
@@ -63,7 +60,6 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminderSet
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanOverdueReminderData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanRepaymentReminderData;
-import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,12 +81,13 @@ public class LoanSchedularServiceImpl implements LoanSchedularService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    private final int queueSize = 1;
+
     private final ConfigurationDomainService configurationDomainService;
     private final LoanReadPlatformService loanReadPlatformService;
     private final LoanWritePlatformService loanWritePlatformService;
     private final OfficeReadPlatformService officeReadPlatformService;
     private final ApplicationContext applicationContext;
-    private final ApplyChargeToOverdueLoansBusinessStep applyChargeToOverdueLoansBusinessStep;
     private final LoanRepository loanRepository;
     private final LoanRepaymentReminderSettingsRepository loanRepaymentReminderSettingsRepository;
     private final LoanOverdueReminderSettingsRepository loanOverdueReminderSettingsRepository;
@@ -105,41 +102,145 @@ public class LoanSchedularServiceImpl implements LoanSchedularService {
 
     @Override
     @CronTarget(jobName = JobName.APPLY_CHARGE_TO_OVERDUE_LOAN_INSTALLMENT)
-    public void applyChargeForOverdueLoans() throws JobExecutionException {
+    public void applyChargeForOverdueLoans(Map<String, String> jobParameters) throws JobExecutionException {
 
+        final Queue<List<Long>> queue = new ArrayDeque<>();
+        final ApplicationContext applicationContext;
+        final int threadPoolSize = Integer.parseInt(jobParameters.get("thread-pool-size"));
+        final int batchSize = Integer.parseInt(jobParameters.get("batch-size"));
+        final int pageSize = batchSize * threadPoolSize;
+        Long maxLoanIdInList = 0L;
         final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
         final Boolean backdatePenalties = this.configurationDomainService.isBackdatePenaltiesEnabled();
-        final Collection<OverdueLoanScheduleData> overdueLoanScheduledInstallments = this.loanReadPlatformService
-                .retrieveAllLoansWithOverdueInstallments(penaltyWaitPeriodValue, backdatePenalties);
+        final List<Long> overdueLoanIds = this.loanReadPlatformService.retrieveAllLoanIdsWithOverdueInstallments(penaltyWaitPeriodValue,
+                backdatePenalties, maxLoanIdInList, pageSize);
 
-        Set<Long> loanIds = overdueLoanScheduledInstallments.stream().map(OverdueLoanScheduleData::getLoanId).collect(Collectors.toSet());
+        final ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
 
-        if (!loanIds.isEmpty()) {
-            List<Throwable> exceptions = new ArrayList<>();
+        if (overdueLoanIds != null && !overdueLoanIds.isEmpty()) {
+            queue.add(overdueLoanIds.stream().toList());
+            if (!CollectionUtils.isEmpty(queue)) {
+                do {
+                    int totalFilteredRecords = overdueLoanIds.size();
+                    LOG.info("Starting Apply penalty to overdue loans- total records - {}", totalFilteredRecords);
+                    List<Long> queueElement = queue.element();
+                    maxLoanIdInList = queueElement.get(queueElement.size() - 1);
+                    applyChargeForOverdueLoans(queue.remove(), queue, threadPoolSize, executorService, pageSize, maxLoanIdInList,
+                            penaltyWaitPeriodValue, backdatePenalties);
+                } while (!CollectionUtils.isEmpty(queue));
+            }
+            // shutdown the executor when done
+            executorService.shutdownNow();
+        }
+    }
 
-            Long loanId = loanIds.stream().findFirst().orElse(null);
+    private void applyChargeForOverdueLoans(List<Long> overdueLoanIds, Queue<List<Long>> queue, int threadPoolSize,
+            ExecutorService executorService, int pageSize, Long maxLoanIdInList, Long penaltyWaitPeriodValue, Boolean backdatePenalties) {
+        List<Callable<Void>> posters = new ArrayList<>();
+        int fromIndex = 0;
+        int size = overdueLoanIds.size();
+        int batchSize = (int) Math.ceil((double) size / threadPoolSize);
+        if (batchSize == 0) {
+            return;
+        }
+        int toIndex = (batchSize > size - 1) ? size : batchSize;
+        while (toIndex < size && overdueLoanIds.get(toIndex - 1).equals(overdueLoanIds.get(toIndex))) {
+            toIndex++;
+        }
+        boolean lastBatch = false;
+        int loopCount = size / batchSize + 1;
 
-            try {
-                applyChargeToOverdueLoansBusinessStep.execute(loanRepository.getReferenceById(loanId));
-            } catch (final PlatformApiDataValidationException e) {
-                final List<ApiParameterError> errors = e.getErrors();
-                for (final ApiParameterError error : errors) {
-                    log.error("Apply Charges due for overdue loans failed for account {} with message: {}", loanId,
-                            error.getDeveloperMessage(), e);
+        FineractContext context = ThreadLocalContextUtil.getContext();
+
+        Callable<Void> fetchData = () -> {
+            ThreadLocalContextUtil.init(context);
+            Long maxId = maxLoanIdInList;
+            if (!queue.isEmpty()) {
+                maxId = Math.max(maxLoanIdInList, queue.element().get(queue.element().size() - 1));
+            }
+            while (queue.size() <= queueSize) {
+                LOG.info("Fetching while threads are running!");
+                List<Long> loanIds = this.loanReadPlatformService.retrieveAllLoanIdsWithOverdueInstallments(penaltyWaitPeriodValue,
+                        backdatePenalties, maxId, pageSize);
+
+                if (loanIds.isEmpty()) {
+                    break;
                 }
-                exceptions.add(e);
-            } catch (final AbstractPlatformDomainRuleException e) {
-                log.error("Apply Charges due for overdue loans failed for account {} with message: {}", loanId, e.getDefaultUserMessage(),
-                        e);
-                exceptions.add(e);
-            } catch (Exception e) {
-                log.error("Apply Charges due for overdue loans failed for account {}", loanId, e);
-                exceptions.add(e);
+                maxId = loanIds.get(loanIds.size() - 1);
+                queue.add(loanIds);
             }
+            return null;
+        };
+        posters.add(fetchData);
 
-            if (!exceptions.isEmpty()) {
-                throw new JobExecutionException(exceptions);
+        for (long i = 0; i < loopCount; i++) {
+            List<Long> subList = safeSubList(overdueLoanIds, fromIndex, toIndex);
+            ApplyChargeToOverdueLoansPoster poster = (ApplyChargeToOverdueLoansPoster) applicationContext
+                    .getBean("applyChargeToOverdueLoansPoster");
+            poster.setLoanIds(subList);
+            poster.setLoanWritePlatformService(loanWritePlatformService);
+            poster.setLoanReadPlatformService(loanReadPlatformService);
+            poster.setConfigurationDomainService(configurationDomainService);
+            poster.setContext(ThreadLocalContextUtil.getContext());
+
+            posters.add(poster);
+            if (lastBatch) {
+                break;
             }
+            if (toIndex + batchSize > size - 1) {
+                lastBatch = true;
+            }
+            fromIndex = fromIndex + (toIndex - fromIndex);
+            toIndex = (toIndex + batchSize > size - 1) ? size : toIndex + batchSize;
+            while (toIndex < size && overdueLoanIds.get(toIndex - 1).equals(overdueLoanIds.get(toIndex))) {
+                toIndex++;
+            }
+        }
+        try {
+            List<Future<Void>> responses = executorService.invokeAll(posters);
+            Long maxId = maxLoanIdInList;
+            if (!queue.isEmpty()) {
+                maxId = Math.max(maxLoanIdInList, queue.element().get(queue.element().size() - 1));
+            }
+            while (queue.size() <= queueSize) {
+                LOG.info("Fetching while threads are running!..:: this is not supposed to run........");
+                overdueLoanIds = this.loanReadPlatformService.retrieveAllLoanIdsWithOverdueInstallments(penaltyWaitPeriodValue,
+                        backdatePenalties, maxId, pageSize);
+
+                if (overdueLoanIds.isEmpty()) {
+                    break;
+                }
+                maxId = overdueLoanIds.get(overdueLoanIds.size() - 1);
+                LOG.info("Add to the Queue");
+                queue.add(overdueLoanIds);
+            }
+            checkTaskCompletion(responses);
+            LOG.info("Queue size {}", queue.size());
+        } catch (InterruptedException e1) {
+            LOG.error("Interrupted while AddPenalty", e1);
+        }
+    }
+
+    private void checkTaskCompletion(List<Future<Void>> responses) {
+        try {
+            for (Future<Void> f : responses) {
+                f.get();
+            }
+            boolean allThreadsExecuted;
+            int noOfThreadsExecuted = 0;
+            for (Future<Void> future : responses) {
+                if (future.isDone()) {
+                    noOfThreadsExecuted++;
+                }
+            }
+            allThreadsExecuted = noOfThreadsExecuted == responses.size();
+            if (!allThreadsExecuted) {
+                LOG.error("All threads could not execute.");
+            }
+        } catch (InterruptedException e1) {
+            LOG.error("Interrupted while interest posting entries", e1);
+        } catch (ExecutionException e2) {
+            LOG.error("Execution exception while interest posting entries", e2);
         }
     }
 
