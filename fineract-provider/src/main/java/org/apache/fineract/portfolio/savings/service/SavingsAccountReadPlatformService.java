@@ -73,7 +73,7 @@ public interface SavingsAccountReadPlatformService {
 
     Collection<SavingsAccountBlockNarrationHistoryData> retrieveSavingsAccountBlockNarrationHistory(Long savingsId);
 
-    List<Long> retrieveActiveSavingsAccrualAccounts(Long accountType);
+    List<Long> retrieveActiveSavingsAccrualAccounts(Long maxSavingsAccountId, int pageSize);
 
     List<Long> retrieveActiveSavingAccountsForInterestPosting(Long maxSavingsIdInList, int pageSize);
 

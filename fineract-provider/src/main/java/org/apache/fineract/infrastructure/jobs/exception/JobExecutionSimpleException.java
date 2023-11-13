@@ -16,30 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.scheduledjobs.service;
+package org.apache.fineract.infrastructure.jobs.exception;
 
-import java.util.Map;
-import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
+import java.util.Objects;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformException;
 
-public interface ScheduledJobRunnerService {
+public class JobExecutionSimpleException extends AbstractPlatformException {
 
-    void applyAnnualFeeForSavings();
-
-    void applyDueChargesForSavings() throws JobExecutionException;
-
-    void updateNPA();
-
-    void updateMaturityDetailsOfDepositAccounts();
-
-    void generateRDSchedule();
-
-    void postDividends() throws JobExecutionException;
-
-    void updateTrialBalanceDetails() throws JobExecutionException;
-
-    void executeMissMatchedJobs() throws JobExecutionException;
-
-    void postAccrualInterestForSavings(Map<String, String> jobParameters) throws JobExecutionException;
-
-    void updateNextWithdrawalDateOnSavingsAccount() throws JobExecutionException;
+    public JobExecutionSimpleException(Exception exception) {
+        super("error.msg.execution.job.exception",
+                (Objects.nonNull(exception.getMessage()) ? exception.getMessage() + " --> Stacktrace: " : "")
+                        + ExceptionUtils.getStackTrace(exception));
+    }
 }

@@ -684,15 +684,20 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     }
 
     @Override
-    public List<Long> retrieveActiveSavingsAccrualAccounts(Long accountType) {
+    public List<Long> retrieveActiveSavingsAccrualAccounts(Long maxSavingsAccountId, int pageSize) {
         StringBuilder sql = new StringBuilder(" SELECT distinct msa.id ");
         sql.append(" FROM m_savings_account msa ");
         sql.append(" JOIN m_savings_product msp ON msp.id = msa.product_id ");
         sql.append(" WHERE msa.status_enum = 300 AND msp.accounting_type = 3 ");
         sql.append(" and (msa.nominal_annual_interest_rate != 0 or msa.allow_overdraft = true or msa.account_balance_derived <= 0) ");
-        sql.append(" AND msa.deposit_type_enum = ? ");
+        sql.append(" AND msa.deposit_type_enum in (100, 200, 300) ");
+        sql.append(" and msa.id > ? order by msa.id asc limit ? ");
 
-        return this.jdbcTemplate.queryForList(sql.toString(), Long.class, accountType);
+        try {
+            return Collections.synchronizedList(this.jdbcTemplate.queryForList(sql.toString(), Long.class, maxSavingsAccountId, pageSize));
+        } catch (final EmptyResultDataAccessException e) {
+            return new ArrayList<Long>();
+        }
     }
 
     @Override
