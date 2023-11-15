@@ -1716,6 +1716,13 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         FixedDepositAccount account = (FixedDepositAccount) this.depositAccountAssembler.assembleFrom(accountId,
                 DepositAccountType.FIXED_DEPOSIT);
         AccountAssociations accountAssociations = this.depositAccountDomainService.getLinkedSavingsAccount(accountId, true);
+        final boolean isSavingsInterestPostingAtCurrentPeriodEnd = this.configurationDomainService
+                .isSavingsInterestPostingAtCurrentPeriodEnd();
+        final Integer financialYearBeginningMonth = this.configurationDomainService.retrieveFinancialYearBeginningMonth();
+
+        final LocalDate today = DateUtils.getLocalDateOfTenant();
+        final MathContext mc = new MathContext(10, MoneyHelper.getRoundingMode());
+        boolean isInterestTransfer = false;
 
         this.checkClientOrGroupActive(account);
         account.setApplyPreclosureCharges(false);
@@ -1723,6 +1730,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
 
         FixedDepositApplicationReq fixedDepositApplicationReq = this.generateFixedDepositApplicationReq(account, command);
         fixedDepositApplicationReq.setDepositAmount(command.bigDecimalValueOfParameterNamed(depositAmountParamName));
+        account.postAccrualInterest(mc, today, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth,
+                today, account.maturityDate());
         fixedDepositApplicationReq.setInterestCarriedForward(this.calculateInterestCarriedForward(account));
         boolean changeTenure = command.booleanPrimitiveValueOfParameterNamed(changeTenureParamName);
         if (!changeTenure) {

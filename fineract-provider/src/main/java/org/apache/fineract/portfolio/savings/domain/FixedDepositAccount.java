@@ -253,6 +253,11 @@ public class FixedDepositAccount extends SavingsAccount {
         for (PostingPeriod postingPeriod : postingPeriods) {
             totalInterestPayable = totalInterestPayable.plus(postingPeriod.getInterestEarned());
         }
+        // Add interest carried forward to interest payable
+        if (this.accountTermAndPreClosure != null && this.accountTermAndPreClosure.getInterestCarriedForwardOnTopUp() != null) {
+            totalInterestPayable = totalInterestPayable.plus(this.accountTermAndPreClosure.getInterestCarriedForwardOnTopUp());
+        }
+
         final Money depositAmount = Money.of(getCurrency(), this.accountTermAndPreClosure.depositAmount());
         final Money maturityAmount = depositAmount.plus(totalInterestPayable);
 
