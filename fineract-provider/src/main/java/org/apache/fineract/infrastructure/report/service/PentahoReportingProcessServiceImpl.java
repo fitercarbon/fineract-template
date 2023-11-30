@@ -58,10 +58,13 @@ import org.springframework.stereotype.Service;
 public class PentahoReportingProcessServiceImpl implements ReportingProcessService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PentahoReportingProcessServiceImpl.class);
-    private static final String MIFOS_BASE_DIR = File.separator + "root" + File.separator + ".mifosx";
 
     private final PlatformSecurityContext context;
     private final FineractProperties fineractProperties;
+
+    @Value("${fineract.configuration.mifosBaseDir}")
+    private String mifosBaseDir;
+
     @Value("${fineract.configuration.pentahoFolderName}")
     private String pentahoFolderName;
 
@@ -89,7 +92,7 @@ public class PentahoReportingProcessServiceImpl implements ReportingProcessServi
             throw new PlatformDataIntegrityException("error.msg.invalid.outputType", "No matching Output Type: " + outputType);
         }
 
-        final var reportPath = MIFOS_BASE_DIR + File.separator + pentahoFolderName + File.separator + reportName + ".prpt";
+        final var reportPath = mifosBaseDir + File.separator + pentahoFolderName + File.separator + reportName + ".prpt";
         var outPutInfo = "Report path: " + reportPath;
         LOGGER.info("Report path: {}", outPutInfo);
 
