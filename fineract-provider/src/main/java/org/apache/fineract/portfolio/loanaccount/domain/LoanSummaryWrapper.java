@@ -202,6 +202,42 @@ public final class LoanSummaryWrapper {
         return total;
     }
 
+    public Money calculateTotalPenaltyRecovered(final List<LoanRepaymentScheduleInstallment> repaymentScheduleInstallments,
+            final MonetaryCurrency currency) {
+        Money total = Money.zero(currency);
+        for (final LoanRepaymentScheduleInstallment installment : repaymentScheduleInstallments) {
+            total = total.plus(installment.getPenaltiesWrittenOffRecovered(currency));
+        }
+        return total;
+    }
+
+    public Money calculateTotalFeesRecovered(final List<LoanRepaymentScheduleInstallment> repaymentScheduleInstallments,
+            final MonetaryCurrency currency) {
+        Money total = Money.zero(currency);
+        for (final LoanRepaymentScheduleInstallment installment : repaymentScheduleInstallments) {
+            total = total.plus(installment.getFeesWrittenOffRecovered(currency));
+        }
+        return total;
+    }
+
+    public Money calculateTotalPrincipalRecovered(final List<LoanRepaymentScheduleInstallment> repaymentScheduleInstallments,
+            final MonetaryCurrency currency) {
+        Money total = Money.zero(currency);
+        for (final LoanRepaymentScheduleInstallment installment : repaymentScheduleInstallments) {
+            total = total.plus(installment.getPrincipalWrittenOffRecovered(currency));
+        }
+        return total;
+    }
+
+    public Money calculateTotalInterestRecovered(final List<LoanRepaymentScheduleInstallment> repaymentScheduleInstallments,
+            final MonetaryCurrency currency) {
+        Money total = Money.zero(currency);
+        for (final LoanRepaymentScheduleInstallment installment : repaymentScheduleInstallments) {
+            total = total.plus(installment.getInterestWrittenOffRecovered(currency));
+        }
+        return total;
+    }
+
     public Money calculateTotalOverdueOn(final List<LoanRepaymentScheduleInstallment> repaymentScheduleInstallments,
             final MonetaryCurrency currency, final LocalDate overdueAsOf) {
 

@@ -3794,8 +3794,20 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         final MonetaryCurrency currency = loanCurrency();
         Money cumulativeTotalPaidOnInstallments = Money.zero(currency);
         Money cumulativeTotalWaivedOnInstallments = Money.zero(currency);
+        Money cumulativeTotalWrittenOff = Money.zero(currency);
+        Money cumulativeTotalWrittenOffRecovered = Money.zero(currency);
+
         List<LoanRepaymentScheduleInstallment> installments = getRepaymentScheduleInstallments();
         for (final LoanRepaymentScheduleInstallment scheduledRepayment : installments) {
+            cumulativeTotalWrittenOff = cumulativeTotalWrittenOff.add(scheduledRepayment.getPrincipalWrittenOff(currency))
+                    .add(scheduledRepayment.getInterestWrittenOff(currency)).add(scheduledRepayment.getFeeChargesWrittenOff(currency))
+                    .add(scheduledRepayment.getPenaltyChargesWrittenOff(currency));
+
+            cumulativeTotalWrittenOffRecovered = cumulativeTotalWrittenOffRecovered
+                    .add(scheduledRepayment.getPrincipalWrittenOffRecovered(currency))
+                    .add(scheduledRepayment.getInterestWrittenOffRecovered(currency))
+                    .add(scheduledRepayment.getFeesWrittenOffRecovered(currency))
+                    .add(scheduledRepayment.getPenaltiesWrittenOffRecovered(currency));
 
             cumulativeTotalPaidOnInstallments = cumulativeTotalPaidOnInstallments
                     .plus(scheduledRepayment.getPrincipalCompleted(currency).plus(scheduledRepayment.getInterestPaid(currency)))
@@ -3808,6 +3820,15 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             if ((loanTransaction.isRefund() || loanTransaction.isRefundForActiveLoan() || loanTransaction.isCreditBalanceRefund())
                     && !loanTransaction.isReversed()) {
                 totalPaidInRepayments = totalPaidInRepayments.minus(loanTransaction.getAmount(currency));
+            }
+        }
+
+        if (cumulativeTotalWrittenOff.isGreaterThanZero()) {
+            final Money pendingRecovery = cumulativeTotalWrittenOffRecovered.minus(cumulativeTotalWrittenOff);
+            if (pendingRecovery.isZero()) {
+                return totalPaidInRepayments.minus(cumulativeTotalPaidOnInstallments);
+            } else {
+                return pendingRecovery.isLessThanZero() ? Money.zero(currency) : pendingRecovery;
             }
         }
 
@@ -4222,7 +4243,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         Money cumulativePaid = Money.zero(loanCurrency());
 
         for (final LoanTransaction repayment : this.loanTransactions) {
-            if ((repayment.isRepaymentType() || repayment.isPayoff()) && !repayment.isReversed()) {
+            if ((repayment.isRepaymentType() || repayment.isPayoff() || repayment.isRecoveryRepayment()) && !repayment.isReversed()) {
                 cumulativePaid = cumulativePaid.plus(repayment.getAmount(loanCurrency()));
             }
         }
@@ -5840,9 +5861,9 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             } else {
                 if (this.loanInterestRecalculationDetails != null
                         && this.loanInterestRecalculationDetails.isCompoundingToBePostedAsTransaction()
-                        && !loanTransaction.isRepaymentAtDisbursement()) {
+                        && !loanTransaction.isRepaymentAtDisbursement() && !loanTransaction.isRecoveryRepayment()) {
                     outstanding = outstanding.minus(loanTransaction.getAmount(getCurrency()));
-                } else {
+                } else if (!loanTransaction.isRecoveryRepayment()) {
                     outstanding = outstanding.minus(loanTransaction.getPrincipalPortion(getCurrency()));
                 }
                 loanTransaction.updateOutstandingLoanBalance(outstanding.getAmount());
