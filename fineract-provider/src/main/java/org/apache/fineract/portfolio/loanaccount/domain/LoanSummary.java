@@ -117,6 +117,18 @@ public final class LoanSummary {
     @Column(name = "total_outstanding_derived", scale = 6, precision = 19)
     private BigDecimal totalOutstanding;
 
+    @Column(name = "total_principal_recovered", scale = 6, precision = 19)
+    private BigDecimal totalPrincipalRecovered;
+
+    @Column(name = "total_interest_recovered", scale = 6, precision = 19)
+    private BigDecimal totalInterestRecovered;
+
+    @Column(name = "total_penalty_recovered", scale = 6, precision = 19)
+    private BigDecimal totalPenaltyRecovered;
+
+    @Column(name = "total_fees_recovered", scale = 6, precision = 19)
+    private BigDecimal totalFeesRecovered;
+
     public static LoanSummary create(final BigDecimal totalFeeChargesDueAtDisbursement) {
         return new LoanSummary(totalFeeChargesDueAtDisbursement);
     }
@@ -218,7 +230,7 @@ public final class LoanSummary {
         this.totalPrincipalWrittenOff = summaryWrapper.calculateTotalPrincipalWrittenOff(repaymentScheduleInstallments, currency)
                 .getAmount();
 
-        this.totalPrincipalOutstanding = principal.minus(this.totalPrincipalRepaid).minus(this.totalPrincipalWrittenOff).getAmount();
+        this.totalPrincipalOutstanding = principal.minus(this.totalPrincipalRepaid).getAmount();
 
         final Money totalInterestCharged = summaryWrapper.calculateTotalInterestCharged(repaymentScheduleInstallments, currency);
         this.totalInterestCharged = totalInterestCharged.getAmount();
@@ -226,8 +238,7 @@ public final class LoanSummary {
         this.totalInterestWaived = summaryWrapper.calculateTotalInterestWaived(repaymentScheduleInstallments, currency).getAmount();
         this.totalInterestWrittenOff = summaryWrapper.calculateTotalInterestWrittenOff(repaymentScheduleInstallments, currency).getAmount();
 
-        this.totalInterestOutstanding = totalInterestCharged.minus(this.totalInterestRepaid).minus(this.totalInterestWaived)
-                .minus(this.totalInterestWrittenOff).getAmount();
+        this.totalInterestOutstanding = totalInterestCharged.minus(this.totalInterestRepaid).minus(this.totalInterestWaived).getAmount();
 
         final Money totalFeeChargesCharged = summaryWrapper.calculateTotalFeeChargesCharged(repaymentScheduleInstallments, currency)
                 .plus(this.totalFeeChargesDueAtDisbursement);
@@ -246,7 +257,7 @@ public final class LoanSummary {
                 .getAmount();
 
         this.totalFeeChargesOutstanding = totalFeeChargesCharged.minus(this.totalFeeChargesRepaid).minus(this.totalFeeChargesWaived)
-                .minus(this.totalFeeChargesWrittenOff).getAmount();
+                .getAmount();
 
         final Money totalPenaltyChargesCharged = summaryWrapper.calculateTotalPenaltyChargesCharged(repaymentScheduleInstallments,
                 currency);
@@ -258,8 +269,13 @@ public final class LoanSummary {
         this.totalPenaltyChargesWrittenOff = summaryWrapper.calculateTotalPenaltyChargesWrittenOff(repaymentScheduleInstallments, currency)
                 .getAmount();
 
+        this.totalPrincipalRecovered = summaryWrapper.calculateTotalPrincipalRecovered(repaymentScheduleInstallments, currency).getAmount();
+        this.totalInterestRecovered = summaryWrapper.calculateTotalInterestRecovered(repaymentScheduleInstallments, currency).getAmount();
+        this.totalFeesRecovered = summaryWrapper.calculateTotalFeesRecovered(repaymentScheduleInstallments, currency).getAmount();
+        this.totalPenaltyRecovered = summaryWrapper.calculateTotalPenaltyRecovered(repaymentScheduleInstallments, currency).getAmount();
+
         this.totalPenaltyChargesOutstanding = totalPenaltyChargesCharged.minus(this.totalPenaltyChargesRepaid)
-                .minus(this.totalPenaltyChargesWaived).minus(this.totalPenaltyChargesWrittenOff).getAmount();
+                .minus(this.totalPenaltyChargesWaived).getAmount();
 
         final Money totalExpectedRepayment = Money.of(currency, this.totalPrincipalDisbursed).plus(this.totalInterestCharged)
                 .plus(this.totalFeeChargesCharged).plus(this.totalPenaltyChargesCharged);

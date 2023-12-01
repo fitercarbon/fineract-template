@@ -89,6 +89,7 @@ public class FineractStyleLoanRepaymentScheduleTransactionProcessor extends Abst
         Money interestPortion = Money.zero(transactionAmountRemaining.getCurrency());
         Money feeChargesPortion = Money.zero(transactionAmountRemaining.getCurrency());
         Money penaltyChargesPortion = Money.zero(transactionAmountRemaining.getCurrency());
+        final boolean isRecoveryRepayment = loanTransaction.isRecoveryRepayment();
 
         if (loanTransaction.isChargesWaiver()) {
             penaltyChargesPortion = currentInstallment.waivePenaltyChargesComponent(transactionDate,
@@ -114,16 +115,17 @@ public class FineractStyleLoanRepaymentScheduleTransactionProcessor extends Abst
             }
             loanTransaction.updateComponents(principalPortion, interestPortion, feeChargesPortion, penaltyChargesPortion);
         } else {
-            penaltyChargesPortion = currentInstallment.payPenaltyChargesComponent(transactionDate, transactionAmountRemaining);
+            penaltyChargesPortion = currentInstallment.payPenaltyChargesComponent(transactionDate, transactionAmountRemaining,
+                    isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(penaltyChargesPortion);
 
-            feeChargesPortion = currentInstallment.payFeeChargesComponent(transactionDate, transactionAmountRemaining);
+            feeChargesPortion = currentInstallment.payFeeChargesComponent(transactionDate, transactionAmountRemaining, isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(feeChargesPortion);
 
-            interestPortion = currentInstallment.payInterestComponent(transactionDate, transactionAmountRemaining);
+            interestPortion = currentInstallment.payInterestComponent(transactionDate, transactionAmountRemaining, isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(interestPortion);
 
-            principalPortion = currentInstallment.payPrincipalComponent(transactionDate, transactionAmountRemaining);
+            principalPortion = currentInstallment.payPrincipalComponent(transactionDate, transactionAmountRemaining, isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(principalPortion);
 
             loanTransaction.updateComponents(principalPortion, interestPortion, feeChargesPortion, penaltyChargesPortion);

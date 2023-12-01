@@ -135,6 +135,18 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, mappedBy = "installment")
     private Set<LoanInstallmentCharge> installmentCharges = new HashSet<>();
 
+    @Column(name = "penalty_charges_written_off_recovered_derived", scale = 6, precision = 19, nullable = true)
+    private BigDecimal penaltiesWrittenOffRecoveredDerived;
+
+    @Column(name = "fees_written_off_recovered_derived", scale = 6, precision = 19, nullable = true)
+    private BigDecimal feesWrittenOffRecoveredDerived;
+
+    @Column(name = "interest_written_off_recovered_derived", scale = 6, precision = 19, nullable = true)
+    private BigDecimal interestWrittenOffRecoveredDerived;
+
+    @Column(name = "principal_written_off_recovered_derived", scale = 6, precision = 19, nullable = true)
+    private BigDecimal principalWrittenOffRecoveredDerived;
+
     LoanRepaymentScheduleInstallment() {
         this.installmentNumber = null;
         this.fromDate = null;
@@ -193,7 +205,7 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
 
     private BigDecimal defaultToNullIfZero(final BigDecimal value) {
         BigDecimal result = value;
-        if (BigDecimal.ZERO.compareTo(value) == 0) {
+        if (value != null && BigDecimal.ZERO.compareTo(value) == 0) {
             result = null;
         }
         return result;
@@ -244,6 +256,15 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         return getPrincipal(currency).minus(principalAccountedFor);
     }
 
+    public Money getPrincipalOutstandingForRecovery(final MonetaryCurrency currency) {
+
+        if (getPrincipalWrittenOff(currency).isGreaterThanZero()) {
+            return getPrincipalWrittenOff(currency).minus(getPrincipalWrittenOffRecovered(currency));
+        }
+
+        return getPrincipal(currency).minus(getPrincipalCompleted(currency));
+    }
+
     public Money getInterestCharged(final MonetaryCurrency currency) {
         return Money.of(currency, this.interestCharged);
     }
@@ -256,6 +277,22 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         return Money.of(currency, this.interestWaived);
     }
 
+    public Money getInterestWrittenOffRecovered(final MonetaryCurrency currency) {
+        return Money.of(currency, this.interestWrittenOffRecoveredDerived);
+    }
+
+    public Money getFeesWrittenOffRecovered(final MonetaryCurrency currency) {
+        return Money.of(currency, this.feesWrittenOffRecoveredDerived);
+    }
+
+    public Money getPrincipalWrittenOffRecovered(final MonetaryCurrency currency) {
+        return Money.of(currency, this.principalWrittenOffRecoveredDerived);
+    }
+
+    public Money getPenaltiesWrittenOffRecovered(final MonetaryCurrency currency) {
+        return Money.of(currency, this.penaltiesWrittenOffRecoveredDerived);
+    }
+
     public Money getInterestWrittenOff(final MonetaryCurrency currency) {
         return Money.of(currency, this.interestWrittenOff);
     }
@@ -264,6 +301,16 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         final Money interestAccountedFor = getInterestPaid(currency).plus(getInterestWaived(currency))
                 .plus(getInterestWrittenOff(currency));
         return getInterestCharged(currency).minus(interestAccountedFor);
+    }
+
+    public Money getInterestOutstandingForRecovery(final MonetaryCurrency currency) {
+
+        if (getInterestWrittenOff(currency).isGreaterThanZero()) {
+            return getInterestWrittenOff(currency).minus(getInterestWrittenOffRecovered(currency));
+        }
+
+        final Money interestAccountedFor = getInterestPaid(currency).plus(getInterestWaived(currency));
+        return getInterestCharged(currency).plus(getInterestWrittenOff(currency)).minus(interestAccountedFor);
     }
 
     public Money getInterestAccrued(final MonetaryCurrency currency) {
@@ -289,6 +336,16 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     public Money getFeeChargesOutstanding(final MonetaryCurrency currency) {
         final Money feeChargesAccountedFor = getFeeChargesPaid(currency).plus(getFeeChargesWaived(currency))
                 .plus(getFeeChargesWrittenOff(currency));
+        return getFeeChargesCharged(currency).minus(feeChargesAccountedFor);
+    }
+
+    public Money getFeeChargesOutstandingForRecovery(final MonetaryCurrency currency) {
+
+        if (getFeeChargesWrittenOff(currency).isGreaterThanZero()) {
+            return getFeeChargesWrittenOff(currency).minus(getFeesWrittenOffRecovered(currency));
+        }
+
+        final Money feeChargesAccountedFor = getFeeChargesPaid(currency).plus(getFeeChargesWaived(currency));
         return getFeeChargesCharged(currency).minus(feeChargesAccountedFor);
     }
 
@@ -318,6 +375,16 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         return getPenaltyChargesCharged(currency).minus(feeChargesAccountedFor);
     }
 
+    public Money getPenaltyChargesOutstandingForRecovery(final MonetaryCurrency currency) {
+
+        if (getPenaltyChargesWrittenOff(currency).isGreaterThanZero()) {
+            return getPenaltyChargesWrittenOff(currency).minus(getPenaltiesWrittenOffRecovered(currency));
+        }
+
+        final Money feeChargesAccountedFor = getPenaltyChargesPaid(currency).plus(getPenaltyChargesWaived(currency));
+        return getPenaltyChargesCharged(currency).minus(feeChargesAccountedFor);
+    }
+
     public Money getPenaltyAccrued(final MonetaryCurrency currency) {
         return Money.of(currency, this.penaltyAccrued);
     }
@@ -335,6 +402,11 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
                 .plus(getPenaltyChargesOutstanding(currency));
     }
 
+    public Money getTotalOutstandingWithRecoveries(final MonetaryCurrency currency) {
+        return getPrincipalOutstandingForRecovery(currency).plus(getInterestOutstandingForRecovery(currency))
+                .plus(getFeeChargesOutstandingForRecovery(currency)).plus(getPenaltyChargesOutstandingForRecovery(currency));
+    }
+
     public void updateLoan(final Loan loan) {
         this.loan = loan;
     }
@@ -349,6 +421,11 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
 
     public boolean isNotFullyPaidOff() {
         return !this.obligationsMet;
+    }
+
+    public boolean isAmountsNotFullyPaidOff() {
+        return (this.principalWrittenOff != null || this.interestWrittenOff != null || this.feeChargesWrittenOff != null
+                || this.penaltyChargesWrittenOff != null || !this.obligationsMet);
     }
 
     @Override
@@ -378,6 +455,10 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
         this.penaltyChargesWrittenOff = null;
         this.totalPaidInAdvance = null;
         this.totalPaidLate = null;
+        this.feesWrittenOffRecoveredDerived = null;
+        this.interestWrittenOffRecoveredDerived = null;
+        this.principalWrittenOffRecoveredDerived = null;
+        this.penaltiesWrittenOffRecoveredDerived = null;
 
         this.obligationsMet = false;
         this.obligationsMetOnDate = null;
@@ -390,12 +471,27 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     }
 
     public Money payPenaltyChargesComponent(final LocalDate transactionDate, final Money transactionAmountRemaining) {
+        return payPenaltyChargesComponent(transactionDate, transactionAmountRemaining, false);
+    }
+
+    public Money payPenaltyChargesComponent(final LocalDate transactionDate, final Money transactionAmountRemaining,
+            boolean isRecoveryPayment) {
 
         final MonetaryCurrency currency = transactionAmountRemaining.getCurrency();
         Money penaltyPortionOfTransaction = Money.zero(currency);
 
-        final Money penaltyChargesDue = getPenaltyChargesOutstanding(currency);
-        if (transactionAmountRemaining.isGreaterThanOrEqualTo(penaltyChargesDue)) {
+        final Money penaltyChargesDue = isRecoveryPayment ? getPenaltyChargesOutstandingForRecovery(currency)
+                : getPenaltyChargesOutstanding(currency);
+        if (isRecoveryPayment && transactionAmountRemaining.isGreaterThanOrEqualTo(penaltyChargesDue)) {
+            this.penaltiesWrittenOffRecoveredDerived = getPenaltiesWrittenOffRecovered(currency).plus(penaltyChargesDue).getAmount();
+            this.penaltyChargesPaid = getPenaltyChargesPaid(currency).plus(penaltyChargesDue).getAmount();
+            penaltyPortionOfTransaction = penaltyPortionOfTransaction.plus(penaltyChargesDue);
+        } else if (isRecoveryPayment && transactionAmountRemaining.isGreaterThan(Money.zero(currency))) {
+            this.penaltiesWrittenOffRecoveredDerived = getPenaltiesWrittenOffRecovered(currency).plus(transactionAmountRemaining)
+                    .getAmount();
+            this.penaltyChargesPaid = getPenaltyChargesPaid(currency).plus(transactionAmountRemaining).getAmount();
+            penaltyPortionOfTransaction = penaltyPortionOfTransaction.plus(transactionAmountRemaining);
+        } else if (transactionAmountRemaining.isGreaterThanOrEqualTo(penaltyChargesDue)) {
             this.penaltyChargesPaid = getPenaltyChargesPaid(currency).plus(penaltyChargesDue).getAmount();
             penaltyPortionOfTransaction = penaltyPortionOfTransaction.plus(penaltyChargesDue);
         } else {
@@ -411,12 +507,26 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     }
 
     public Money payFeeChargesComponent(final LocalDate transactionDate, final Money transactionAmountRemaining) {
+        return payFeeChargesComponent(transactionDate, transactionAmountRemaining, false);
+    }
+
+    public Money payFeeChargesComponent(final LocalDate transactionDate, final Money transactionAmountRemaining,
+            boolean isRecoveryPayment) {
 
         final MonetaryCurrency currency = transactionAmountRemaining.getCurrency();
         Money feePortionOfTransaction = Money.zero(currency);
 
-        final Money feeChargesDue = getFeeChargesOutstanding(currency);
-        if (transactionAmountRemaining.isGreaterThanOrEqualTo(feeChargesDue)) {
+        final Money feeChargesDue = isRecoveryPayment ? getFeeChargesOutstandingForRecovery(currency) : getFeeChargesOutstanding(currency);
+
+        if (isRecoveryPayment && transactionAmountRemaining.isGreaterThanOrEqualTo(feeChargesDue)) {
+            this.feesWrittenOffRecoveredDerived = getFeesWrittenOffRecovered(currency).plus(feeChargesDue).getAmount();
+            this.feeChargesPaid = getFeeChargesPaid(currency).plus(feeChargesDue).getAmount();
+            feePortionOfTransaction = feePortionOfTransaction.plus(feeChargesDue);
+        } else if (isRecoveryPayment && transactionAmountRemaining.isGreaterThan(Money.zero(currency))) {
+            this.feesWrittenOffRecoveredDerived = getFeesWrittenOffRecovered(currency).plus(transactionAmountRemaining).getAmount();
+            this.feeChargesPaid = getFeeChargesPaid(currency).plus(transactionAmountRemaining).getAmount();
+            feePortionOfTransaction = feePortionOfTransaction.plus(transactionAmountRemaining);
+        } else if (transactionAmountRemaining.isGreaterThanOrEqualTo(feeChargesDue)) {
             this.feeChargesPaid = getFeeChargesPaid(currency).plus(feeChargesDue).getAmount();
             feePortionOfTransaction = feePortionOfTransaction.plus(feeChargesDue);
         } else {
@@ -434,12 +544,25 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     }
 
     public Money payInterestComponent(final LocalDate transactionDate, final Money transactionAmountRemaining) {
+        return payInterestComponent(transactionDate, transactionAmountRemaining, false);
+    }
+
+    public Money payInterestComponent(final LocalDate transactionDate, final Money transactionAmountRemaining, boolean isRecoveryPayment) {
 
         final MonetaryCurrency currency = transactionAmountRemaining.getCurrency();
         Money interestPortionOfTransaction = Money.zero(currency);
 
-        final Money interestDue = getInterestOutstanding(currency);
-        if (transactionAmountRemaining.isGreaterThanOrEqualTo(interestDue)) {
+        final Money interestDue = isRecoveryPayment ? getInterestOutstandingForRecovery(currency) : getInterestOutstanding(currency);
+
+        if (isRecoveryPayment && transactionAmountRemaining.isGreaterThanOrEqualTo(interestDue)) {
+            this.interestWrittenOffRecoveredDerived = getInterestWrittenOffRecovered(currency).plus(interestDue).getAmount();
+            this.interestPaid = getInterestPaid(currency).plus(interestDue).getAmount();
+            interestPortionOfTransaction = interestPortionOfTransaction.plus(interestDue);
+        } else if (isRecoveryPayment && transactionAmountRemaining.isGreaterThan(Money.zero(currency))) {
+            this.interestWrittenOffRecoveredDerived = getInterestWrittenOffRecovered(currency).plus(transactionAmountRemaining).getAmount();
+            this.interestPaid = getInterestPaid(currency).plus(transactionAmountRemaining).getAmount();
+            interestPortionOfTransaction = interestPortionOfTransaction.plus(transactionAmountRemaining);
+        } else if (transactionAmountRemaining.isGreaterThanOrEqualTo(interestDue)) {
             this.interestPaid = getInterestPaid(currency).plus(interestDue).getAmount();
             interestPortionOfTransaction = interestPortionOfTransaction.plus(interestDue);
         } else {
@@ -457,12 +580,25 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     }
 
     public Money payPrincipalComponent(final LocalDate transactionDate, final Money transactionAmountRemaining) {
+        return payPrincipalComponent(transactionDate, transactionAmountRemaining, false);
+    }
+
+    public Money payPrincipalComponent(final LocalDate transactionDate, final Money transactionAmountRemaining, boolean isRecoveryPayment) {
 
         final MonetaryCurrency currency = transactionAmountRemaining.getCurrency();
         Money principalPortionOfTransaction = Money.zero(currency);
 
-        final Money principalDue = getPrincipalOutstanding(currency);
-        if (transactionAmountRemaining.isGreaterThanOrEqualTo(principalDue)) {
+        final Money principalDue = isRecoveryPayment ? getPrincipalOutstandingForRecovery(currency) : getPrincipalOutstanding(currency);
+        if (isRecoveryPayment && transactionAmountRemaining.isGreaterThanOrEqualTo(principalDue)) {
+            this.principalWrittenOffRecoveredDerived = getPrincipalWrittenOffRecovered(currency).plus(principalDue).getAmount();
+            this.principalCompleted = getPrincipalCompleted(currency).plus(principalDue).getAmount();
+            principalPortionOfTransaction = principalPortionOfTransaction.plus(principalDue);
+        } else if (isRecoveryPayment && transactionAmountRemaining.isGreaterThan(Money.zero(currency))) {
+            this.principalWrittenOffRecoveredDerived = getPrincipalWrittenOffRecovered(currency).plus(transactionAmountRemaining)
+                    .getAmount();
+            this.principalCompleted = getPrincipalCompleted(currency).plus(transactionAmountRemaining).getAmount();
+            principalPortionOfTransaction = principalPortionOfTransaction.plus(transactionAmountRemaining);
+        } else if (transactionAmountRemaining.isGreaterThanOrEqualTo(principalDue)) {
             this.principalCompleted = getPrincipalCompleted(currency).plus(principalDue).getAmount();
             principalPortionOfTransaction = principalPortionOfTransaction.plus(principalDue);
         } else {
@@ -626,7 +762,7 @@ public final class LoanRepaymentScheduleInstallment extends AbstractAuditableCus
     }
 
     private void checkIfRepaymentPeriodObligationsAreMet(final LocalDate transactionDate, final MonetaryCurrency currency) {
-        this.obligationsMet = getTotalOutstanding(currency).isZero();
+        this.obligationsMet = getTotalOutstandingWithRecoveries(currency).isZero();
         if (this.obligationsMet) {
             this.obligationsMetOnDate = transactionDate;
         } else {

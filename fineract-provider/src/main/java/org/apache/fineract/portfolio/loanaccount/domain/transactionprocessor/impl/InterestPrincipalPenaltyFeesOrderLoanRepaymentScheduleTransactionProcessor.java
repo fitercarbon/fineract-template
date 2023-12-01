@@ -78,6 +78,7 @@ public class InterestPrincipalPenaltyFeesOrderLoanRepaymentScheduleTransactionPr
         Money interestPortion = Money.zero(transactionAmountRemaining.getCurrency());
         Money feeChargesPortion = Money.zero(transactionAmountRemaining.getCurrency());
         Money penaltyChargesPortion = Money.zero(transactionAmountRemaining.getCurrency());
+        final boolean isRecoveryRepayment = loanTransaction.isRecoveryRepayment();
 
         if (loanTransaction.isChargesWaiver()) {
             penaltyChargesPortion = currentInstallment.waivePenaltyChargesComponent(transactionDate,
@@ -103,16 +104,17 @@ public class InterestPrincipalPenaltyFeesOrderLoanRepaymentScheduleTransactionPr
             }
             loanTransaction.updateComponents(principalPortion, interestPortion, feeChargesPortion, penaltyChargesPortion);
         } else {
-            interestPortion = currentInstallment.payInterestComponent(transactionDate, transactionAmountRemaining);
+            interestPortion = currentInstallment.payInterestComponent(transactionDate, transactionAmountRemaining, isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(interestPortion);
 
-            principalPortion = currentInstallment.payPrincipalComponent(transactionDate, transactionAmountRemaining);
+            principalPortion = currentInstallment.payPrincipalComponent(transactionDate, transactionAmountRemaining, isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(principalPortion);
 
-            penaltyChargesPortion = currentInstallment.payPenaltyChargesComponent(transactionDate, transactionAmountRemaining);
+            penaltyChargesPortion = currentInstallment.payPenaltyChargesComponent(transactionDate, transactionAmountRemaining,
+                    isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(penaltyChargesPortion);
 
-            feeChargesPortion = currentInstallment.payFeeChargesComponent(transactionDate, transactionAmountRemaining);
+            feeChargesPortion = currentInstallment.payFeeChargesComponent(transactionDate, transactionAmountRemaining, isRecoveryRepayment);
             transactionAmountRemaining = transactionAmountRemaining.minus(feeChargesPortion);
 
             loanTransaction.updateComponents(principalPortion, interestPortion, feeChargesPortion, penaltyChargesPortion);

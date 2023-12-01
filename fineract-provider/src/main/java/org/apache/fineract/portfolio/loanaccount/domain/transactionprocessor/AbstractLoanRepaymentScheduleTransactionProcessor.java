@@ -186,6 +186,7 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
             } else if (loanTransaction.isWriteOff()) {
                 loanTransaction.resetDerivedComponents();
                 handleWriteOff(loanTransaction, currency, installments);
+                markSchedulesAsObligationNotMetAfterWriteOff(installments);
             } else if (loanTransaction.isRefundForActiveLoan()) {
                 loanTransaction.resetDerivedComponents();
 
@@ -410,6 +411,16 @@ public abstract class AbstractLoanRepaymentScheduleTransactionProcessor implemen
         }
 
         loanTransaction.updateComponentsAndTotal(principalPortion, interestPortion, feeChargesPortion, penaltychargesPortion);
+    }
+
+    private void markSchedulesAsObligationNotMetAfterWriteOff(List<LoanRepaymentScheduleInstallment> installments) {
+        for (final LoanRepaymentScheduleInstallment currentInstallment : installments) {
+
+            if (currentInstallment.isAmountsNotFullyPaidOff()) {
+                currentInstallment.updateObligationMetOnDate(null);
+                currentInstallment.updateObligationMet(false);
+            }
+        }
     }
 
     // abstract interface
