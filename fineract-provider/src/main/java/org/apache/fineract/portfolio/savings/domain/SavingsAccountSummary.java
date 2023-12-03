@@ -110,6 +110,7 @@ public final class SavingsAccountSummary {
         this.totalPenaltyChargesWaived = wrapper.calculateTotalPenaltyChargeWaived(currency, transactions);
         this.totalOverdraftInterestDerived = wrapper.calculateTotalOverdraftInterest(currency, transactions);
         this.totalWithholdTax = wrapper.calculateTotalWithholdTaxWithdrawal(currency, transactions);
+        this.totalInterestEarned = wrapper.calculateTotalInterestAccrued(currency, transactions);
 
         // boolean isUpdated = false;
         updateRunningBalanceAndPivotDate(false, transactions, null, null, null, currency);
