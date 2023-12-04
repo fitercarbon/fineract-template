@@ -18,22 +18,14 @@
  */
 package org.apache.fineract.portfolio.loanaccount.service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 public interface LoanArrearsAgingService {
 
-    void updateLoanArrearsAgeingDetails(Map<String, String> jobParameters)
-            throws JobExecutionException, ExecutionException, InterruptedException;
+    void updateLoanArrearsAgeingDetails();
 
     void updateLoanArrearsAgeingDetailsWithOriginalSchedule(Loan loan);
 
     void updateLoanArrearsAgeingDetails(Loan loan);
-
-    List<String> updateLoanArrearsAgeingDetailsWithOriginalSchedule(List<Long> loanIdList, JdbcTemplate jdbcTemplate);
 
 }

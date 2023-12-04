@@ -23,34 +23,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import javax.annotation.PostConstruct;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.fineract.infrastructure.businessdate.domain.BusinessDateType;
-import org.apache.fineract.infrastructure.businessdate.service.BusinessDateReadPlatformService;
-import org.apache.fineract.infrastructure.core.domain.FineractContext;
-import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
 import org.apache.fineract.infrastructure.jobs.annotation.CronTarget;
-import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
-import org.apache.fineract.infrastructure.jobs.exception.JobExecutionSimpleException;
-import org.apache.fineract.infrastructure.jobs.service.AbstractServicePoster;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
 import org.apache.fineract.portfolio.businessevent.BusinessEventListener;
 import org.apache.fineract.portfolio.businessevent.domain.loan.LoanAdjustTransactionBusinessEvent;
@@ -71,28 +55,22 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleIns
 import org.apache.fineract.portfolio.loanaccount.domain.LoanSummary;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransaction;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanSchedulePeriodData;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implements LoanArrearsAgingService {
+public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    @Getter
     private final JdbcTemplate jdbcTemplate;
     private final BusinessEventNotifierService businessEventNotifierService;
     private final DatabaseSpecificSQLGenerator sqlGenerator;
-
-    private final BusinessDateReadPlatformService businessDateReadPlatformService;
-
-    private final ApplicationContext applicationContext;
 
     @PostConstruct
     public void registerForNotification() {
@@ -114,21 +92,10 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
                 new LoanForeClosureEventListener());
     }
 
-    // @Transactional
+    @Transactional
     @Override
     @CronTarget(jobName = JobName.UPDATE_LOAN_ARREARS_AGEING)
-    public void updateLoanArrearsAgeingDetails(Map<String, String> jobParameters)
-            throws JobExecutionException, ExecutionException, InterruptedException {
-
-        final Queue<List<Long>> queue = new ArrayDeque<>();
-        final ApplicationContext applicationContext;
-        final int threadPoolSize = Integer.parseInt(jobParameters.get("thread-pool-size"));
-        final int batchSize = Integer.parseInt(jobParameters.get("batch-size"));
-        final int pageSize = batchSize * threadPoolSize;
-        Long maxLoanIdInList = 0L;
-
-        // initialise the executor service with fetched configurations
-        final ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize);
+    public void updateLoanArrearsAgeingDetails() {
 
         this.jdbcTemplate.execute("truncate table m_loan_arrears_aging");
 
@@ -162,38 +129,15 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
         updateSqlBuilder.append(" and (prd.arrears_based_on_original_schedule = false or prd.arrears_based_on_original_schedule is null) ");
         updateSqlBuilder.append(" GROUP BY ml.id");
 
-        List<String> insertStatements = new ArrayList<>();
+        List<String> insertStatements = updateLoanArrearsAgeingDetailsWithOriginalSchedule();
         insertStatements.add(0, updateSqlBuilder.toString());
-
-        int[] results = jdbcTemplate.batchUpdate(insertStatements.toArray(new String[0]));
-        log.info("Starting updateLoanArrearsAgeingDetails - Initlal Insert - {}", insertStatements.size());
-
-        log.info("Retrieving list of loans in arrears...");
-        List<Long> loanIdList = getLoansInArrearAgingList(maxLoanIdInList, pageSize);
-        log.info("Retrieving list of loans in arrears - DONE...");
-
-        if (!loanIdList.isEmpty()) {
-            queue.add(loanIdList);
-            if (!org.apache.commons.collections4.CollectionUtils.isEmpty(queue)) {
-                do {
-                    log.info("Adding to QUEUE updateLoanArrearsAgeingDetails - total records - {}", loanIdList.size());
-
-                    List<Long> queueElement = queue.element();
-                    if (!queueElement.isEmpty()) {
-                        maxLoanIdInList = queueElement.get(queueElement.size() - 1);
-
-                        updateLoanArrearsAgeingDetailsWithOriginalSchedule(queue.remove(), threadPoolSize, executorService, pageSize,
-                                maxLoanIdInList);
-                    }
-
-                    log.info("Adding to QUEUE updateLoanArrearsAgeingDetails - DONE");
-
-                } while (!org.apache.commons.collections4.CollectionUtils.isEmpty(queue));
-            }
-
-            // shutdown the executor when done
-            executorService.shutdownNow();
+        final int[] results = this.jdbcTemplate.batchUpdate(insertStatements.toArray(new String[0]));
+        int result = 0;
+        for (int i : results) {
+            result += i;
         }
+
+        log.info("{}: Records affected by updateLoanArrearsAgeingDetails: {}", ThreadLocalContextUtil.getTenant().getName(), result);
     }
 
     @Override
@@ -264,189 +208,35 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
         return updateSql;
     }
 
-    @Override
-    public List<String> updateLoanArrearsAgeingDetailsWithOriginalSchedule(List<Long> loanIdList, JdbcTemplate jdbcTemplateFromThread) {
+    private List<String> updateLoanArrearsAgeingDetailsWithOriginalSchedule() {
         List<String> insertStatement = new ArrayList<>();
 
-        if (!loanIdList.isEmpty()) {
-
-            String loanIdsAsString = loanIdList.toString();
+        final StringBuilder loanIdentifier = new StringBuilder();
+        loanIdentifier.append("select ml.id as loanId FROM m_loan ml  ");
+        loanIdentifier.append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
+        loanIdentifier.append(
+                "inner join m_product_loan_recalculation_details prd on prd.product_id = ml.product_id and prd.arrears_based_on_original_schedule = true  ");
+        loanIdentifier.append("WHERE ml.loan_status_id = 300  and mr.completed_derived is false  and mr.duedate < ")
+                .append(sqlGenerator.subDate(sqlGenerator.currentBusinessDate(), "COALESCE(ml.grace_on_arrears_ageing, 0)", "day"))
+                .append(" group by ml.id");
+        List<Long> loanIds = this.jdbcTemplate.queryForList(loanIdentifier.toString(), Long.class);
+        if (!loanIds.isEmpty()) {
+            String loanIdsAsString = loanIds.toString();
             loanIdsAsString = loanIdsAsString.substring(1, loanIdsAsString.length() - 1);
+            OriginalScheduleExtractor originalScheduleExtractor = new OriginalScheduleExtractor(loanIdsAsString, sqlGenerator);
+            Map<Long, List<LoanSchedulePeriodData>> scheduleDate = this.jdbcTemplate.query(originalScheduleExtractor.schema,
+                    originalScheduleExtractor);
 
-            try {
-
-                log.debug("0 - loanIdsAsString): {}", loanIdsAsString);
-
-                log.debug("1 - Called originalScheduleExtractor..");
-                OriginalScheduleExtractor originalScheduleExtractor = new OriginalScheduleExtractor(loanIdsAsString, sqlGenerator);
-
-                log.debug("2 - Called this.jdbcTemplate.query(originalScheduleExtractor.schema, originalScheduleExtractor)..");
-                Map<Long, List<LoanSchedulePeriodData>> scheduleDate = jdbcTemplateFromThread.query(originalScheduleExtractor.schema,
-                        originalScheduleExtractor);
-
-                log.debug("3 - Called Loan Summary..");
-                List<Map<String, Object>> loanSummary = getLoanSummary(loanIdsAsString, jdbcTemplateFromThread);
-
-                log.debug("4 - Called updateSchheduleWithPaidDetail..");
-                updateSchheduleWithPaidDetail(scheduleDate, loanSummary);// fads
-
-                log.debug("5 -Called createInsertStatements..");
-                insertStatement.add("DELETE FROM m_loan_arrears_aging WHERE loan_id = " + loanIdsAsString + ";");
-                insertStatement = createInsertStatements(insertStatement, scheduleDate, true);
-                log.debug("5.1 -SQL COMMAND: {}", insertStatement.toArray(new String[0]));
-                log.debug("6 -Called createInsertStatements size: {}", insertStatement.size());
-
-                if (!insertStatement.isEmpty()) {
-                    log.debug("7 -Persisting: {}", insertStatement.size());
-                    int[] results = jdbcTemplateFromThread.batchUpdate(insertStatement.toArray(new String[0]));
-                    log.debug("8 -Done Persisting! Yay! rowsAffected: {}", results.length);
-                } else {
-                    log.debug("Skipping 7,8 - Entries not found for: {}", loanIdsAsString);
-                }
-                log.debug("9 - Processed successfully loan: {}", loanIdsAsString);
-            } catch (Exception e) {
-                log.error("ERROR - Error whilst executing updateLoanArrearsAgeingDetailsWithOriginalSchedule: {}", loanIdsAsString);
-                e.printStackTrace();
-                throw new JobExecutionSimpleException(e);
-            }
+            List<Map<String, Object>> loanSummary = getLoanSummary(loanIdsAsString);
+            updateSchheduleWithPaidDetail(scheduleDate, loanSummary);
+            createInsertStatements(insertStatement, scheduleDate, true);
         }
 
         return insertStatement;
-    }
-
-    private void updateLoanArrearsAgeingDetailsWithOriginalSchedule(List<Long> loanIdList, int threadPoolSize,
-            ExecutorService executorService, final int pageSize, Long maxLoanIdInList) throws ExecutionException, InterruptedException {
-
-        List<Callable<Void>> posters = new ArrayList<>();
-        int fromIndex = 0;
-        // get the size of current paginated dataset
-        int size = loanIdList.size();
-        // calculate the batch size
-        int batchSize = (int) Math.ceil((double) size / threadPoolSize);
-
-        FineractContext context = ThreadLocalContextUtil.getContext();
-
-        int toIndex = (batchSize > size - 1) ? size : batchSize;
-        while (toIndex < size && loanIdList.get(toIndex - 1).equals(loanIdList.get(toIndex))) {
-            toIndex++;
-        }
-        boolean lastBatch = false;
-        int loopCount = size / batchSize + 1;
-
-        FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
-        Callable<Void> fetchData = () -> {
-            ThreadLocalContextUtil.setTenant(tenant);
-            Long maxId = maxLoanIdInList;
-            if (!queue.isEmpty()) {
-                maxId = Math.max(maxLoanIdInList, queue.element().get(queue.element().size() - 1));
-            }
-
-            while (queue.size() <= queueSize) {
-                log.info("Fetching while threads are running! queue.size() {} <= queueSize {}", queue.size(), queueSize);
-
-                List<Long> savingsAccountIdList = Collections.synchronizedList(getLoansInArrearAgingList(maxLoanIdInList, pageSize));
-
-                if (savingsAccountIdList.isEmpty()) {
-                    break;
-                }
-
-                maxId = savingsAccountIdList.get(savingsAccountIdList.size() - 1);
-                queue.add(savingsAccountIdList);
-
-                log.info("Fetching while threads are running! - DONE");
-            }
-            return null;
-        };
-        posters.add(fetchData);
-
-        for (long i = 0; i < loopCount; i++) {
-
-            log.info("Adding poster -> count={}", i);
-
-            List<Long> subList = safeSubList(loanIdList, fromIndex, toIndex);
-            LoanArrearsAgingPoster poster = (LoanArrearsAgingPoster) this.applicationContext.getBean("loanArrearsAgingPoster");
-            poster.setLoanIds(subList);
-            poster.setLoanArrearsAgingService(this);
-            poster.setJdbcTemplate(this.jdbcTemplate);
-            poster.setTenant(tenant);
-            poster.setContext(ThreadLocalContextUtil.getContext());
-            posters.add(poster);
-
-            if (lastBatch) {
-                break;
-            }
-            if (toIndex + batchSize > size - 1) {
-                lastBatch = true;
-            }
-            fromIndex = fromIndex + (toIndex - fromIndex);
-            toIndex = (toIndex + batchSize > size - 1) ? size : toIndex + batchSize;
-            while (toIndex < size && loanIdList.get(toIndex - 1).equals(loanIdList.get(toIndex))) {
-                toIndex++;
-                log.info("Adding poster -> toIndex={} - DONE", toIndex);
-            }
-
-            log.info("Adding poster -> count={} - DONE", i);
-
-        }
-
-        List<Future<Void>> responses = executorService.invokeAll(posters);
-        Long maxId = maxLoanIdInList;
-        if (!queue.isEmpty()) {
-            maxId = Math.max(maxLoanIdInList, queue.element().get(queue.element().size() - 1));
-        }
-
-        while (queue.size() <= queueSize) {
-            log.info("Fetching while threads are running!..:: this is not supposed to run........");
-
-            loanIdList = Collections.synchronizedList(getLoansInArrearAgingList(maxLoanIdInList, pageSize));
-
-            if (loanIdList.isEmpty()) {
-                break;
-            }
-
-            maxId = loanIdList.get(loanIdList.size() - 1);
-            log.info("Add to the Queue");
-            queue.add(loanIdList);
-        }
-
-        checkCompletion(responses);
-        log.info("Queue size {}", queue.size());
 
     }
 
-    @NotNull
-    private List<Long> getLoansInArrearAgingList(Long minId, int pageSize) {
-
-        // Snippet added due to having NPE when running in Threads
-        HashMap<BusinessDateType, LocalDate> businessDates = businessDateReadPlatformService.getBusinessDates();
-        ThreadLocalContextUtil.setBusinessDates(businessDates);
-
-        log.info("Fetching loans in arrears aging list with minId {} and pageSize {}", minId, pageSize);
-
-        final StringBuilder loanIdInArrearsSB = new StringBuilder();
-        loanIdInArrearsSB.append("select ml.id as loanId FROM m_loan ml  ");
-        loanIdInArrearsSB.append("INNER JOIN m_loan_repayment_schedule mr on mr.loan_id = ml.id ");
-        loanIdInArrearsSB.append(
-                "INNER join m_product_loan_recalculation_details prd on prd.product_id = ml.product_id and prd.arrears_based_on_original_schedule = true  ");
-        loanIdInArrearsSB.append("WHERE ml.loan_status_id = 300  and mr.completed_derived is false  and mr.duedate < ");
-        loanIdInArrearsSB
-                .append(sqlGenerator.subDate(sqlGenerator.currentBusinessDate(), "COALESCE(ml.grace_on_arrears_ageing, 0)", "day"));
-        loanIdInArrearsSB.append(" AND ml.id > ? ");
-
-        loanIdInArrearsSB.append(" group by ml.id ");
-        loanIdInArrearsSB.append(" LIMIT ?");
-
-        log.info("About to execute - Fetching loans in arrears aging list with minId {} and pageSize {}", minId, pageSize);
-        List<Long> loanIds = this.jdbcTemplate.queryForList(loanIdInArrearsSB.toString(), Long.class, minId, pageSize);
-
-        Collections.synchronizedList(loanIds);
-
-        log.info("EXECUTED - Fetching loans in arrears aging list with minId {} and pageSize {}, FOUND {}", minId, pageSize,
-                loanIds.size());
-        return loanIds;
-    }
-
-    private List<Map<String, Object>> getLoanSummary(final String loanIdsAsString, JdbcTemplate jdbcTemplateFromThread) {
+    private List<Map<String, Object>> getLoanSummary(final String loanIdsAsString) {
         final StringBuilder transactionsSql = new StringBuilder();
         transactionsSql.append("select ml.id as loanId, ");
         transactionsSql
@@ -458,7 +248,7 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
         transactionsSql.append("from m_loan ml ");
         transactionsSql.append("where ml.id IN (").append(loanIdsAsString).append(") order by ml.id");
 
-        List<Map<String, Object>> loanSummary = jdbcTemplateFromThread.queryForList(transactionsSql.toString());
+        List<Map<String, Object>> loanSummary = this.jdbcTemplate.queryForList(transactionsSql.toString());
         return loanSummary;
     }
 
@@ -480,7 +270,7 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
 
     }
 
-    private List<String> createInsertStatements(List<String> insertStatement, Map<Long, List<LoanSchedulePeriodData>> scheduleDate,
+    private void createInsertStatements(List<String> insertStatement, Map<Long, List<LoanSchedulePeriodData>> scheduleDate,
             boolean isInsertStatement) {
         for (Map.Entry<Long, List<LoanSchedulePeriodData>> entry : scheduleDate.entrySet()) {
             final Long loanId = entry.getKey();
@@ -518,8 +308,6 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
             }
 
         }
-
-        return insertStatement;
     }
 
     private String constructInsertStatement(final Long loanId, BigDecimal principalOverdue, BigDecimal interestOverdue,
@@ -534,7 +322,7 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
         insertStatementBuilder.append(penaltyOverdue).append(",");
         BigDecimal totalOverDue = principalOverdue.add(interestOverdue).add(feeOverdue).add(penaltyOverdue);
         insertStatementBuilder.append(totalOverDue).append(",'");
-        insertStatementBuilder.append(this.formatter.format(overDueSince)).append("');");
+        insertStatementBuilder.append(this.formatter.format(overDueSince)).append("')");
         return insertStatementBuilder.toString();
     }
 
@@ -549,7 +337,7 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
         BigDecimal totalOverDue = principalOverdue.add(interestOverdue).add(feeOverdue).add(penaltyOverdue);
         insertStatementBuilder.append(totalOverDue).append(",overdue_since_date_derived= '");
         insertStatementBuilder.append(this.formatter.format(overDueSince)).append("' ");
-        insertStatementBuilder.append("WHERE  loan_id=").append(loanId).append(";");
+        insertStatementBuilder.append("WHERE  loan_id=").append(loanId);
         return insertStatementBuilder.toString();
     }
 
@@ -651,12 +439,10 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
                     "mr.interest_amount as interestAmount, mr.fee_charges_amount as feeAmount, mr.penalty_charges_amount as penaltyAmount  ");
             scheduleDetail.append("from m_loan ml  INNER JOIN m_loan_repayment_schedule_history mr on mr.loan_id = ml.id ");
             scheduleDetail.append("where mr.duedate  < "
-                    + sqlGenerator.subDate(sqlGenerator.currentBusinessDate(), "COALESCE(ml.grace_on_arrears_ageing, 0)", "day"));
-
-            scheduleDetail.append(" AND ml.id IN(").append(loanIdsAsString).append(") and  mr.version = (");
+                    + sqlGenerator.subDate(sqlGenerator.currentBusinessDate(), "COALESCE(ml.grace_on_arrears_ageing, 0)", "day") + " and ");
+            scheduleDetail.append("ml.id IN(").append(loanIdsAsString).append(") and  mr.version = (");
             scheduleDetail.append("select max(lrs.version) from m_loan_repayment_schedule_history lrs where mr.loan_id = lrs.loan_id");
-            scheduleDetail.append(") ");
-            scheduleDetail.append("order by ml.id, mr.duedate");
+            scheduleDetail.append(") order by ml.id,mr.duedate");
             this.schema = scheduleDetail.toString();
         }
 
@@ -814,5 +600,4 @@ public class LoanArrearsAgingServiceImpl extends AbstractServicePoster implement
             updateLoanArrearsAgeingDetails(loan);
         }
     }
-
 }

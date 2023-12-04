@@ -166,33 +166,32 @@ public class FixedDepositAccount extends SavingsAccount {
         // default it to nominalAnnualInterst rate. interest chart overrrides
         // this value.
         BigDecimal applicableInterestRate = this.nominalAnnualInterestRate;
-        if (this.chart != null
-                && (BigDecimal.ZERO.compareTo(this.nominalAnnualInterestRate) == 0 || this.nominalAnnualInterestRate == null)) {
-            boolean applyPreMaturePenalty = false;
-            BigDecimal penalInterest = BigDecimal.ZERO;
-            LocalDate depositCloseDate = calculateMaturityDate();
-            if (isPreMatureClosure) {
-                if (this.accountTermAndPreClosure.isPreClosurePenalApplicable()) {
-                    if (this.originalInterestRate == null) {
-                        this.originalInterestRate = this.nominalAnnualInterestRate;
-                    } else {
-                        this.nominalAnnualInterestRate = this.originalInterestRate;
-                    }
-                    applyPreMaturePenalty = true;
-                    penalInterest = this.accountTermAndPreClosure.depositPreClosureDetail().preClosurePenalInterest();
-                    final PreClosurePenalInterestOnType preClosurePenalInterestOnType = this.accountTermAndPreClosure
-                            .depositPreClosureDetail().preClosurePenalInterestOnType();
-                    if (preClosurePenalInterestOnType.isWholeTerm()) {
-                        depositCloseDate = interestCalculatedUpto();
-                    } else if (preClosurePenalInterestOnType.isTillPrematureWithdrawal()) {
-                        depositCloseDate = interestPostingUpToDate;
-                    }
+        boolean applyPreMaturePenalty = false;
+        BigDecimal penalInterest = BigDecimal.ZERO;
+        LocalDate depositCloseDate = calculateMaturityDate();
+        if (isPreMatureClosure) {
+            if (this.accountTermAndPreClosure.isPreClosurePenalApplicable()) {
+                if (this.originalInterestRate == null) {
+                    this.originalInterestRate = this.nominalAnnualInterestRate;
+                } else {
+                    this.nominalAnnualInterestRate = this.originalInterestRate;
+                }
+                applyPreMaturePenalty = true;
+                penalInterest = this.accountTermAndPreClosure.depositPreClosureDetail().preClosurePenalInterest();
+                final PreClosurePenalInterestOnType preClosurePenalInterestOnType = this.accountTermAndPreClosure.depositPreClosureDetail()
+                        .preClosurePenalInterestOnType();
+                if (preClosurePenalInterestOnType.isWholeTerm()) {
+                    depositCloseDate = interestCalculatedUpto();
+                } else if (preClosurePenalInterestOnType.isTillPrematureWithdrawal()) {
+                    depositCloseDate = interestPostingUpToDate;
                 }
             }
-
-            final BigDecimal depositAmount = accountTermAndPreClosure.depositAmount();
-            applicableInterestRate = this.chart.getApplicableInterestRate(depositAmount, depositStartDate(), depositCloseDate, this.client);
-
+            if (this.chart != null
+                    && (BigDecimal.ZERO.compareTo(this.nominalAnnualInterestRate) == 0 || this.nominalAnnualInterestRate == null)) {
+                final BigDecimal depositAmount = accountTermAndPreClosure.depositAmount();
+                applicableInterestRate = this.chart.getApplicableInterestRate(depositAmount, depositStartDate(), depositCloseDate,
+                        this.client);
+            }
             if (applyPreMaturePenalty) {
                 applicableInterestRate = applicableInterestRate.subtract(penalInterest);
                 applicableInterestRate = applicableInterestRate.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : applicableInterestRate;
