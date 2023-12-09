@@ -2895,27 +2895,28 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final ScheduledDateGenerator scheduledDateGenerator = new DefaultScheduledDateGenerator();
         Map<Integer, LocalDate> scheduleDates = new HashMap<>();
         final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
+        final LocalDate penaltyStartDate = configurationDomainService.retrievePenaltyStartDate();
         final Long penaltyPostingWaitPeriodValue = this.configurationDomainService.retrieveGraceOnPenaltyPostingPeriod();
         final LocalDate dueDate = command.localDateValueOfParameterNamed("dueDate");
 
-        Long diff = penaltyWaitPeriodValue + 1 - penaltyPostingWaitPeriodValue;
+        Long diff = penaltyWaitPeriodValue - penaltyPostingWaitPeriodValue;
         if (diff < 1) {
             diff = 1L;
         }
-        LocalDate startDate = dueDate.plusDays(penaltyWaitPeriodValue.intValue() + 1);
+        LocalDate startDate = dueDate.plusDays(penaltyWaitPeriodValue.intValue());
         Loan loanData = this.loanAssembler.assembleFrom(loanId);
         LocalDate endDate = DateUtils.getBusinessLocalDate();
-        if (dueDate.isBefore(loanData.getExpectedMaturityDate())) {
-            if (chargeDefinition.feeInterval() != null) {
-                endDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
-                        chargeDefinition.feeInterval(), startDate);
-            }
-        }
+        // if (dueDate.isBefore(loanData.getExpectedMaturityDate())) {
+        // if (chargeDefinition.feeInterval() != null) {
+        // endDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
+        // chargeDefinition.feeInterval(), startDate);
+        // }
+        // }
         Integer frequencyNunber = 1;
         if (feeFrequency == null) {
             scheduleDates.put(frequencyNunber++, startDate.minusDays(diff));
         } else {
-            while (!startDate.isAfter(endDate) && !startDate.isEqual(endDate)) {
+            while (!startDate.isAfter(endDate)) {
                 scheduleDates.put(frequencyNunber++, startDate.minusDays(diff));
                 LocalDate scheduleDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
                         chargeDefinition.feeInterval(), startDate);
@@ -2962,6 +2963,10 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 final LoanCharge loanCharge = LoanCharge.createNewFromJson(loan, chargeDefinition, command, entry.getValue());
 
                 if (BigDecimal.ZERO.compareTo(loanCharge.amount()) == 0) {
+                    continue;
+                }
+                // If due date of charge is before penalty start date, continue
+                if (loanCharge.getDueLocalDate().isBefore(penaltyStartDate)) {
                     continue;
                 }
                 LoanOverdueInstallmentCharge overdueInstallmentCharge = new LoanOverdueInstallmentCharge(loanCharge, installment,

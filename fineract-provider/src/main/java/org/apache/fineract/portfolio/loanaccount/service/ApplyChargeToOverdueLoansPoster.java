@@ -97,11 +97,11 @@ public class ApplyChargeToOverdueLoansPoster implements Callable<Void> {
                         this.loanWritePlatformService.applyOverdueChargesForLoan(loanId, groupedOverdueData.get(loanId));
                         numberOfRetries = maxNumberOfRetries + 1;
                     } catch (CannotAcquireLockException | ObjectOptimisticLockingFailureException exception) {
-                        LOG.info("Recalulate interest job has been retried {} time(s)", numberOfRetries);
+                        LOG.info("Recalculate interest job has been retried {} time(s)", numberOfRetries);
                         // Fail if the transaction has been retired for
                         // maxNumberOfRetries
                         if (numberOfRetries >= maxNumberOfRetries) {
-                            LOG.error("Recalulate interest job has been retried for the max allowed attempts of {} and will be rolled back",
+                            LOG.error("Recalculate interest job has been retried for the max allowed attempts of {} and will be rolled back",
                                     numberOfRetries);
                             errors.add(exception);
                             break;

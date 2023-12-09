@@ -105,7 +105,6 @@ public class LoanSchedularServiceImpl implements LoanSchedularService {
     public void applyChargeForOverdueLoans(Map<String, String> jobParameters) throws JobExecutionException {
 
         final Queue<List<Long>> queue = new ArrayDeque<>();
-        final ApplicationContext applicationContext;
         final int threadPoolSize = Integer.parseInt(jobParameters.get("thread-pool-size"));
         final int batchSize = Integer.parseInt(jobParameters.get("batch-size"));
         final int pageSize = batchSize * threadPoolSize;
