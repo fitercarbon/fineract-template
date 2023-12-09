@@ -101,7 +101,8 @@ public class ApplyChargeToOverdueLoansPoster implements Callable<Void> {
                         // Fail if the transaction has been retired for
                         // maxNumberOfRetries
                         if (numberOfRetries >= maxNumberOfRetries) {
-                            LOG.error("Recalculate interest job has been retried for the max allowed attempts of {} and will be rolled back",
+                            LOG.error(
+                                    "Recalculate interest job has been retried for the max allowed attempts of {} and will be rolled back",
                                     numberOfRetries);
                             errors.add(exception);
                             break;
