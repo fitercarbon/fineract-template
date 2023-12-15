@@ -577,21 +577,24 @@ public final class LoanApplicationTerms {
 
         Money adjusted = interestForThisPeriod;
 
-        final Money totalInterestRemaining = totalInterestDueForLoan.minus(totalCumulativeInterestToDate);
-        if (totalInterestRemaining.isLessThanZero()) {
-            // paid too much interest, subtract amount that overpays from
-            // interest paid for period.
-            adjusted = interestForThisPeriod.minus(totalInterestRemaining.abs());
-        } else if (isLastRepaymentPeriod(this.actualNumberOfRepayments, periodNumber)) {
-            final Money interestDifference = totalCumulativeInterestToDate.minus(totalInterestDueForLoan);
-            if (interestDifference.isLessThanZero()) {
-                adjusted = interestForThisPeriod.plus(interestDifference.abs());
-            } else if (interestDifference.isGreaterThanZero()) {
-                adjusted = interestForThisPeriod.minus(interestDifference.abs());
+        if (totalInterestDueForLoan != null) {
+
+            final Money totalInterestRemaining = totalInterestDueForLoan.minus(totalCumulativeInterestToDate);
+            if (totalInterestRemaining.isLessThanZero()) {
+                // paid too much interest, subtract amount that overpays from
+                // interest paid for period.
+                adjusted = interestForThisPeriod.minus(totalInterestRemaining.abs());
+            } else if (isLastRepaymentPeriod(this.actualNumberOfRepayments, periodNumber)) {
+                final Money interestDifference = totalCumulativeInterestToDate.minus(totalInterestDueForLoan);
+                if (interestDifference.isLessThanZero()) {
+                    adjusted = interestForThisPeriod.plus(interestDifference.abs());
+                } else if (interestDifference.isGreaterThanZero()) {
+                    adjusted = interestForThisPeriod.minus(interestDifference.abs());
+                }
             }
-        }
-        if (adjusted.isLessThanZero()) {
-            adjusted = adjusted.plus(adjusted);
+            if (adjusted.isLessThanZero()) {
+                adjusted = adjusted.plus(adjusted);
+            }
         }
         return adjusted;
     }
