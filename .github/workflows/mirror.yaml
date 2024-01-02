@@ -29,4 +29,5 @@ jobs:
 
       - name: Mirror to Bitbucket
         run: |
-          git push -f bitbucket carbon
+          git pull bitbucket carbon
+          git push bitbucket carbon
