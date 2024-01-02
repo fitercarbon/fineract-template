@@ -25,8 +25,7 @@ jobs:
       - name: Add Bitbucket Remote
         run: |
           git remote add bitbucket git@bitbucket.org:kvpafrica/fineract-backend-cba.git
-          git fetch --prune bitbucket 
-          git fetch --unshallow bitbucket
+          git fetch --prune bitbucket
 
       - name: Mirror to Bitbucket
         run: |
