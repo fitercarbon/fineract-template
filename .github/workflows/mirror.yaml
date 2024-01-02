@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Set to 0 for a full clone
 
       - name: Set up SSH key
         run: |
@@ -28,4 +30,4 @@ jobs:
 
       - name: Mirror to Bitbucket
         run: |
-          git push -f bitbucket carbon
+          git push bitbucket carbon
