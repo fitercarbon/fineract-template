@@ -18,6 +18,12 @@ jobs:
           git remote add bitbucket git@bitbucket.org:kvpafrica/fineract-backend-cba.git
           git fetch bitbucket --prune
 
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$BITBUCKET_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
       - name: Mirror to Bitbucket
         run: |
           git push --mirror bitbucket
