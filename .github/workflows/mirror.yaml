@@ -16,11 +16,9 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "$BITBUCKET_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "${{ secrets.BITBUCKET_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          
-      - name: Update known hosts
-        run: ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+          ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Add Bitbucket Remote
         run: |
