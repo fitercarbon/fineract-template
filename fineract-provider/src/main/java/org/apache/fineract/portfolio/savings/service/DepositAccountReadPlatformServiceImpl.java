@@ -223,7 +223,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         final StringBuilder sqlBuilder = new StringBuilder(200);
         sqlBuilder.append("SELECT ");
         sqlBuilder.append(this.depositAccountForMaturityRowMapper.schema());
-        sqlBuilder.append(" WHERE da.deposit_type_enum in (?, ?) and da.status_enum = ?");
+        sqlBuilder.append(" WHERE da.deposit_type_enum in (?, ?) and da.status_enum = ? and da.account_balance_derived > 0 ");
         return this.jdbcTemplate.query(sqlBuilder.toString(), this.depositAccountForMaturityRowMapper,
                 new Object[] { DepositAccountType.FIXED_DEPOSIT.getValue(), DepositAccountType.RECURRING_DEPOSIT.getValue(),
                         SavingsAccountStatusType.ACTIVE.getValue() });
