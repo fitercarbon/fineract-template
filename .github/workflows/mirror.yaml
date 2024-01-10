@@ -30,5 +30,7 @@ jobs:
       - name: Mirror to Bitbucket
         run: |
           git config pull.rebase true
+          git config --global user.email "devops@fiter.io"
+          git config --global user.name "Devops"
           git pull bitbucket carbon
           git push bitbucket carbon
