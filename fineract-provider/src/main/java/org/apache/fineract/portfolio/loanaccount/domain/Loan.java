@@ -6882,9 +6882,11 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             LocalDate lastUserTransactionDate = getLastUserTransactionDate();
             handleLoanRepaymentInFull(lastUserTransactionDate, loanLifecycleStateMachine);
         } else {
-            this.loanStatus = LoanStatus.ACTIVE.getValue();
-            this.closedOnDate = null;
-            this.actualMaturityDate = null;
+            if (!this.status().isClosedWrittenOff()) { // we don't want to reactivate closed-off loans
+                this.loanStatus = LoanStatus.ACTIVE.getValue();
+                this.closedOnDate = null;
+                this.actualMaturityDate = null;
+            }
         }
 
     }
