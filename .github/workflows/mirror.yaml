@@ -30,6 +30,5 @@ jobs:
       - name: Mirror to Bitbucket
         run: |
           git config pull.rebase true
-          git config pull.ff only
           git pull bitbucket carbon
           git push bitbucket carbon
