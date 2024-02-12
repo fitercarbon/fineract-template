@@ -669,7 +669,8 @@ public class FixedDepositAccount extends SavingsAccount {
         return accountTermAndPreClosure;
     }
 
-    private void addNewTransaction(SavingsAccountTransaction transaction) {
+    @Override
+    public void addNewTransaction(SavingsAccountTransaction transaction) {
         this.transactions.add(transaction);
         if (this.savingsAccountTransactionRepository != null) {
             this.savingsAccountTransactionRepository.saveAndFlush(transaction);
