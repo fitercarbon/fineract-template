@@ -4832,7 +4832,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         updateSummary();
     }
 
-    private void addNewTransaction(SavingsAccountTransaction transaction) {
+    protected void addNewTransaction(SavingsAccountTransaction transaction) {
         addTransaction(transaction, true);
         if (this.savingsAccountTransactionRepository != null) {
             this.savingsAccountTransactionRepository.saveAndFlush(transaction);

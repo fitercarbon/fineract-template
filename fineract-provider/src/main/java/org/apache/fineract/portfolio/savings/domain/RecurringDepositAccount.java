@@ -28,9 +28,11 @@ import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -671,7 +673,7 @@ public class RecurringDepositAccount extends SavingsAccount {
             if (postingTransaction == null) {
                 final SavingsAccountTransaction newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
                         interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting());
-                addTransaction(newPostingTransaction);
+                addNewTransaction(newPostingTransaction);
                 recalucateDailyBalanceDetails = true;
             } else {
                 final boolean correctionRequired = postingTransaction.hasNotAmount(interestEarnedToBePostedForPeriod);
@@ -679,7 +681,7 @@ public class RecurringDepositAccount extends SavingsAccount {
                     postingTransaction.reverse();
                     final SavingsAccountTransaction newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
                             interestPostingTransactionDate, interestEarnedToBePostedForPeriod, interestPostingPeriod.isUserPosting());
-                    addTransaction(newPostingTransaction);
+                    addNewTransaction(newPostingTransaction);
                     recalucateDailyBalanceDetails = true;
                 }
             }
@@ -1292,5 +1294,46 @@ public class RecurringDepositAccount extends SavingsAccount {
 
     public DepositAccountTermAndPreClosure getAccountTermAndPreClosure() {
         return accountTermAndPreClosure;
+    }
+
+    @Override
+    public void validateInterestPostingAndCompoundingPeriodTypes(final DataValidatorBuilder baseDataValidator) {
+        Map<SavingsPostingInterestPeriodType, List<SavingsCompoundingInterestPeriodType>> postingtoCompoundMap = new HashMap<>();
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.DAILY,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.MONTHLY, Arrays.asList(new SavingsCompoundingInterestPeriodType[] {
+                SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.QUATERLY,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.BIANNUAL,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
+                        SavingsCompoundingInterestPeriodType.BI_ANNUAL }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.ANNUAL,
+                Arrays.asList(new SavingsCompoundingInterestPeriodType[] { SavingsCompoundingInterestPeriodType.DAILY,
+                        SavingsCompoundingInterestPeriodType.MONTHLY, SavingsCompoundingInterestPeriodType.QUATERLY,
+                        SavingsCompoundingInterestPeriodType.BI_ANNUAL, SavingsCompoundingInterestPeriodType.ANNUAL }));
+
+        postingtoCompoundMap.put(SavingsPostingInterestPeriodType.TENURE,
+                java.util.Arrays.asList(SavingsCompoundingInterestPeriodType.DAILY, SavingsCompoundingInterestPeriodType.MONTHLY,
+                        SavingsCompoundingInterestPeriodType.QUATERLY, SavingsCompoundingInterestPeriodType.BI_ANNUAL,
+                        SavingsCompoundingInterestPeriodType.AT_MATURITY));
+
+        SavingsPostingInterestPeriodType savingsPostingInterestPeriodType = SavingsPostingInterestPeriodType
+                .fromInt(interestPostingPeriodType);
+        SavingsCompoundingInterestPeriodType savingsCompoundingInterestPeriodType = SavingsCompoundingInterestPeriodType
+                .fromInt(interestCompoundingPeriodType);
+
+        if (postingtoCompoundMap.get(savingsPostingInterestPeriodType) == null) {
+            baseDataValidator.failWithCodeNoParameterAddedToErrorCode("posting.period.type.is.less.than.compound.period.type",
+                    savingsPostingInterestPeriodType.name(), savingsCompoundingInterestPeriodType.name());
+
+        }
     }
 }
