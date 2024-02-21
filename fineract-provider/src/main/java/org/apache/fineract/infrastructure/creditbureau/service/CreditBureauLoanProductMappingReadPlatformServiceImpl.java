@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.fineract.infrastructure.creditbureau.data.CreditBureauLoanProductMappingData;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
@@ -102,9 +103,14 @@ public class CreditBureauLoanProductMappingReadPlatformServiceImpl implements Cr
         this.context.authenticatedUser();
 
         final CreditBureauLoanProductMapper rm = new CreditBureauLoanProductMapper();
-        final String sql = "select " + rm.schema() + " and cblp.loan_product_id=?";
+        final String sql = "select " + rm.schema() + " and cblp.loan_product_id=? ";
 
-        return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanProductId }); // NOSONAR
+        try {
+            return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanProductId }); // NOSONAR
+        } catch (EmptyResultDataAccessException e) {
+      return null;
+        }
+
     }
 
     @Override
