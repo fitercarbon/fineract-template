@@ -3722,7 +3722,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                 transactionForAdjustment.getTransactionDate());
 
         if (transactionForAdjustment.isNotRepaymentType() && transactionForAdjustment.isNotWaiver()
-                && transactionForAdjustment.isNotCreditBalanceRefund()) {
+                && transactionForAdjustment.isNotCreditBalanceRefund() && !transactionForAdjustment.isRecoveryRepayment()) {
             final String errorMessage = "Only transactions of type repayment, waiver or credit balance refund can be adjusted.";
             throw new InvalidLoanTransactionTypeException("transaction",
                     "adjustment.is.only.allowed.to.repayment.or.waiver.or.creditbalancerefund.transactions", errorMessage);
@@ -3734,7 +3734,9 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         if (isClosedWrittenOff()) {
             // find write off transaction and reverse it
             final LoanTransaction writeOffTransaction = findWriteOffTransaction();
-            writeOffTransaction.reverse();
+            if (writeOffTransaction != null) {
+                writeOffTransaction.reverse();
+            }
         }
 
         if (isClosedObligationsMet() || isClosedWrittenOff() || isClosedWithOutsandingAmountMarkedForReschedule()) {
