@@ -1155,11 +1155,6 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             throw new PlatformServiceUnavailableException("error.msg.loan.transfer.transaction.update.not.allowed",
                     "Loan transaction:" + transactionId + " update not allowed as it involves in account transfer", transactionId);
         }
-        if (loan.isClosedWrittenOff()) {
-            throw new PlatformServiceUnavailableException("error.msg.loan.written.off.update.not.allowed",
-                    "Loan transaction:" + transactionId + " update not allowed as loan status is written off", transactionId);
-        }
-
         final LocalDate transactionDate = command.localDateValueOfParameterNamed("transactionDate");
         final BigDecimal transactionAmount = command.bigDecimalValueOfParameterNamed("transactionAmount");
         final String txnExternalId = command.stringValueOfParameterNamedAllowingNull("externalId");
