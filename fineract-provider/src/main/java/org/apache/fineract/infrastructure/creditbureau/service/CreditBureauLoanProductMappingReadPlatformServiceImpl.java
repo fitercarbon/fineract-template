@@ -108,7 +108,7 @@ public class CreditBureauLoanProductMappingReadPlatformServiceImpl implements Cr
         try {
             return this.jdbcTemplate.queryForObject(sql, rm, new Object[] { loanProductId }); // NOSONAR
         } catch (EmptyResultDataAccessException e) {
-      return null;
+            return null;
         }
 
     }
