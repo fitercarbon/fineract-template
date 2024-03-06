@@ -1552,6 +1552,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         final Set<Long> existingTransactionIds = new HashSet<>();
         final Set<Long> existingReversedTransactionIds = new HashSet<>();
         updateExistingTransactionsDetails(account, existingTransactionIds, existingReversedTransactionIds);
+        AppUser user = context.authenticatedUser();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         if (depositAccountType.isFixedDeposit()) {
             FixedDepositAccount fdAccount = ((FixedDepositAccount) account);
@@ -1560,9 +1562,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             // handle maturity instructions
 
             if (fdAccount.isMatured() && (fdAccount.isReinvestOnClosure() || fdAccount.isTransferToSavingsOnClosure())) {
-                DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                 Map<String, Object> changes = new HashMap<>();
-                AppUser user = context.authenticatedUser();
                 Long toSavingsId = fdAccount.getTransferToSavingsAccountId();
                 this.depositAccountDomainService.handleFDAccountMaturityClosure(fdAccount, null, user, fdAccount.maturityDate(), fmt,
                         fdAccount.maturityDate(), fdAccount.getOnAccountClosureId(), toSavingsId, "Apply maturity instructions", changes);
@@ -1583,11 +1583,15 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             }
         } else if (depositAccountType.isRecurringDeposit()) {
 
-            ((RecurringDepositAccount) account).updateMaturityStatus(isSavingsInterestPostingAtCurrentPeriodEnd,
-                    financialYearBeginningMonth, postReversals);
+            RecurringDepositAccount rdAccount = ((RecurringDepositAccount) account);
+            rdAccount.updateMaturityStatus(isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, postReversals);
 
             applyChargeOnRecurringDepositAccountWhenSavingsTargetIsMissed(account);
             account.setStatus(SavingsAccountStatusType.MATURED.getValue());
+
+            this.depositAccountDomainService.handleRDAccountMaturityClosure(rdAccount, null, user, rdAccount.maturityDate(), fmt,
+                    rdAccount.maturityDate(), rdAccount.getOnAccountClosureId(), rdAccount.getTransferToSavingsAccountId(),
+                    "Apply maturity instructions");
 
         }
         this.savingAccountRepositoryWrapper.saveAndFlush(account);

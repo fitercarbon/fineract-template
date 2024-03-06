@@ -384,6 +384,46 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
 
     @Transactional
     @Override
+    public Long handleRDAccountMaturityClosure(final RecurringDepositAccount account, final PaymentDetail paymentDetail, final AppUser user,
+            final LocalDate tenantsTodayDate, final DateTimeFormatter fmt, final LocalDate closedDate, final Integer onAccountClosureId,
+            final Long toSavingsId, final String transferDescription) {
+
+        boolean isAccountTransfer = false;
+        final Set<Long> existingTransactionIds = new HashSet<>();
+        final Set<Long> existingReversedTransactionIds = new HashSet<>();
+        /***
+         * Update account transactionIds for post journal entries.
+         */
+        updateExistingTransactionsDetails(account, existingTransactionIds, existingReversedTransactionIds);
+
+        Long savingsTransactionId = null;
+
+        final DepositAccountOnClosureType onClosureType = DepositAccountOnClosureType.fromInt(onAccountClosureId);
+        if (onClosureType.isTransferToSavings()) {
+            final SavingsAccount toSavingsAccount = this.depositAccountAssembler.assembleFrom(toSavingsId,
+                    DepositAccountType.SAVINGS_DEPOSIT);
+            final boolean isExceptionForBalanceCheck = false;
+            final AccountTransferDTO accountTransferDTO = new AccountTransferDTO(closedDate, account.getAccountBalance(),
+                    PortfolioAccountType.SAVINGS, PortfolioAccountType.SAVINGS, null, null, transferDescription, null, fmt, null, null,
+                    null, null, null, AccountTransferType.ACCOUNT_TRANSFER.getValue(), null, null, null, null, toSavingsAccount, account,
+                    isAccountTransfer, isExceptionForBalanceCheck);
+            this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            updateAlreadyPostedTransactions(existingTransactionIds, account);
+            account.updateSummary();
+            account.updateClosedStatus();
+            account.setClosedOnDate(closedDate);
+            account.updateOnAccountClosureStatus(onClosureType);
+        }
+
+        this.savingsAccountRepository.save(account);
+
+        postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds, isAccountTransfer);
+
+        return savingsTransactionId;
+    }
+
+    @Transactional
+    @Override
     public Long handleRDAccountClosure(final RecurringDepositAccount account, final PaymentDetail paymentDetail, final AppUser user,
             final JsonCommand command, final LocalDate tenantsTodayDate, final Map<String, Object> changes) {
 
