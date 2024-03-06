@@ -1336,4 +1336,21 @@ public class RecurringDepositAccount extends SavingsAccount {
 
         }
     }
+
+    public void updateClosedStatus() {
+        this.status = SavingsAccountStatusType.CLOSED.getValue();
+    }
+
+    public void updateOnAccountClosureStatus(DepositAccountOnClosureType onClosureType) {
+        this.accountTermAndPreClosure.updateOnAccountClosureStatus(onClosureType);
+    }
+
+    public Integer getOnAccountClosureId() {
+        return this.accountTermAndPreClosure.getOnAccountClosureType();
+    }
+
+    public Long getTransferToSavingsAccountId() {
+        return this.accountTermAndPreClosure.getTransferToSavingsAccountId();
+    }
+
 }

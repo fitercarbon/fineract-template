@@ -51,6 +51,11 @@ public interface DepositAccountDomainService {
             DateTimeFormatter fmt, LocalDate closedDate, Integer onAccountClosureId, Long toSavingsId, String transferDescription,
             Map<String, Object> changes);
 
+    @Transactional
+    Long handleRDAccountMaturityClosure(RecurringDepositAccount account, PaymentDetail paymentDetail, AppUser user,
+            LocalDate tenantsTodayDate, DateTimeFormatter fmt, LocalDate closedDate, Integer onAccountClosureId, Long toSavingsId,
+            String transferDescription);
+
     Long handleRDAccountClosure(RecurringDepositAccount account, PaymentDetail paymentDetail, AppUser user, JsonCommand command,
             LocalDate tenantsTodayDate, Map<String, Object> changes);
 
