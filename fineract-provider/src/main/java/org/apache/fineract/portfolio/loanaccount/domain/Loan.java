@@ -3731,12 +3731,15 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         transactionForAdjustment.reverse();
         transactionForAdjustment.manuallyAdjustedOrReversed();
 
-        if (isClosedWrittenOff()) {
-            // find write off transaction and reverse it
+        if (isClosedWrittenOff() && !newTransactionDetail.isRecoveryRepayment()) {
+            // if new transaction is a recovery payment after the loan was written off , then do not reverse the
+            // write-off transaction
+            // else , find write off transaction and reverse it
             final LoanTransaction writeOffTransaction = findWriteOffTransaction();
             if (writeOffTransaction != null) {
                 writeOffTransaction.reverse();
             }
+
         }
 
         if (isClosedObligationsMet() || isClosedWrittenOff() || isClosedWithOutsandingAmountMarkedForReschedule()) {
