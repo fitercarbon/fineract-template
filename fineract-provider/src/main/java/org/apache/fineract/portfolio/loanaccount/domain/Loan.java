@@ -3742,7 +3742,8 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
         }
 
-        if (isClosedObligationsMet() || isClosedWrittenOff() || isClosedWithOutsandingAmountMarkedForReschedule()) {
+        if (isClosedObligationsMet() || isClosedWrittenOff()
+                || isClosedWithOutsandingAmountMarkedForReschedule() && !newTransactionDetail.isRecoveryRepayment()) {
             this.loanStatus = LoanStatus.ACTIVE.getValue();
         }
 
