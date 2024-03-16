@@ -3727,11 +3727,11 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
             throw new InvalidLoanTransactionTypeException("transaction",
                     "adjustment.is.only.allowed.to.repayment.or.waiver.or.creditbalancerefund.transactions", errorMessage);
         }
-
+       boolean isRecoveryRepayment = transactionForAdjustment.isRecoveryRepayment();
         transactionForAdjustment.reverse();
         transactionForAdjustment.manuallyAdjustedOrReversed();
 
-        if (isClosedWrittenOff() && !newTransactionDetail.isRecoveryRepayment()) {
+        if (isClosedWrittenOff() && !isRecoveryRepayment) {
             // if new transaction is a recovery payment after the loan was written off , then do not reverse the
             // write-off transaction
             // else , find write off transaction and reverse it
@@ -3743,7 +3743,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
         }
 
         if ((isClosedObligationsMet() || isClosedWrittenOff() || isClosedWithOutsandingAmountMarkedForReschedule())
-                && !newTransactionDetail.isRecoveryRepayment()) {
+                && !isRecoveryRepayment) {
             this.loanStatus = LoanStatus.ACTIVE.getValue();
         }
 
