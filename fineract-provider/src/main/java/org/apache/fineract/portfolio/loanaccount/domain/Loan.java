@@ -3722,12 +3722,13 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                 transactionForAdjustment.getTransactionDate());
 
         if (transactionForAdjustment.isNotRepaymentType() && transactionForAdjustment.isNotWaiver()
-                && transactionForAdjustment.isNotCreditBalanceRefund() && !transactionForAdjustment.isRecoveryRepayment()) {
+                && transactionForAdjustment.isNotCreditBalanceRefund()
+                && !(transactionForAdjustment.isRecoveryRepayment() || transactionForAdjustment.isWriteOff())) {
             final String errorMessage = "Only transactions of type repayment, waiver or credit balance refund can be adjusted.";
             throw new InvalidLoanTransactionTypeException("transaction",
                     "adjustment.is.only.allowed.to.repayment.or.waiver.or.creditbalancerefund.transactions", errorMessage);
         }
-       boolean isRecoveryRepayment = transactionForAdjustment.isRecoveryRepayment();
+        boolean isRecoveryRepayment = transactionForAdjustment.isRecoveryRepayment();
         transactionForAdjustment.reverse();
         transactionForAdjustment.manuallyAdjustedOrReversed();
 
