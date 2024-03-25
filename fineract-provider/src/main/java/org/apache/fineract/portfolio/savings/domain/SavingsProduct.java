@@ -967,4 +967,8 @@ public class SavingsProduct extends AbstractPersistableCustom {
     public Set<SavingsProductFloatingInterestRate> getSavingsProductFloatingInterestRates() {
         return savingsProductFloatingInterestRates;
     }
+
+    public String getDescription() {
+        return description;
+    }
 }

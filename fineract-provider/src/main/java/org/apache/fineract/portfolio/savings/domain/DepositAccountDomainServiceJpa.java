@@ -35,16 +35,25 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+
+import com.google.gson.JsonElement;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
+import org.apache.fineract.commands.domain.CommandWrapper;
+import org.apache.fineract.commands.service.CommandProcessingService;
+import org.apache.fineract.commands.service.CommandWrapperBuilder;
 import org.apache.fineract.infrastructure.accountnumberformat.domain.AccountNumberFormat;
 import org.apache.fineract.infrastructure.accountnumberformat.domain.AccountNumberFormatRepositoryWrapper;
 import org.apache.fineract.infrastructure.accountnumberformat.domain.EntityAccountType;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
+import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
+import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.dataqueries.service.ReadWriteNonCoreDataService;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
@@ -57,6 +66,9 @@ import org.apache.fineract.portfolio.account.domain.AccountAssociationType;
 import org.apache.fineract.portfolio.account.domain.AccountAssociations;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationsRepository;
 import org.apache.fineract.portfolio.account.domain.AccountTransferType;
+import org.apache.fineract.portfolio.account.domain.AccountTransferDetails;
+import org.apache.fineract.portfolio.account.domain.AccountTransferTransaction;
+import org.apache.fineract.portfolio.account.domain.AccountTransferDetailRepository;
 import org.apache.fineract.portfolio.account.service.AccountTransfersWritePlatformService;
 import org.apache.fineract.portfolio.calendar.domain.Calendar;
 import org.apache.fineract.portfolio.calendar.domain.CalendarEntityType;
@@ -81,9 +93,11 @@ import org.apache.fineract.portfolio.savings.request.FixedDepositPreClosureReq;
 import org.apache.fineract.portfolio.savings.service.SavingsAccountWritePlatformService;
 import org.apache.fineract.portfolio.savings.service.SavingsEnumerations;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class DepositAccountDomainServiceJpa implements DepositAccountDomainService {
@@ -105,20 +119,23 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
     private final SavingsAccountChargeRepository savingsAccountChargeRepository;
 
     private final ReadWriteNonCoreDataService readWriteNonCoreDataService;
+    private final FromJsonHelper fromApiJsonHelper;
+    private final AccountTransferDetailRepository accountTransferDetailRepository;
+    private final CommandProcessingService commandProcessingService;
 
     @Autowired
     public DepositAccountDomainServiceJpa(final PlatformSecurityContext context,
-            final SavingsAccountRepositoryWrapper savingsAccountRepository,
-            final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepositoryWrapper,
-            final JournalEntryWritePlatformService journalEntryWritePlatformService, final AccountNumberGenerator accountNumberGenerator,
-            final DepositAccountAssembler depositAccountAssembler, final SavingsAccountDomainService savingsAccountDomainService,
-            final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
-            final ConfigurationDomainService configurationDomainService,
-            final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository,
-            final CalendarInstanceRepository calendarInstanceRepository, final AccountAssociationsRepository accountAssociationsRepository,
-            final SavingsAccountTransactionRepository savingsAccountTransactionRepository,
-            final SavingsAccountWritePlatformService savingsAccountWritePlatformService,
-            final SavingsAccountChargeRepository savingsAccountChargeRepository, ReadWriteNonCoreDataService readWriteNonCoreDataService) {
+                                          final SavingsAccountRepositoryWrapper savingsAccountRepository,
+                                          final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepositoryWrapper,
+                                          final JournalEntryWritePlatformService journalEntryWritePlatformService, final AccountNumberGenerator accountNumberGenerator,
+                                          final DepositAccountAssembler depositAccountAssembler, final SavingsAccountDomainService savingsAccountDomainService,
+                                          final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
+                                          final ConfigurationDomainService configurationDomainService,
+                                          final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository,
+                                          final CalendarInstanceRepository calendarInstanceRepository, final AccountAssociationsRepository accountAssociationsRepository,
+                                          final SavingsAccountTransactionRepository savingsAccountTransactionRepository,
+                                          final SavingsAccountWritePlatformService savingsAccountWritePlatformService,
+                                          final SavingsAccountChargeRepository savingsAccountChargeRepository, ReadWriteNonCoreDataService readWriteNonCoreDataService, FromJsonHelper fromApiJsonHelper, AccountTransferDetailRepository accountTransferDetailRepository, CommandProcessingService commandProcessingService) {
         this.context = context;
         this.savingsAccountRepository = savingsAccountRepository;
         this.applicationCurrencyRepositoryWrapper = applicationCurrencyRepositoryWrapper;
@@ -135,6 +152,9 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
         this.savingsAccountWritePlatformService = savingsAccountWritePlatformService;
         this.savingsAccountChargeRepository = savingsAccountChargeRepository;
         this.readWriteNonCoreDataService = readWriteNonCoreDataService;
+        this.fromApiJsonHelper = fromApiJsonHelper;
+        this.accountTransferDetailRepository = accountTransferDetailRepository;
+        this.commandProcessingService = commandProcessingService;
     }
 
     @Transactional
@@ -360,7 +380,8 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                 }
 
             }
-            this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            Long transferTransactionId = this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            this.handleInternalEventAfterMatureFDRD("SAVINGSACCOUNT", "DEPOSIT", accountTransferDTO, transferTransactionId);
             updateAlreadyPostedTransactions(existingTransactionIds, account);
             account.updateSummary();
             account.updateClosedStatus();
@@ -407,7 +428,8 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                     PortfolioAccountType.SAVINGS, PortfolioAccountType.SAVINGS, null, null, transferDescription, null, fmt, null, null,
                     null, null, null, AccountTransferType.ACCOUNT_TRANSFER.getValue(), null, null, null, null, toSavingsAccount, account,
                     isAccountTransfer, isExceptionForBalanceCheck);
-            this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            Long transferTransactionId = this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            this.handleInternalEventAfterMatureFDRD("SAVINGSACCOUNT", "DEPOSIT", accountTransferDTO, transferTransactionId);
             updateAlreadyPostedTransactions(existingTransactionIds, account);
             account.updateSummary();
             account.updateClosedStatus();
@@ -587,7 +609,8 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                 }
 
             }
-            this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            Long transferTransactionId = this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            this.handleInternalEventAfterMatureFDRD("SAVINGSACCOUNT", "DEPOSIT", accountTransferDTO, transferTransactionId);
             updateAlreadyPostedTransactions(existingTransactionIds, account);
         } else {
             final SavingsAccountTransaction withdrawal = this.handleWithdrawal(account, fmt, closedDate, account.getAccountBalance(),
@@ -907,5 +930,32 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                         user);
             }
         }
+    }
+    
+    public void handleInternalEventAfterMatureFDRD(String entityName, String actionName, AccountTransferDTO accountTransferDTO, Long transferTransactionId) {
+        SavingsAccount toSavingsAccount = accountTransferDTO.getToSavingsAccount();
+        final Map<String, Object> changes = new LinkedHashMap<>();
+        AccountTransferDetails details = this.accountTransferDetailRepository.findById(transferTransactionId).orElseThrow();
+        AccountTransferTransaction tran = details.getAccountTransferTransactions().stream().findFirst().orElseThrow();
+
+        JSONObject apiRequestBodyAsJson = new JSONObject();
+        apiRequestBodyAsJson.put("transactionDate", accountTransferDTO.getTransactionDate());
+        apiRequestBodyAsJson.put("transactionAmount", accountTransferDTO.getTransactionAmount());
+        apiRequestBodyAsJson.put("paymentTypeId", accountTransferDTO.getPaymentDetail() != null ? accountTransferDTO.getPaymentDetail().getPaymentType().getId() : null);
+        apiRequestBodyAsJson.put("locale", accountTransferDTO.getLocale());
+        apiRequestBodyAsJson.put("dateFormat", accountTransferDTO.getFmt());
+
+        final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson.toString());
+        final CommandWrapper wrapper = builder.savingsAccountDeposit(toSavingsAccount.getId()).build();
+        final JsonElement parsedCommand = this.fromApiJsonHelper.parse(wrapper.getJson());
+        JsonCommand command = JsonCommand.from(wrapper.getJson(), parsedCommand, this.fromApiJsonHelper, wrapper.getEntityName(), wrapper.getEntityId(),
+                wrapper.getSubentityId(), wrapper.getGroupId(), wrapper.getClientId(), wrapper.getLoanId(), wrapper.getSavingsId(),
+                wrapper.getTransactionId(), wrapper.getHref(), wrapper.getProductId(), wrapper.getCreditBureauId(),
+                wrapper.getOrganisationCreditBureauId());
+        CommandProcessingResult result = new CommandProcessingResultBuilder().withEntityId(tran.getToSavingsTransaction().getId()).withOfficeId(toSavingsAccount.officeId()) //
+                .withClientId(toSavingsAccount.clientId()).withGroupId(toSavingsAccount.groupId()).withSavingsId(toSavingsAccount.getId()) //
+                .with(changes).build();
+        this.commandProcessingService.publishEventInternalForActions(entityName, actionName, command, result);
+
     }
 }
