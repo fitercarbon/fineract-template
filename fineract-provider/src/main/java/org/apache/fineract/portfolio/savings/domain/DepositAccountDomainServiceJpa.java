@@ -798,7 +798,8 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                     throw new Fx_RateTableShouldBeExistException();
                 }
             }
-            this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            final Long transferTransactionId = this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            this.handleInternalEventAfterMatureFDRD("SAVINGSACCOUNT", "DEPOSIT", accountTransferDTO, transferTransactionId);
             updateAlreadyPostedTransactions(existingTransactionIds, account);
             account.withdrawalFeeApplicableForTransfer = applyWithdrawalFeeForTransfer;
         } else {
