@@ -121,10 +121,14 @@ public class AccountTransferAssembler {
             accountTransferDetails = this.accountTransferDetailAssembler.assembleSavingsToSavingsTransfer(fromSavingsAccount,
                     toSavingsAccount, accountTransferDTO.getTransferType());
         }
+        String description = accountTransferDTO.getDescription();
+        if(fromSavingsAccount.depositAccountType().isFixedDeposit() || toSavingsAccount.depositAccountType().isRecurringDeposit()) {
+          description = accountTransferDTO.getDescription() != null ? accountTransferDTO.getDescription().concat(" " + fromSavingsAccount.savingsProduct().getDescription()) : fromSavingsAccount.savingsProduct().getDescription();
+        }
 
         AccountTransferTransaction accountTransferTransaction = AccountTransferTransaction.savingsToSavingsTransfer(accountTransferDetails,
                 withdrawal, deposit, accountTransferDTO.getTransactionDate(), transactionMonetaryAmount,
-                accountTransferDTO.getDescription());
+                description);
         accountTransferDetails.addAccountTransferTransaction(accountTransferTransaction);
         return accountTransferDetails;
     }

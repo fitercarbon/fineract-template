@@ -32,4 +32,6 @@ public interface CommandProcessingService {
 
     boolean validateCommand(CommandWrapper commandWrapper, AppUser user);
 
+    void publishEventInternalForActions(final String entityName, final String actionName, JsonCommand command, final Object result);
+
 }
