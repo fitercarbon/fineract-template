@@ -32,5 +32,7 @@ jobs:
           git config pull.rebase true
           git config --global user.email "devops@fiter.io"
           git config --global user.name "Devops"
+          echo "Pulling from carbon"
           git pull bitbucket carbon
+          echo "Pushing to carbon"
           git push bitbucket carbon
