@@ -122,7 +122,7 @@ public class AccountTransferAssembler {
                     toSavingsAccount, accountTransferDTO.getTransferType());
         }
         String description = accountTransferDTO.getDescription();
-        if(fromSavingsAccount.depositAccountType().isFixedDeposit() || toSavingsAccount.depositAccountType().isRecurringDeposit()) {
+        if(fromSavingsAccount.depositAccountType().isFixedDeposit() || fromSavingsAccount.depositAccountType().isRecurringDeposit()) {
           description = accountTransferDTO.getDescription() != null ? accountTransferDTO.getDescription().concat(" " + fromSavingsAccount.savingsProduct().getDescription()) : fromSavingsAccount.savingsProduct().getDescription();
         }
 
