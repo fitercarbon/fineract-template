@@ -1995,7 +1995,8 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         saveLoanWithDataIntegrityViolationChecks(loan);
 
         postJournalEntries(loan, existingTransactionIds, existingReversedTransactionIds);
-
+        loan.restoreLoanScheduleAndTransactions();
+        this.loanRepository.saveAndFlush(loan);
         businessEventNotifierService.notifyPostBusinessEvent(new LoanWaiveChargeBusinessEvent(loanCharge));
 
         return new CommandProcessingResultBuilder() //
