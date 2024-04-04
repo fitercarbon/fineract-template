@@ -670,7 +670,8 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
                     PortfolioAccountType.SAVINGS, PortfolioAccountType.SAVINGS, null, null, transferDescription, locale, fmt, null, null,
                     null, null, null, AccountTransferType.ACCOUNT_TRANSFER.getValue(), null, null, null, null, toSavingsAccount, account,
                     isRegularTransaction, isExceptionForBalanceCheck);
-            this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            Long transferTransactionId = this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
+            this.handleInternalEventAfterMatureFDRD("SAVINGSACCOUNT", "DEPOSIT", accountTransferDTO, transferTransactionId);
             updateAlreadyPostedTransactions(existingTransactionIds, account);
         } else {
             final SavingsAccountTransaction withdrawal = this.handleWithdrawal(account, fmt, closedDate, account.getAccountBalance(),
