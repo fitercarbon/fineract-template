@@ -34,16 +34,19 @@ jobs:
           # Fetch changes from Bitbucket
           echo "Fetching from Bitbucket"
           git fetch bitbucket carbon
-          # Attempt to rebase the changes from Bitbucket onto the current branch
-          echo "Rebasing changes from Bitbucket"
-          if git rebase bitbucket/carbon; then
-            echo "Rebase successful, pushing to Bitbucket"
+          # Attempt to rebase the changes from Bitbucket onto the current branch,
+          # resolving any conflicts by preferring 'theirs' (GitHub changes)
+          echo "Rebasing changes from Bitbucket, favoring GitHub changes on conflict"
+          git rebase -X theirs bitbucket/carbon || true  # Continue even if rebase fails
+          # Check if the rebase was successful or if there were conflicts resolved
+          if [ "$(git ls-files -u | wc -l)" -eq 0 ]; then
+            echo "Rebase successful or conflicts automatically resolved, pushing to Bitbucket"
             git push bitbucket HEAD:carbon
           else
-            echo "Conflict detected during rebase, aborting rebase"
+            echo "There were unresolved conflicts after attempting to auto-resolve. Manual intervention required."
+            # Abort the rebase to clean up the state
             git rebase --abort
-            # Here you can insert commands to notify your team about the conflict
-            # For example, sending a message to Slack, sending an email, etc.
-            echo "Please resolve the conflict manually."
+            echo "Please resolve the remaining conflicts manually."
           fi
+
 
