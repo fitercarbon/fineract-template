@@ -29,10 +29,21 @@ jobs:
 
       - name: Mirror to Bitbucket
         run: |
-          git config pull.rebase true
           git config --global user.email "devops@fiter.io"
           git config --global user.name "Devops"
-          echo "Pulling from carbon"
-          git pull bitbucket carbon
-          echo "Pushing to carbon"
-          git push bitbucket carbon
+          # Fetch changes from Bitbucket
+          echo "Fetching from Bitbucket"
+          git fetch bitbucket carbon
+          # Attempt to rebase the changes from Bitbucket onto the current branch
+          echo "Rebasing changes from Bitbucket"
+          if git rebase bitbucket/carbon; then
+            echo "Rebase successful, pushing to Bitbucket"
+            git push bitbucket HEAD:carbon
+          else
+            echo "Conflict detected during rebase, aborting rebase"
+            git rebase --abort
+            # Here you can insert commands to notify your team about the conflict
+            # For example, sending a message to Slack, sending an email, etc.
+            echo "Please resolve the conflict manually."
+          fi
+
