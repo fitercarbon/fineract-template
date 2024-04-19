@@ -59,6 +59,10 @@ public class FineractHookListener implements HookListener {
             final HookProcessor processor = this.hookProcessorProvider.getProcessor(hook);
             try {
                 processor.process(hook, payload, entityName, actionName, fineractContext);
+                log.info(
+                        "Hook {} executed in HookProcessor {} for tenantIdentifier/user {}/{}, entityName: {}, actionName: {}, payload {} ",
+                        hook.getId(), processor.getClass().getSimpleName(), fineractContext.getTenantContext().getTenantIdentifier(),
+                        appUser.getDisplayName(), entityName, actionName, payload);
             } catch (Throwable e) {
                 log.error("Hook {} failed in HookProcessor {} for tenantIdentifier/user {}/{}, entityName: {}, actionName: {}, payload {} ",
                         hook.getId(), processor.getClass().getSimpleName(), fineractContext.getTenantContext().getTenantIdentifier(),

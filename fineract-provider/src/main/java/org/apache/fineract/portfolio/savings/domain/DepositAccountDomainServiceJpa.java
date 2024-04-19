@@ -23,6 +23,7 @@ import static org.apache.fineract.portfolio.savings.DepositsApiConstants.onAccou
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.toSavingsAccountIdParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.transferDescriptionParamName;
 
+import com.google.gson.JsonElement;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.LocalDate;
@@ -30,14 +31,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.LinkedHashMap;
-
-import com.google.gson.JsonElement;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.commands.domain.CommandWrapper;
 import org.apache.fineract.commands.service.CommandProcessingService;
@@ -65,10 +64,10 @@ import org.apache.fineract.portfolio.account.data.AccountTransferDTO;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationType;
 import org.apache.fineract.portfolio.account.domain.AccountAssociations;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationsRepository;
-import org.apache.fineract.portfolio.account.domain.AccountTransferType;
+import org.apache.fineract.portfolio.account.domain.AccountTransferDetailRepository;
 import org.apache.fineract.portfolio.account.domain.AccountTransferDetails;
 import org.apache.fineract.portfolio.account.domain.AccountTransferTransaction;
-import org.apache.fineract.portfolio.account.domain.AccountTransferDetailRepository;
+import org.apache.fineract.portfolio.account.domain.AccountTransferType;
 import org.apache.fineract.portfolio.account.service.AccountTransfersWritePlatformService;
 import org.apache.fineract.portfolio.calendar.domain.Calendar;
 import org.apache.fineract.portfolio.calendar.domain.CalendarEntityType;
@@ -98,7 +97,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 public class DepositAccountDomainServiceJpa implements DepositAccountDomainService {
 
@@ -125,17 +123,19 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
 
     @Autowired
     public DepositAccountDomainServiceJpa(final PlatformSecurityContext context,
-                                          final SavingsAccountRepositoryWrapper savingsAccountRepository,
-                                          final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepositoryWrapper,
-                                          final JournalEntryWritePlatformService journalEntryWritePlatformService, final AccountNumberGenerator accountNumberGenerator,
-                                          final DepositAccountAssembler depositAccountAssembler, final SavingsAccountDomainService savingsAccountDomainService,
-                                          final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
-                                          final ConfigurationDomainService configurationDomainService,
-                                          final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository,
-                                          final CalendarInstanceRepository calendarInstanceRepository, final AccountAssociationsRepository accountAssociationsRepository,
-                                          final SavingsAccountTransactionRepository savingsAccountTransactionRepository,
-                                          final SavingsAccountWritePlatformService savingsAccountWritePlatformService,
-                                          final SavingsAccountChargeRepository savingsAccountChargeRepository, ReadWriteNonCoreDataService readWriteNonCoreDataService, FromJsonHelper fromApiJsonHelper, AccountTransferDetailRepository accountTransferDetailRepository, CommandProcessingService commandProcessingService) {
+            final SavingsAccountRepositoryWrapper savingsAccountRepository,
+            final ApplicationCurrencyRepositoryWrapper applicationCurrencyRepositoryWrapper,
+            final JournalEntryWritePlatformService journalEntryWritePlatformService, final AccountNumberGenerator accountNumberGenerator,
+            final DepositAccountAssembler depositAccountAssembler, final SavingsAccountDomainService savingsAccountDomainService,
+            final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
+            final ConfigurationDomainService configurationDomainService,
+            final AccountNumberFormatRepositoryWrapper accountNumberFormatRepository,
+            final CalendarInstanceRepository calendarInstanceRepository, final AccountAssociationsRepository accountAssociationsRepository,
+            final SavingsAccountTransactionRepository savingsAccountTransactionRepository,
+            final SavingsAccountWritePlatformService savingsAccountWritePlatformService,
+            final SavingsAccountChargeRepository savingsAccountChargeRepository, ReadWriteNonCoreDataService readWriteNonCoreDataService,
+            FromJsonHelper fromApiJsonHelper, AccountTransferDetailRepository accountTransferDetailRepository,
+            CommandProcessingService commandProcessingService) {
         this.context = context;
         this.savingsAccountRepository = savingsAccountRepository;
         this.applicationCurrencyRepositoryWrapper = applicationCurrencyRepositoryWrapper;
@@ -933,28 +933,32 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
             }
         }
     }
-    
-    public void handleInternalEventAfterMatureFDRD(String entityName, String actionName, AccountTransferDTO accountTransferDTO, Long transferTransactionId) {
+
+    public void handleInternalEventAfterMatureFDRD(String entityName, String actionName, AccountTransferDTO accountTransferDTO,
+            Long transferTransactionId) {
         SavingsAccount toSavingsAccount = accountTransferDTO.getToSavingsAccount();
         final Map<String, Object> changes = new LinkedHashMap<>();
         AccountTransferDetails details = this.accountTransferDetailRepository.findById(transferTransactionId).orElseThrow();
         AccountTransferTransaction tran = details.getAccountTransferTransactions().stream().findFirst().orElseThrow();
 
         JSONObject apiRequestBodyAsJson = new JSONObject();
-        apiRequestBodyAsJson.put("transactionDate", accountTransferDTO.getTransactionDate());
+        apiRequestBodyAsJson.put("transactionDate",
+                accountTransferDTO.getTransactionDate().format(DateTimeFormatter.ofPattern(DateUtils.DEFAULT_FULL_DATE_FORMAT)));
         apiRequestBodyAsJson.put("transactionAmount", accountTransferDTO.getTransactionAmount());
-        apiRequestBodyAsJson.put("paymentTypeId", accountTransferDTO.getPaymentDetail() != null ? accountTransferDTO.getPaymentDetail().getPaymentType().getId() : null);
+        apiRequestBodyAsJson.put("paymentTypeId",
+                accountTransferDTO.getPaymentDetail() != null ? accountTransferDTO.getPaymentDetail().getPaymentType().getId() : null);
         apiRequestBodyAsJson.put("locale", accountTransferDTO.getLocale());
-        apiRequestBodyAsJson.put("dateFormat", accountTransferDTO.getFmt());
+        apiRequestBodyAsJson.put("dateFormat", DateUtils.DEFAULT_FULL_DATE_FORMAT);
 
         final CommandWrapperBuilder builder = new CommandWrapperBuilder().withJson(apiRequestBodyAsJson.toString());
         final CommandWrapper wrapper = builder.savingsAccountDeposit(toSavingsAccount.getId()).build();
         final JsonElement parsedCommand = this.fromApiJsonHelper.parse(wrapper.getJson());
-        JsonCommand command = JsonCommand.from(wrapper.getJson(), parsedCommand, this.fromApiJsonHelper, wrapper.getEntityName(), wrapper.getEntityId(),
-                wrapper.getSubentityId(), wrapper.getGroupId(), wrapper.getClientId(), wrapper.getLoanId(), wrapper.getSavingsId(),
-                wrapper.getTransactionId(), wrapper.getHref(), wrapper.getProductId(), wrapper.getCreditBureauId(),
+        JsonCommand command = JsonCommand.from(wrapper.getJson(), parsedCommand, this.fromApiJsonHelper, wrapper.getEntityName(),
+                wrapper.getEntityId(), wrapper.getSubentityId(), wrapper.getGroupId(), wrapper.getClientId(), wrapper.getLoanId(),
+                wrapper.getSavingsId(), wrapper.getTransactionId(), wrapper.getHref(), wrapper.getProductId(), wrapper.getCreditBureauId(),
                 wrapper.getOrganisationCreditBureauId());
-        CommandProcessingResult result = new CommandProcessingResultBuilder().withEntityId(tran.getToSavingsTransaction().getId()).withOfficeId(toSavingsAccount.officeId()) //
+        CommandProcessingResult result = new CommandProcessingResultBuilder().withEntityId(tran.getToSavingsTransaction().getId())
+                .withOfficeId(toSavingsAccount.officeId()) //
                 .withClientId(toSavingsAccount.clientId()).withGroupId(toSavingsAccount.groupId()).withSavingsId(toSavingsAccount.getId()) //
                 .with(changes).build();
         this.commandProcessingService.publishEventInternalForActions(entityName, actionName, command, result);
