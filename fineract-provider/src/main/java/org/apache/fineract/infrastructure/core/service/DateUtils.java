@@ -41,6 +41,8 @@ import org.apache.fineract.organisation.teller.util.DateRange;
 public final class DateUtils {
 
     public static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
+
+    public static final String DEFAULT_FULL_DATE_FORMAT = "dd MMMM yyyy";
     public static final String DEFAULT_DATETIME_FORMAT = DEFAULT_DATE_FORMAT + " HH:mm:ss";
     public static final DateTimeFormatter DEFAULT_DATETIME_FORMATTER = new DateTimeFormatterBuilder().appendPattern(DEFAULT_DATETIME_FORMAT)
             .toFormatter();
