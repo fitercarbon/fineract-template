@@ -81,6 +81,7 @@ import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 import org.apache.fineract.portfolio.client.domain.AccountNumberGenerator;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
+import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
 import org.apache.fineract.portfolio.savings.DepositAccountOnClosureType;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.DepositsApiConstants;
@@ -993,11 +994,19 @@ public class DepositAccountDomainServiceJpa implements DepositAccountDomainServi
         AccountTransferTransaction tran = details.getAccountTransferTransactions().stream().findFirst().orElseThrow();
 
         JSONObject apiRequestBodyAsJson = new JSONObject();
-        apiRequestBodyAsJson.put("transactionDate",
-                accountTransferDTO.getTransactionDate().format(DateTimeFormatter.ofPattern(DateUtils.DEFAULT_FULL_DATE_FORMAT)));
+        LocalDate transactionDate = accountTransferDTO.getTransactionDate();
+        if (transactionDate != null) {
+            apiRequestBodyAsJson.put("transactionDate",
+                    transactionDate.format(DateTimeFormatter.ofPattern(DateUtils.DEFAULT_FULL_DATE_FORMAT)));
+        }
         apiRequestBodyAsJson.put("transactionAmount", accountTransferDTO.getTransactionAmount());
-        apiRequestBodyAsJson.put("paymentTypeId",
-                accountTransferDTO.getPaymentDetail() != null ? accountTransferDTO.getPaymentDetail().getPaymentType().getId() : null);
+        PaymentDetail paymentDetail = accountTransferDTO.getPaymentDetail();
+        if (paymentDetail != null) {
+            PaymentType paymentType = paymentDetail.getPaymentType();
+            if (paymentType != null) {
+                apiRequestBodyAsJson.put("paymentTypeId", paymentType.getId());
+            }
+        }
         apiRequestBodyAsJson.put("locale", accountTransferDTO.getLocale());
         apiRequestBodyAsJson.put("dateFormat", DateUtils.DEFAULT_FULL_DATE_FORMAT);
 
