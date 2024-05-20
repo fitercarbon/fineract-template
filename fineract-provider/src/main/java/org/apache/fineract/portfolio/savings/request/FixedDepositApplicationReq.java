@@ -95,6 +95,7 @@ public class FixedDepositApplicationReq {
     private RecurringAccountDetailReq recurringAccountDetailReq;
     private FixedDepositApplicationTermsReq fixedDepositApplicationTermsReq;
     private FixedDepositApplicationPreClosureReq fixedDepositApplicationPreClosureReq;
+    private Integer accountOnClosureTypeId;
 
     public static FixedDepositApplicationReq instance(JsonCommand command) {
         FixedDepositApplicationReq instance = new FixedDepositApplicationReq();
@@ -452,5 +453,13 @@ public class FixedDepositApplicationReq {
 
     public void setClosedFixedDepositAccountNumber(String closedFixedDepositAccountNumber) {
         this.closedFixedDepositAccountNumber = closedFixedDepositAccountNumber;
+    }
+
+    public Integer getAccountOnClosureTypeId() {
+        return accountOnClosureTypeId;
+    }
+
+    public void setAccountOnClosureTypeId(Integer accountOnClosureTypeId) {
+        this.accountOnClosureTypeId = accountOnClosureTypeId;
     }
 }
