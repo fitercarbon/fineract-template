@@ -1751,7 +1751,12 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         // Maintain the interest rate
         fixedDepositApplicationReq.setInterestRateSet(true);
         fixedDepositApplicationReq.setInterestRate(account.getNominalAnnualInterestRate());
+        // quick fix to include on closure(maturity) instruction
+        if (account.getOnAccountClosureId() != null) {
+            fixedDepositApplicationReq.setAccountOnClosureTypeId(account.getOnAccountClosureId());
+        }
         FixedDepositAccount newFD = this.autoCreateNewFD(command, account, accountAssociations, fixedDepositApplicationReq);
+
         // Copy any data tables to the new account
         this.copyAccountDataTableToNewAccount(account, newFD);
         return new CommandProcessingResultBuilder().withEntityId(accountId).withOfficeId(account.officeId())
