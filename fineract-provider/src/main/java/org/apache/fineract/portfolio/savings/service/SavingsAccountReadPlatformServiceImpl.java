@@ -747,7 +747,6 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             queryBuilder.append(" order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC LIMIT ? OFFSET ?");
             params.add(limit);
             params.add(offset);
-
             return this.jdbcTemplate.query(queryBuilder.toString(), this.transactionsMapper, params.toArray());
 
         } catch (JsonProcessingException e) {

@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
@@ -327,7 +326,10 @@ public class SearchReadPlatformServiceImpl implements SearchReadPlatformService 
                             .append(" IN (").append(String.join(",", Collections.nCopies(filterConstraint.getValues().size(), "?")))
                             .append(") ");
                     if (filterConstraint.getFilterSelection().equals(FilterSelection.TRANSACTION_TYPE)) {
-                        params.addAll(filterConstraint.getValues().stream().map(Integer::parseInt).collect(Collectors.toList()));
+                        params.addAll(filterConstraint.getValues().stream().map(Integer::parseInt).toList());
+                    } else if (FilterSelection.NUMERIC_ID_FIELDS.contains(filterConstraint.getFilterSelection())) {
+                        params.addAll(filterConstraint.getValues().stream().map(Long::parseLong).toList());
+
                     } else {
                         params.addAll(filterConstraint.getValues());
                     }
