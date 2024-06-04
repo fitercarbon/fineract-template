@@ -19,6 +19,7 @@
 package org.apache.fineract.portfolio.savings.request;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
 import java.util.Map;
 
 public interface FilterSelection {
@@ -54,6 +55,8 @@ public interface FilterSelection {
     String EXTERNAL_ID = "EXTERNAL_ID";
 
     String PARENT_ACCOUNT_ID = "PARENT_ACCOUNT_ID";
+
+    List<String> NUMERIC_ID_FIELDS = List.of(USER_ID, PRODUCT_ID, OFFICE_ID, TRANSACTION_ID, PARENT_ACCOUNT_ID);
 
     Map<String, String> SAVINGS_SEARCH_REQUEST_MAP = ImmutableMap.<String, String>builder().put(USER_ID, "au.id")
             .put(ACCOUNT_OWNER_ID, "mc.id").put(PRODUCT_ID, "sp.id").put(TRANSACTION_TYPE, "tr.transaction_type_enum")

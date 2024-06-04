@@ -18,7 +18,9 @@
  */
 package org.apache.fineract.infrastructure.core.filters;
 
+import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 public class FilterConstraint {
 
@@ -65,6 +67,17 @@ public class FilterConstraint {
     }
 
     public List<String> getValues() {
+        if (values == null) {
+            List<String> newValues = new ArrayList<>();
+            if (StringUtils.isNotBlank(value)) {
+                newValues.add(value);
+            }
+            if (StringUtils.isNotBlank(secondValue)) {
+                newValues.add(secondValue);
+            }
+            return newValues;
+
+        }
         return values;
     }
 
