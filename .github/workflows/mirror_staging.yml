@@ -1,0 +1,51 @@
+name: Mirror Staging Branch to Bitbucket
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Set to 0 for a full clone
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BITBUCKET_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
+
+      - name: Add Bitbucket Remote
+        run: |
+          git remote add bitbucket git@bitbucket.org:kvpafrica/fineract-backend-cba.git
+          git fetch --prune bitbucket
+
+      - name: Mirror to Bitbucket
+        run: |
+          git config --global user.email "devops@fiter.io"
+          git config --global user.name "Devops"
+          # Fetch changes from Bitbucket
+          echo "Fetching from Bitbucket"
+          git fetch bitbucket staging
+          # Attempt to rebase the changes from Bitbucket onto the current branch,
+          # resolving any conflicts by preferring 'theirs' (GitHub changes)
+          echo "Rebasing changes from Bitbucket, favoring GitHub changes on conflict"
+          git rebase -X theirs bitbucket/staging || true  # Continue even if rebase fails
+          # Check if the rebase was successful or if there were conflicts resolved
+          if [ "$(git ls-files -u | wc -l)" -eq 0 ]; then
+            echo "Rebase successful or conflicts automatically resolved, pushing to Bitbucket"
+            git push bitbucket HEAD:staging
+          else
+            echo "There were unresolved conflicts after attempting to auto-resolve. Manual intervention required."
+            # Abort the rebase to clean up the state
+            git rebase --abort
+            echo "Please resolve the remaining conflicts manually."
+          fi
+
