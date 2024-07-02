@@ -1062,7 +1062,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             // Don't react to this exception because If messaging fails, RpPayment Transaction shouldn't rollback
         }
 
-        if (loan.getTotalOverpaid() != null && !loanTransaction.isPayoff()) {
+        if (loan.getTotalOverpaid() != null && !loanTransaction.isPayoff() && loanTransaction.isNotRecoveryRepayment()) {
             loanRepositoryWrapper.updateRedrawAmount(loan, currentUser, loanId, loan.getTotalOverpaid(), true, transactionDate,
                     paymentDetail);
         }
