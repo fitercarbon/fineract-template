@@ -506,16 +506,10 @@ public class RecurringDepositAccount extends SavingsAccount {
         }
 
         final List<SavingsAccountTransaction> savingsAccountTransactions = retreiveListOfTransactions();
-        if (savingsAccountTransactions.size() > 0) {
-            final SavingsAccountTransaction accountTransaction = savingsAccountTransactions.get(savingsAccountTransactions.size() - 1);
-            if (accountTransaction.isAfter(closedDate)) {
-                baseDataValidator.reset().parameter(SavingsApiConstants.closedOnDateParamName).value(closedDate)
-                        .failWithCode("must.be.after.last.transaction.date");
-                if (!dataValidationErrors.isEmpty()) {
-                    throw new PlatformApiDataValidationException(dataValidationErrors);
-                }
-            }
-        }
+        // Filter out accruals
+        List<SavingsAccountTransaction> transactions = savingsAccountTransactions.stream()
+                .filter(t -> !t.isAccrualInterestPostingAndNotReversed()).toList();
+        this.validateCloseDate(transactions, closedDate, baseDataValidator, dataValidationErrors);
 
         validateActivityNotBeforeClientOrGroupTransferDate(SavingsEvent.SAVINGS_CLOSE_ACCOUNT, closedDate);
         this.status = SavingsAccountStatusType.PRE_MATURE_CLOSURE.getValue();
