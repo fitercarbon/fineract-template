@@ -1690,6 +1690,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 .append(" where " + sqlGenerator.subDate(sqlGenerator.currentBusinessDate(), "?", "day") + " > ls.duedate ")
                 .append(" and ml.id > ? ").append(" and ls.completed_derived <> true and mc.charge_applies_to_enum =1 ")
                 .append(" and ls.recalculated_interest_component <> true ")
+                .append(" and (ml.client_id IS NOT NULL OR ml.group_id IS NOT NULL)")
                 .append(" and mc.charge_time_enum = 9 and ml.loan_status_id = 300 ").append(" order by ml.id asc limit ? ");
 
         if (backdatePenalties) {
