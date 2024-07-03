@@ -3462,16 +3462,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
             }
         }
         final List<SavingsAccountTransaction> savingsAccountTransactions = retreiveListOfTransactions();
-        if (savingsAccountTransactions.size() > 0) {
-            final SavingsAccountTransaction accountTransaction = savingsAccountTransactions.get(savingsAccountTransactions.size() - 1);
-            if (accountTransaction.isAfter(closedDate)) {
-                baseDataValidator.reset().parameter(SavingsApiConstants.closedOnDateParamName).value(closedDate)
-                        .failWithCode("must.be.after.last.transaction.date");
-                if (!dataValidationErrors.isEmpty()) {
-                    throw new PlatformApiDataValidationException(dataValidationErrors);
-                }
-            }
-        }
+        this.validateCloseDate(savingsAccountTransactions, closedDate, baseDataValidator, dataValidationErrors);
         if (getAccountBalance().doubleValue() != 0) {
             baseDataValidator.reset().failWithCodeNoParameterAddedToErrorCode("results.in.balance.not.zero");
             if (!dataValidationErrors.isEmpty()) {
@@ -3492,6 +3483,20 @@ public class SavingsAccount extends AbstractPersistableCustom {
         this.closedBy = currentUser;
 
         return actualChanges;
+    }
+
+    protected void validateCloseDate(List<SavingsAccountTransaction> savingsAccountTransactions, LocalDate closedDate,
+            DataValidatorBuilder baseDataValidator, List<ApiParameterError> dataValidationErrors) {
+        if (savingsAccountTransactions.size() > 0) {
+            final SavingsAccountTransaction accountTransaction = savingsAccountTransactions.get(savingsAccountTransactions.size() - 1);
+            if (accountTransaction.isAfter(closedDate)) {
+                baseDataValidator.reset().parameter(SavingsApiConstants.closedOnDateParamName).value(closedDate)
+                        .failWithCode("must.be.after.last.transaction.date");
+                if (!dataValidationErrors.isEmpty()) {
+                    throw new PlatformApiDataValidationException(dataValidationErrors);
+                }
+            }
+        }
     }
 
     protected void validateActivityNotBeforeClientOrGroupTransferDate(final SavingsEvent event, final LocalDate activityDate) {
