@@ -665,13 +665,10 @@ public class FixedDepositAccount extends SavingsAccount {
             final SavingsAccountTransaction newPostingTransaction = SavingsAccountTransaction.interestPosting(this, office(),
                     accountCloseDate, Money.of(this.currency, this.getAccountTermAndPreClosure().getInterestCarriedForwardOnTopUp()), false,
                     false);
-            List<SavingsAccountTransaction> matchingTransactions = this.savingsAccountTransactionRepository
-                    .findTransactionByDateAmountAndType(newPostingTransaction.getSavingsAccount(),
-                            newPostingTransaction.transactionLocalDate(), newPostingTransaction.getAmount(),
-                            newPostingTransaction.getTypeOf());
-            // if matching transactions are found and type is Interest posting , ignore the transaction
-            if (matchingTransactions != null && !matchingTransactions.isEmpty()
-                    && newPostingTransaction.isInterestPostingAndNotReversed()) {
+            Integer matchingTransactionsCount = this.savingsAccountTransactionRepository.findTransactionByDateAmountAndType(
+                    newPostingTransaction.getSavingsAccount(), newPostingTransaction.transactionLocalDate(),
+                    newPostingTransaction.getAmount(), newPostingTransaction.getTypeOf());
+            if (matchingTransactionsCount > 0 && newPostingTransaction.isInterestPostingAndNotReversed()) {
                 return true;
             }
 
