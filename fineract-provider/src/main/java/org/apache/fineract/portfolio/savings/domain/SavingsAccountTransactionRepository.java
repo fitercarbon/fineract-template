@@ -85,9 +85,9 @@ public interface SavingsAccountTransactionRepository
     SavingsAccountTransaction findSavingsAccountTransaction(@Param("transactionId") Long transactionId,
             @Param("savingsAccountId") Long savingsAccountId);
 
-    // fetch transactions by date , amount and savings account id and type
-    @Query("select st from SavingsAccountTransaction st where st.savingsAccount = :savingsAccount and st.dateOf = :transactionDate and st.amount = :amount and st.typeOf = :type")
-    List<SavingsAccountTransaction> findTransactionByDateAmountAndType(@Param("savingsAccount") SavingsAccount savingsAccount,
+    // fetch transactions count by date , amount and savings account id and type
+    @Query("select COUNT(st) from SavingsAccountTransaction st where st.savingsAccount = :savingsAccount and st.dateOf = :transactionDate and st.amount = :amount and st.typeOf = :type")
+    Integer findTransactionByDateAmountAndType(@Param("savingsAccount") SavingsAccount savingsAccount,
             @Param("transactionDate") LocalDate transactionDate, @Param("amount") BigDecimal amount, @Param("type") Integer type);
 
 }
