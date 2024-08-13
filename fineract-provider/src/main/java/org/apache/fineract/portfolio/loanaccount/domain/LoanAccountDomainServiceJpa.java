@@ -241,11 +241,6 @@ public class LoanAccountDomainServiceJpa implements LoanAccountDomainService {
          * before the latest payment recorded against the loan)
          ***/
 
-        if (isRecoveryRepayment) {
-            // if recoveryPayment, let's reprocess the loan
-            loan.restoreLoanScheduleAndTransactions();
-        }
-
         saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
 
         if (changedTransactionDetail != null) {
