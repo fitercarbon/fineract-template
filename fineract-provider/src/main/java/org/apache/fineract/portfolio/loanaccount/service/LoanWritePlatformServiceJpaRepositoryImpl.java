@@ -1071,6 +1071,11 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             loan.setLastRepaymentAmount(transactionAmount);
             loanRepositoryWrapper.saveAndFlush(loan);
         }
+        // Reprocess the loan transactions
+        if (isRecoveryRepayment) {
+            loan.restoreLoanScheduleAndTransactions();
+            loanRepositoryWrapper.saveAndFlush(loan);
+        }
         return commandProcessingResultBuilder.withCommandId(command.commandId()) //
                 .withLoanId(loanId) //
                 .with(changes) //
