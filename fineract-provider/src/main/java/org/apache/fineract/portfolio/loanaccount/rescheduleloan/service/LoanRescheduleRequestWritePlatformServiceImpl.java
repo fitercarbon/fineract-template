@@ -30,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.codes.domain.CodeValueRepositoryWrapper;
@@ -42,6 +41,7 @@ import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrency;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrencyRepositoryWrapper;
@@ -54,8 +54,6 @@ import org.apache.fineract.portfolio.loanaccount.domain.ChangedTransactionDetail
 import org.apache.fineract.portfolio.loanaccount.domain.Loan;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanAccountDomainService;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanLifecycleStateMachine;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminder;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminderRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallmentRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleTransactionProcessorFactory;
@@ -91,6 +89,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.NonTransientDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,7 +120,8 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
     private final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository;
 
     private final NoteRepository noteRepository;
-    private final LoanRepaymentReminderRepository loanRepaymentReminderRepository;
+
+    private final JdbcTemplate jdbcTemplate;
 
     /**
      * LoanRescheduleRequestWritePlatformServiceImpl constructor
@@ -144,7 +144,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             final AccountTransfersWritePlatformService accountTransfersWritePlatformService,
             final LoanAccountDomainService loanAccountDomainService,
             final LoanRepaymentScheduleInstallmentRepository repaymentScheduleInstallmentRepository, NoteRepository noteRepository,
-            final LoanRepaymentReminderRepository loanRepaymentReminderRepository) {
+            final RoutingDataSource dataSource) {
         this.codeValueRepositoryWrapper = codeValueRepositoryWrapper;
         this.platformSecurityContext = platformSecurityContext;
         this.loanRescheduleRequestDataValidator = loanRescheduleRequestDataValidator;
@@ -164,7 +164,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
         this.loanAccountDomainService = loanAccountDomainService;
         this.repaymentScheduleInstallmentRepository = repaymentScheduleInstallmentRepository;
         this.noteRepository = noteRepository;
-        this.loanRepaymentReminderRepository = loanRepaymentReminderRepository;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     /**
@@ -518,6 +518,9 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             final LoanScheduleDTO loanSchedule = loanScheduleGenerator.rescheduleNextInstallments(mathContext, loanApplicationTerms, loan,
                     loanApplicationTerms.getHolidayDetailDTO(), loanRepaymentScheduleTransactionProcessor, rescheduleFromDate);
 
+            deleteOverdueInstallmentChargesAssociatedToThisLoanAccount(loan);
+            deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(loan);
+
             loan.updateLoanSchedule(loanSchedule.getInstallments());
             loan.recalculateAllCharges();
             ChangedTransactionDetail changedTransactionDetail = loan.processTransactions();
@@ -531,8 +534,6 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
 
             // update the status of the request
             loanRescheduleRequest.approve(appUser, approvedOnDate);
-
-            deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(loan);
 
             // update the loan object
             saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
@@ -704,11 +705,23 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
 
     private void deleteLoanRepaymentRemindersAssociatedToThisLoanAccount(Loan loan) {
         // delete dependencies on m_loan_repayment_reminder associated with this Loan Account
-        List<LoanRepaymentReminder> loanRepaymentReminders = loanRepaymentReminderRepository
-                .getLoanRepaymentReminderByLoanId(loan.getId().intValue());
+        this.jdbcTemplate.update("DELETE FROM m_loan_repayment_reminder WHERE loan_id = ?", loan.getId());
+    }
 
-        if (!CollectionUtils.isEmpty(loanRepaymentReminders)) {
-            loanRepaymentReminderRepository.deleteAll(loanRepaymentReminders);
+    private void deleteOverdueInstallmentChargesAssociatedToThisLoanAccount(Loan loan) {
+        // Delete loan charges associated with overdue installments
+        this.jdbcTemplate.update(
+                "DELETE FROM m_loan_charge_paid_by WHERE loan_charge_id IN (SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND complete_derived = false))",
+                loan.getId());
+        List<Long> chargeIds = this.jdbcTemplate.queryForList(
+                "SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND complete_derived = false)",
+                Long.class, loan.getId());
+        this.jdbcTemplate.update(
+                "DELETE FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND complete_derived = false)",
+                loan.getId());
+        // Delete chargeIds
+        for (Long chargeId : chargeIds) {
+            this.jdbcTemplate.update("DELETE FROM m_loan_charge WHERE id = ?", chargeId);
         }
     }
 
