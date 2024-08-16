@@ -59,4 +59,8 @@ public class LoanOverdueInstallmentCharge extends AbstractPersistableCustom {
         return this.installment;
     }
 
+    public LoanCharge getLoanCharge() {
+        return this.loancharge;
+    }
+
 }
