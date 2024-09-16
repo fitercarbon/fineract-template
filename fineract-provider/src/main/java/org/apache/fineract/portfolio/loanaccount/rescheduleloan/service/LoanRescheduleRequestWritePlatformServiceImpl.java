@@ -711,13 +711,13 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
     private void deleteOverdueInstallmentChargesAssociatedToThisLoanAccount(Loan loan) {
         // Delete loan charges associated with overdue installments
         this.jdbcTemplate.update(
-                "DELETE FROM m_loan_charge_paid_by WHERE loan_charge_id IN (SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND complete_derived = false))",
+                "DELETE FROM m_loan_charge_paid_by WHERE loan_charge_id IN (SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND completed_derived = false))",
                 loan.getId());
         List<Long> chargeIds = this.jdbcTemplate.queryForList(
-                "SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND complete_derived = false)",
+                "SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND completed_derived = false)",
                 Long.class, loan.getId());
         this.jdbcTemplate.update(
-                "DELETE FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND complete_derived = false)",
+                "DELETE FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND completed_derived = false)",
                 loan.getId());
         // Delete chargeIds
         for (Long chargeId : chargeIds) {
