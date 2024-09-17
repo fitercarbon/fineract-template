@@ -96,6 +96,7 @@ public class FixedDepositApplicationReq {
     private FixedDepositApplicationTermsReq fixedDepositApplicationTermsReq;
     private FixedDepositApplicationPreClosureReq fixedDepositApplicationPreClosureReq;
     private Integer accountOnClosureTypeId;
+    private Long transferToSavingsId;
 
     public static FixedDepositApplicationReq instance(JsonCommand command) {
         FixedDepositApplicationReq instance = new FixedDepositApplicationReq();
@@ -461,5 +462,13 @@ public class FixedDepositApplicationReq {
 
     public void setAccountOnClosureTypeId(Integer accountOnClosureTypeId) {
         this.accountOnClosureTypeId = accountOnClosureTypeId;
+    }
+
+    public Long getTransferToSavingsId() {
+        return transferToSavingsId;
+    }
+
+    public void setTransferToSavingsId(Long transferToSavingsId) {
+        this.transferToSavingsId = transferToSavingsId;
     }
 }
