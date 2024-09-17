@@ -398,7 +398,7 @@ public class DepositAccountAssembler {
         final SavingsPeriodFrequencyType depositPeriodFrequency = fixedDepositApplicationReq.getDepositPeriodFrequency();
         final LocalDate expectedFirstDepositOnDate = fixedDepositApplicationReq.getExpectedFirstDepositOnDate();
         final Boolean transferInterest = fixedDepositApplicationReq.getTransferInterest();
-        final Long transferToSavingsId = fixedDepositApplicationReq.getSavingsAccountId();
+        final Long transferToSavingsId = fixedDepositApplicationReq.getTransferToSavingsId();
         DepositAccountOnClosureType accountOnClosureType = null;
         if (fixedDepositApplicationReq.getAccountOnClosureTypeId() != null) {
             accountOnClosureType = DepositAccountOnClosureType.fromInt(fixedDepositApplicationReq.getAccountOnClosureTypeId());

@@ -1751,10 +1751,6 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         // Maintain the interest rate
         fixedDepositApplicationReq.setInterestRateSet(true);
         fixedDepositApplicationReq.setInterestRate(account.getNominalAnnualInterestRate());
-        // quick fix to include on closure(maturity) instruction
-        if (account.getOnAccountClosureId() != null) {
-            fixedDepositApplicationReq.setAccountOnClosureTypeId(account.getOnAccountClosureId());
-        }
         FixedDepositAccount newFD = this.autoCreateNewFD(command, account, accountAssociations, fixedDepositApplicationReq);
 
         // Copy any data tables to the new account
@@ -1858,12 +1854,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         fixedDepositApplicationReq.setTransferInterest(account.getAccountTermAndPreClosure().isTransferInterestToLinkedAccount());
         fixedDepositApplicationReq.setFixedDepositApplicationTermsReq(new FixedDepositApplicationTermsReq());
         fixedDepositApplicationReq.setFixedDepositApplicationPreClosureReq(this.generateFixedDepositApplicationPreClosureReq(account));
-        String newNickName = command.stringValueOfParameterNamed(SavingsApiConstants.nicknameParamName);
-        /*
-         * if (newNickName != null && !"".equals(newNickName)) {
-         * fixedDepositApplicationReq.setNickname(command.stringValueOfParameterNamed(SavingsApiConstants.
-         * nicknameParamName)); } else { fixedDepositApplicationReq.setNickname(account.getNickname()); }
-         */
+        fixedDepositApplicationReq.setTransferToSavingsId(account.getTransferToSavingsAccountId());
+        fixedDepositApplicationReq.setAccountOnClosureTypeId(account.getOnAccountClosureId());
         return fixedDepositApplicationReq;
     }
 
