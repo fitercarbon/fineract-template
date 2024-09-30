@@ -713,14 +713,16 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
         String query = "SELECT loan_charge_id FROM m_loan_overdue_installment_charge WHERE loan_schedule_id IN (SELECT id FROM m_loan_repayment_schedule WHERE loan_id = ? AND completed_derived = false)";
         // Select the chargeIds
         List<Long> chargeIds = this.namedParameterJdbcTemplate.getJdbcTemplate().queryForList(query, Long.class, loanId);
-        Map<String, Object> params = new HashMap<>();
-        params.put("chargeIds", chargeIds);
-        // Delete loan charges associated with overdue installments
-        this.namedParameterJdbcTemplate.update("DELETE FROM m_loan_charge_paid_by WHERE loan_charge_id IN (:chargeIds)", params);
-        this.namedParameterJdbcTemplate.update("DELETE FROM m_loan_overdue_installment_charge WHERE loan_charge_id IN (:chargeIds)",
-                params);
-        // Delete chargeIds
-        this.namedParameterJdbcTemplate.update("DELETE FROM m_loan_charge WHERE id IN (:chargeIds)", params);
+        if (!chargeIds.isEmpty()) {
+            Map<String, Object> params = new HashMap<>();
+            params.put("chargeIds", chargeIds);
+            // Delete loan charges associated with overdue installments
+            this.namedParameterJdbcTemplate.update("DELETE FROM m_loan_charge_paid_by WHERE loan_charge_id IN (:chargeIds)", params);
+            this.namedParameterJdbcTemplate.update("DELETE FROM m_loan_overdue_installment_charge WHERE loan_charge_id IN (:chargeIds)",
+                    params);
+            // Delete chargeIds
+            this.namedParameterJdbcTemplate.update("DELETE FROM m_loan_charge WHERE id IN (:chargeIds)", params);
+        }
     }
 
 }
