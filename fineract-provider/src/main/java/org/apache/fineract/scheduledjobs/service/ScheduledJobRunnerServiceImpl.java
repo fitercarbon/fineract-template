@@ -41,6 +41,7 @@ import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.domain.FineractContext;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSourceServiceFactory;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
@@ -98,6 +99,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     private final JobExecuter jobExecuter;
     private final SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper;
     private final ApplicationContext applicationContext;
+    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
     public ScheduledJobRunnerServiceImpl(final RoutingDataSourceServiceFactory dataSourceServiceFactory,
@@ -111,7 +113,8 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
             final ScheduledJobDetailRepository scheduledJobDetailsRepository, final FineractProperties fineractProperties,
             DatabaseSpecificSQLGenerator sqlGenerator, DatabaseTypeResolver databaseTypeResolver,
             final SavingsAccountReadPlatformService savingsAccountReadPlatformService, final JobExecuter jobExecuter,
-            SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper, final ApplicationContext applicationContext) {
+            SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper, final ApplicationContext applicationContext,
+            final RoutingDataSource dataSource) {
         this.dataSourceServiceFactory = dataSourceServiceFactory;
         this.savingsAccountWritePlatformService = savingsAccountWritePlatformService;
         this.savingsAccountChargeReadPlatformService = savingsAccountChargeReadPlatformService;
@@ -129,6 +132,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         this.jobExecuter = jobExecuter;
         this.savingAccountRepositoryWrapper = savingAccountRepositoryWrapper;
         this.applicationContext = applicationContext;
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
     @Override
@@ -252,6 +256,25 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
 
         LOG.info("{}: Records affected by updateMaturityDetailsOfDepositAccounts: {}", ThreadLocalContextUtil.getTenant().getName(),
                 depositAccounts.size());
+    }
+
+    @Override
+    @CronTarget(jobName = JobName.UPDATE_FD_MATURITY_INSTRUCTION)
+    public void updateFDMaturityInstructionForToppedUpAccounts() {
+        final String query = "update m_deposit_account_term_and_preclosure d  \n" + "set transfer_to_savings_account_id =w.id\n" + "from \n"
+                + "(select msp.name, x.savings_account_id as dep_account_id,x.id as dep_id,msa.* from m_savings_account msa \n"
+                + "inner join m_savings_product msp on msp.id =msa.product_id\n" + "inner join  \n"
+                + "(select mdatap.*,msa.status_enum ,msa.account_no,msa.client_id  from m_deposit_account_term_and_preclosure mdatap \n"
+                + "inner join m_savings_account msa on msa.id = mdatap.savings_account_id \n"
+                + "where mdatap.interest_carried_forward_on_top_up is not null\n"
+                + "and maturity_date >='2024-06-01' and transfer_to_savings_account_id is null\n"
+                + "and msa.status_enum in (300,800))x on msa.client_id = x.client_id\n"
+                + "and msa.account_no <>x.account_no and msa.deposit_type_enum=100)w\n" + "where \n"
+                + "d.savings_account_id = w.dep_account_id and d.id = w.dep_id;";
+
+        LOG.info("Updating FD Maturity Instructions...");
+        int affected = this.jdbcTemplate.update(query);
+        LOG.info("FD Maturity Instructions updated for {} accounts", affected);
     }
 
     @Override
