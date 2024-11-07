@@ -31,6 +31,8 @@ public interface ScheduledJobRunnerService {
 
     void updateMaturityDetailsOfDepositAccounts();
 
+    void updateFDMaturityInstructionForToppedUpAccounts();
+
     void generateRDSchedule();
 
     void postDividends() throws JobExecutionException;
