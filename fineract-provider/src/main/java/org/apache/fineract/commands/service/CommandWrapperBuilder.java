@@ -3902,4 +3902,12 @@ public class CommandWrapperBuilder {
 
         return this;
     }
+
+    public CommandWrapperBuilder reprocessLoanBalances(Long loanId) {
+        this.actionName = "REPROCESS";
+        this.entityName = "LOAN_BALANCES";
+        this.href = "/loans/" + loanId + "/reprocessBalances/";
+        this.loanId = loanId;
+        return this;
+    }
 }
