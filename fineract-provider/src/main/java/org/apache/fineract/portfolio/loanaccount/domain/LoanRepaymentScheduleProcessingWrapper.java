@@ -60,8 +60,8 @@ public class LoanRepaymentScheduleProcessingWrapper {
 
             final Money penaltyChargesDueForRepaymentPeriod = cumulativePenaltyChargesDueWithin(startDate, endDate, loanCharges, currency,
                     period, totalPrincipal, totalInterest, !period.isRecalculatedInterestComponent());
-            final Money penaltyChargesWaivedForRepaymentPeriod = cumulativePenaltyChargesWaivedWithin(startDate, endDate, loanCharges,
-                    currency, !period.isRecalculatedInterestComponent(), period);
+            final Money penaltyChargesWaivedForRepaymentPeriod = cumulativePenaltyChargesWaivedWithin(endDate, loanCharges, currency,
+                    !period.isRecalculatedInterestComponent(), period);
             final Money penaltyChargesWrittenOffForRepaymentPeriod = cumulativePenaltyChargesWrittenOffWithin(startDate,
                     period.getDueDate(), loanCharges, currency, !period.isRecalculatedInterestComponent());
 
@@ -245,9 +245,8 @@ public class LoanRepaymentScheduleProcessingWrapper {
         return cumulative;
     }
 
-    private Money cumulativePenaltyChargesWaivedWithin(final LocalDate periodStart, final LocalDate periodEnd,
-            final Set<LoanCharge> loanCharges, final MonetaryCurrency currency, boolean isInstallmentChargeApplicable,
-            LoanRepaymentScheduleInstallment period) {
+    private Money cumulativePenaltyChargesWaivedWithin(final LocalDate periodEnd, final Set<LoanCharge> loanCharges,
+            final MonetaryCurrency currency, boolean isInstallmentChargeApplicable, LoanRepaymentScheduleInstallment period) {
 
         Money cumulative = Money.zero(currency);
 
