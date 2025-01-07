@@ -6898,6 +6898,38 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
     }
 
+    public void reprocessLoanBalances() {
+        for (LoanTermVariations variations : this.loanTermVariations) {
+            if (variations.getOnLoanStatus().equals(LoanStatus.ACTIVE.getValue())) {
+                variations.markAsInactive();
+            }
+        }
+        final LoanRepaymentScheduleProcessingWrapper wrapper = new LoanRepaymentScheduleProcessingWrapper();
+        wrapper.reprocess(getCurrency(), getDisbursementDate(), getRepaymentScheduleInstallments(), charges());
+
+        updateLoanSummaryDerivedFields();
+        ChangedTransactionDetail changedTransactionDetail = reprocessTransactions();
+        this.loanTransactions.addAll(changedTransactionDetail.getNewTransactionMappings().values());
+
+        if (isOverPaid()) {
+            this.loanStatus = LoanStatus.OVERPAID.getValue();
+
+            this.closedOnDate = null;
+            this.actualMaturityDate = null;
+
+        } else if (this.summary.isRepaidInFull(loanCurrency())) {
+            LocalDate lastUserTransactionDate = getLastUserTransactionDate();
+            handleLoanRepaymentInFull(lastUserTransactionDate, loanLifecycleStateMachine);
+        } else {
+            if (!this.status().isClosedWrittenOff()) { // we don't want to reactivate closed-off loans
+                this.loanStatus = LoanStatus.ACTIVE.getValue();
+                this.closedOnDate = null;
+                this.actualMaturityDate = null;
+            }
+        }
+
+    }
+
     public void updateLoanScheduleOnForeclosure(final Collection<LoanRepaymentScheduleInstallment> installments) {
         this.repaymentScheduleInstallments.clear();
         for (final LoanRepaymentScheduleInstallment installment : installments) {

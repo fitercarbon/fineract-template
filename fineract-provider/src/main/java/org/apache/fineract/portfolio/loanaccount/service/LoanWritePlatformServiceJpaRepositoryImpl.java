@@ -3389,6 +3389,17 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     }
 
     @Override
+    public CommandProcessingResult reprocessLoanBalances(Long loanId, JsonCommand command) {
+        final Loan loan = this.loanAssembler.assembleFrom(loanId);
+        loan.reprocessLoanBalances();
+        loanRepositoryWrapper.saveAndFlush(loan);
+        final CommandProcessingResultBuilder commandProcessingResultBuilder = new CommandProcessingResultBuilder();
+        return commandProcessingResultBuilder.withCommandId(command.commandId()) //
+                .withLoanId(loanId) //
+                .build();
+    }
+
+    @Override
     @Transactional
     public CommandProcessingResult makeLoanRefund(Long loanId, JsonCommand command) {
 
